@@ -1,6 +1,8 @@
 # Data
 logs/
 stores/
+experiments/
+checkpoint
 labeled_projects.csv
 
 # VSCode
