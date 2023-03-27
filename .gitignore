@@ -2,7 +2,8 @@
 logs/
 stores/
 experiments/
-checkpoint
+checkpoint/
+mlflow/
 labeled_projects.csv
 
 # VSCode
