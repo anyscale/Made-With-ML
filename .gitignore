@@ -1,10 +1,6 @@
 # Data
 logs/
 stores/
-experiments/
-checkpoint/
-mlflow/
-labeled_projects.csv
 
 # VSCode
 .vscode/

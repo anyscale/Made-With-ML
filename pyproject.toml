@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+version = "0.1"
+name = "madewithml"
+description = "Classify machine learning projects."
+authors = [{name = "Goku Mohandas", email = "goku@madewithml.com"}]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "cleanlab==1.0.1",
+    "imbalanced-learn==0.8.1",
+    "ipywidgets==7.7.1",
+    "lime==0.2.0.1",
+    "matplotlib==3.7.1",
+    "mlflow==2.2.2",
+    "nltk==3.7",
+    "numpy==1.22.4",
+    "numpyencoder==0.3.0",
+    "optuna==2.10.0",
+    "pandas==1.4.4",
+    "ray[air]==2.3.0",
+    "scikit-learn==1.2.2",
+    "seaborn==0.12.2",
+    "snorkel==0.9.9",
+    "torch==1.13.1",
+    "transformers==4.27.2",
+    "wordcloud==1.8.2.2",
+]
+
+[project.urls]
+homepage = "https://madewithml.com/"
+repository = "https://github.com/GokuMohandas/mlops-course"
+documentation = "https://gokumohandas.github.io/mlops-course/"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+docs = [
+    "mkdocs==1.3.0",
+    "mkdocstrings==0.18.1",
+]
+style = [
+    "black==22.3.0",
+    "flake8==3.9.2",
+    "isort==5.10.1",
+]
+test = [
+    "pytest==7.1.2",
+    "pytest-cov==2.10.1",
+    "great-expectations==0.15.15",
+]
+dev = [
+    "madewithml[docs]",
+    "madewithml[style]",
+    "madewithml[test]",
+    "pre-commit==2.19.0",
+]
