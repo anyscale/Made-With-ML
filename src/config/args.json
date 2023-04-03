@@ -1,0 +1,12 @@
+
+{
+    "shuffle": true,
+    "subset": null,
+    "min_freq": 75,
+    "lower": true,
+    "stem": false,
+    "lr": 1e-4,
+    "dropout_p": 0.5,
+    "num_epochs": 10,
+    "batch_size": 128
+}
