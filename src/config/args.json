@@ -7,6 +7,6 @@
     "stem": false,
     "lr": 1e-4,
     "dropout_p": 0.5,
-    "num_epochs": 10,
-    "batch_size": 128
+    "num_epochs": 20,
+    "batch_size": 512
 }
