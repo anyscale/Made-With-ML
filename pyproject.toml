@@ -58,4 +58,6 @@ dev = [
     "madewithml[style]",
     "madewithml[test]",
     "pre-commit==2.19.0",
+    "rich==13.3.3",
+    "typer==0.7.0",
 ]

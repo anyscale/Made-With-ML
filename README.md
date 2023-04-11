@@ -38,6 +38,8 @@ pre-commit autoupdate
 
 ## Workloads
 
+**NOTE**: Be sure to terminate all notebook kernels to free up all workers first.
+
 ### Train a single model
 ```python
 from madewithml import train

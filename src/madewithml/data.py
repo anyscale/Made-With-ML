@@ -16,22 +16,6 @@ from config import config
 from madewithml import utils
 
 
-def elt_data():
-    """Extract, load and transform our data assets."""
-    # Extract and load
-    projects = pd.read_csv(config.PROJECTS_URL)
-    tags = pd.read_csv(config.TAGS_URL)
-    projects.to_csv(Path(config.DATA_DIR, "projects.csv"), index=False)
-    tags.to_csv(Path(config.DATA_DIR, "tags.csv"), index=False)
-
-    # Transform
-    df = pd.merge(projects, tags, on="id")
-    df = df[df.tag.notnull()]  # drop rows w/ no tag
-    df.to_csv(Path(config.DATA_DIR, config.LABELED_PROJECTS_FP), index=False)
-
-    print("✅ Saved labeled data!")
-
-
 def clean_text(text, lower=True, stem=False, stopwords=config.STOPWORDS):
     """Clean raw text."""
     # Lower
@@ -141,37 +125,39 @@ def get_data_splits(X, y, train_size=0.7):
     return X_train, X_val, X_test, y_train, y_val, y_test
 
 
+def tokenize_data(X, tokenizer):
+    encoded_input = tokenizer(X, return_tensors="pt", padding=True)
+    ids = encoded_input["input_ids"]
+    masks = encoded_input["attention_mask"]
+    return ids, masks
+
+
 def prep_data(args):
-    """Prepare data."""
-    # Setup
+    # Set up
     utils.set_seeds()
+    df = pd.read_csv(config.LABELED_PROJECTS_URL)  # ingest
+    df = df.sample(frac=1).reset_index(drop=True)  # shuffle
+    df = df[: args.num_samples]  # subset
 
     # Preprocess
-    df = pd.read_csv(config.LABELED_PROJECTS_FP)
-    df = df.sample(frac=1).reset_index(drop=True)
-    df = df[: args["subset"]]  # None/null = all samples
-    df = preprocess(df, lower=args["lower"], stem=args["stem"], min_freq=args["min_freq"])
-    label_encoder = LabelEncoder().fit(df.tag)
+    df = preprocess(df, lower=args.lower, stem=args.stem, min_freq=args.min_freq)  # preprocess
 
     # Split
-    X_train, X_val, X_test, y_train, y_val, y_test = \
-        get_data_splits(X=df.text.to_numpy(), y=label_encoder.encode(df.tag))
-    counts = np.bincount(y_train)
-    class_weights = {i: 1.0/count for i, count in enumerate(counts)}
+    X, y = df.text.to_list(), df.tag.to_list()  # inputs and outputs
+    label_encoder = LabelEncoder().fit(y)  # encode labels
+    X_train, X_val, X_test, y_train, y_val, y_test = get_data_splits(X=X, y=label_encoder.encode(y))
+    class_weights = {i: 1.0/count for i, count in enumerate(np.bincount(y_train))}
 
-    # Tokenize inputs
+    # Tokenize
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    encoded_input = tokenizer(X_train.tolist(), return_tensors="pt", padding=True)
-    X_train_ids = encoded_input["input_ids"]
-    X_train_masks = encoded_input["attention_mask"]
-    encoded_input = tokenizer(X_val.tolist(), return_tensors="pt", padding=True)
-    X_val_ids = encoded_input["input_ids"]
-    X_val_masks = encoded_input["attention_mask"]
-    encoded_input = tokenizer(X_test.tolist(), return_tensors="pt", padding=True)
-    X_test_ids = encoded_input["input_ids"]
-    X_test_masks = encoded_input["attention_mask"]
+    X_train_ids, X_train_masks = tokenize_data(X_train, tokenizer=tokenizer)
+    X_val_ids, X_val_masks = tokenize_data(X_val, tokenizer=tokenizer)
+    X_test_ids, X_test_masks = tokenize_data(X_test, tokenizer=tokenizer)
 
-    return [X_train_ids, X_train_masks, y_train], [X_val_ids, X_val_masks, y_val], [X_test_ids, X_test_masks, y_test], class_weights
+    return [X_train_ids, X_train_masks, y_train], \
+           [X_val_ids, X_val_masks, y_val], \
+           [X_test_ids, X_test_masks, y_test], \
+           label_encoder, class_weights
 
 
 class TransformerTextDataset(torch.utils.data.Dataset):
