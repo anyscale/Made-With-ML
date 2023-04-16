@@ -1,4 +1,3 @@
-
 # madewithml/data.py
 from collections import Counter
 import json
@@ -137,10 +136,10 @@ def prep_data(args):
     utils.set_seeds()
     df = pd.read_csv(config.LABELED_PROJECTS_URL)  # ingest
     df = df.sample(frac=1).reset_index(drop=True)  # shuffle
-    df = df[: args.num_samples]  # subset
+    df = df[: args["num_samples"]]  # subset
 
     # Preprocess
-    df = preprocess(df, lower=args.lower, stem=args.stem, min_freq=args.min_freq)  # preprocess
+    df = preprocess(df, lower=args["lower"], stem=args["stem"], min_freq=args["min_freq"])  # preprocess
 
     # Split
     X, y = df.text.to_list(), df.tag.to_list()  # inputs and outputs

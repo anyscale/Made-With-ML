@@ -38,6 +38,8 @@ pre-commit autoupdate
 
 ## Workloads
 
+We can execute all workloads with Python by calling the functions directly or through the command-line interface (CLI) that we've created.
+
 **NOTE**: Be sure to terminate all notebook kernels to free up all workers first.
 
 ### Train a single model
@@ -45,17 +47,27 @@ pre-commit autoupdate
 from madewithml import train
 result = train.train_model(experiment_name="llm", num_workers=9, use_gpu=False)
 ```
+```bash
+python src/madewithml/train.py llm --num-workers 9 --args-fp="src/config/args.json"
+```
+
 
 ### Tune multiple models
 ```python
 from madewithml import tune
 result_grid = tune.tune_models(experiment_name="llm", num_runs=10, num_workers=9, use_gpu=False)
 ```
+```bash
+python src/madewithml/tune.py llm --num-runs 10 --num-workers 9 --args-fp="src/config/args.json"
+```
 
 ### Inference
 ```python
 from madewithml import predict
 predict.predict(texts=["Transfer learning with transformers for text classification."])
+```
+```bash
+python src/madewithml/predict.py
 ```
 
 ## Dashboards

@@ -87,7 +87,7 @@ def train_loop_per_worker(args):
     model = train.torch.prepare_model(model)
 
     # Training components
-    class_weights_tensor = torch.Tensor(np.array(list(class_weights.values()))).to(device)
+    class_weights_tensor = torch.Tensor(np.array(list(class_weights.values()))).to(args["device"])
     loss_fn = nn.BCEWithLogitsLoss(weight=class_weights_tensor)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -103,12 +103,11 @@ def train_loop_per_worker(args):
         # Checkpoint
         artifacts = dict(epoch=epoch, model=model.state_dict(), class_to_index=label_encoder.class_to_index)
         metrics = dict(epoch=epoch, lr=optimizer.param_groups[0]['lr'], train_loss=train_loss, val_loss=val_loss)
-        checkpoint = Checkpoint.from_dict(artifacts)
-        session.report(metrics, checkpoint=checkpoint)
+        session.report(metrics, checkpoint=Checkpoint.from_dict(artifacts))
 
 
 @app.command()
-def train_model(experiment_name: str, num_workers: int = int(ray.available_resources()["CPU"]) - 1,
+def train_model(experiment_name: str, num_workers: int = 1,
                 use_gpu: bool = False, args_fp:str = config.ARGS_FP):
     """Main train function to train a model.
     Args:
@@ -116,6 +115,11 @@ def train_model(experiment_name: str, num_workers: int = int(ray.available_resou
         num_workers (int): number of workers to use for training.
         args_fp (str): location of args.
     """
+    # Initialize Ray
+    if ray.is_initialized():
+        ray.shutdown()
+    ray.init()
+
     # Checkpoint config
     checkpoint_config = CheckpointConfig(
         num_to_keep=1,  # num checkpoints to keep
@@ -141,6 +145,7 @@ def train_model(experiment_name: str, num_workers: int = int(ray.available_resou
 
     # Trainer
     args = utils.load_dict(path=args_fp)
+    args["device"] = "cuda" if use_gpu else "cpu"
     trainer = TorchTrainer(
         train_loop_per_worker=train_loop_per_worker,
         train_loop_config=args,

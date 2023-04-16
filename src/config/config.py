@@ -2,41 +2,26 @@
 import mlflow
 from pathlib import Path
 import pretty_errors
-import ray
-
-# Initialize Ray
-if ray.is_initialized():
-    ray.shutdown()
-ray.init()
-
 
 # Directories
-PROJECT_DIR = Path(__file__).parent.parent.parent.absolute()
 BASE_DIR = Path(__file__).parent.parent.absolute()
 CONFIG_DIR = Path(BASE_DIR, "config")
 DATA_DIR = Path(BASE_DIR, "data")
-
-# Create dirs
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+ARGS_FP = Path(CONFIG_DIR, "args.json")
+
+# Config MLflow
 try:
     MODEL_REGISTRY = Path("/mnt/user_storage/mlruns")  # needs write access
     Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
 except OSError:
     MODEL_REGISTRY = Path("/tmp/mlruns")
     Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
-
-# Files
-ARGS_FP = Path(CONFIG_DIR, "args.json")
-LABELED_PROJECTS_FP = Path(DATA_DIR, "labeled_projects.csv")
-
-# Config MLflow
 MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-# Data sources
+# Datasets
 DATASETS_URL = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets"
-PROJECTS_URL = f"{DATASETS_URL}/projects.csv"
-TAGS_URL = f"{DATASETS_URL}/tags.csv"
 LABELED_PROJECTS_URL = f"{DATASETS_URL}/labeled_projects.csv"
 
 # Misc

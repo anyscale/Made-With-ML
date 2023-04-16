@@ -5,9 +5,14 @@ from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.train.torch import TorchTrainer
 from ray.tune import Tuner
 from ray.tune.schedulers import AsyncHyperBandScheduler
+import typer
 
 from config import config
 from madewithml import train, utils
+
+
+# Initialize Typer CLI app
+app = typer.Typer()
 
 
 # Fixing https://github.com/ray-project/ray/blob/3aa6ede43743a098b5e0eb37ec11505f46100313/python/ray/air/integrations/mlflow.py#L301
@@ -23,14 +28,22 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):
         self.mlflow_util.log_params(run_id=run_id, params_to_log=config["train_loop_config"])
 
 
-def tune_models(experiment_name, num_runs, num_workers, use_gpu, args_fp=config.ARGS_FP):
+def tune_models(experiment_name: str, num_runs: int = 10, num_workers: int = 1,
+                use_gpu: bool = False, args_fp:str = config.ARGS_FP):
     """Hyperparameter tuning on many models."""
+    # Scaling config
+    scaling_config = ScalingConfig(
+        num_workers=num_workers,
+        use_gpu=use_gpu,
+        _max_cpu_fraction_per_node=0.8,
+    )
+
     # Trainer
     args = utils.load_dict(path=args_fp)
     trainer = TorchTrainer(
         train_loop_per_worker=train.training_loop,
         train_loop_config=args,
-        scaling_config=ScalingConfig(num_workers=num_workers, use_gpu=use_gpu),
+        scaling_config=scaling_config,
     )
 
     # Run configuration
@@ -76,3 +89,7 @@ def tune_models(experiment_name, num_runs, num_workers, use_gpu, args_fp=config.
     # Tune
     result_grid = tuner.fit()
     return result_grid
+
+
+if __name__ == "__main__":
+    app()

@@ -1,11 +1,13 @@
 
 {
     "shuffle": true,
-    "subset": null,
+    "num_samples": null,
     "min_freq": 75,
     "lower": true,
     "stem": false,
     "lr": 1e-4,
+    "lr_factor": 0.8,
+    "lr_patience": 3,
     "dropout_p": 0.5,
     "num_epochs": 20,
     "batch_size": 512
