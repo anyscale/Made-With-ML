@@ -23,7 +23,7 @@ Execute the commands below inside the virtual environment to load the files nece
 
 ```bash
 python3 -m pip install -e ".[notebook]"
-jupyter lab notebooks/finetune-llm.ipynb
+jupyter lab notebooks/finetune_llm.ipynb
 ```
 
 ### Scripts
@@ -38,52 +38,41 @@ pre-commit autoupdate
 
 ## Workloads
 
-We can execute all workloads with Python by calling the functions directly or through the command-line interface (CLI) that we've created.
-
-**NOTE**: Be sure to terminate all notebook kernels to free up all workers first.
+**Note**: Change the `--use-gpu`, `--num-cpu-workers` and `--num-gpu-workers` configurations based on your system's resources.
 
 ### Train a single model
-```python
-from madewithml import train
-result = train.train_model(experiment_name="llm", num_workers=9, use_gpu=False)
-```
 ```bash
-python src/madewithml/train.py llm --num-workers 9 --args-fp="src/config/args.json"
+python src/madewithml/train.py llm \
+    --use-gpu \
+    --num-cpu-workers 40 \
+    --num-gpu-workers 2
 ```
 
-
-### Tune multiple models
-```python
-from madewithml import tune
-result_grid = tune.tune_models(experiment_name="llm", num_runs=10, num_workers=9, use_gpu=False)
-```
+### Tuning experiment
 ```bash
-python src/madewithml/tune.py llm --num-runs 10 --num-workers 9 --args-fp="src/config/args.json"
+python src/madewithml/tune.py llm \
+    --num-runs 10 \
+    --num-cpu-workers 40 \
+    --num-gpu-workers 2
 ```
 
 ### Inference
-```python
-from madewithml import predict
-predict.predict(texts=["Transfer learning with transformers for text classification."])
-```
 ```bash
 python src/madewithml/predict.py
 ```
 
-## Dashboards
-
-### Ray
-```python
-import ray
-ray.init()
-```
-Go to [http://127.0.0.1:8265](http://127.0.0.1:8265)
-
-### MLflow
+### Smoke tests
 ```bash
-mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $PWD/mlruns
+python src/madewithml/tune.py test \
+    --use-gpu \
+    --num-cpu-workers 40 \
+    --num-gpu-workers 2 \
+    --num-runs 1 \
+    --num-samples 100 \
+    --num-epochs 1 \
+    --batch-size 32 \
+    --smoke-test
 ```
-Go to [http://0.0.0.0:8000](http://0.0.0.0:8000)
 
 ## FAQ
 

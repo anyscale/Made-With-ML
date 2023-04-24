@@ -1,14 +1,16 @@
 # madewithml/tune.py
+import typer
+
+import ray
 from ray import tune
-from ray.air.config import  RunConfig, ScalingConfig
+from ray.air.config import CheckpointConfig, DatasetConfig, RunConfig, ScalingConfig
 from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.train.torch import TorchTrainer
 from ray.tune import Tuner
 from ray.tune.schedulers import AsyncHyperBandScheduler
-import typer
 
-from config import config
-from madewithml import train, utils
+from config.config import CONFIG_FP, MLFLOW_TRACKING_URI
+from madewithml import data, train, utils
 
 
 # Initialize Typer CLI app
@@ -28,45 +30,91 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):
         self.mlflow_util.log_params(run_id=run_id, params_to_log=config["train_loop_config"])
 
 
-def tune_models(experiment_name: str, num_runs: int = 10, num_workers: int = 1,
-                use_gpu: bool = False, args_fp:str = config.ARGS_FP):
-    """Hyperparameter tuning on many models."""
+@app.command()
+def tune_models(experiment_name: str, use_gpu: bool = False,
+                num_cpu_workers: int = 1, num_gpu_workers: int = 1,
+                num_runs: int = 1, num_samples: int = None,
+                num_epochs: int = None, batch_size: int = None,
+                smoke_test: bool = False) -> ray.tune.result_grid.ResultGrid:
+    """Hyperparameter tuning experiment.
+
+    Args:
+        experiment_name (str): name of the experiment for this training workload.
+        use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
+        num_cpu_workers (int, optional): number of cpu workers to use for
+            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
+        num_gpu_workers (int, optional): number of gpu workers to use for
+                training (if `use_gpu` is false). Defaults to 1.
+        num_runs (int, optional): number of runs in this tuning experiment. Defaults to 1.
+        num_samples (int, optional): number of samples to use from dataset.
+            If this is passed in, it will override the config. Defaults to None.
+        num_epochs (int, optional): number of epochs to train for.
+            If this is passed in, it will override the config. Defaults to None.
+        batch_size (int, optional): number of samples per batch.
+            If this is passed in, it will override the config. Defaults to None.
+        smoke_test (bool, optional): will not save new config after tuning experiment. Defaults to False.
+
+    Returns:
+        ray.tune.result_grid.ResultGrid: results of the tuning experiment.
+    """
+    # Set up
+    utils.set_seeds()
+    train_loop_config = utils.load_dict(path=CONFIG_FP)
+    train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
+    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
+    train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
+    train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
+
     # Scaling config
     scaling_config = ScalingConfig(
-        num_workers=num_workers,
+        num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
         use_gpu=use_gpu,
         _max_cpu_fraction_per_node=0.8,
     )
 
+    # Dataset
+    ds = data.load_data(num_samples=train_loop_config["num_samples"])
+    train_ds, val_ds, test_ds = data.split_data(ds=ds, test_size=0.3)
+    dataset_config = {
+        "train": DatasetConfig(randomize_block_order=False),
+        "val": DatasetConfig(randomize_block_order=False),
+    }
+
     # Trainer
-    args = utils.load_dict(path=args_fp)
     trainer = TorchTrainer(
-        train_loop_per_worker=train.training_loop,
-        train_loop_config=args,
+        train_loop_per_worker=train.train_loop_per_worker,
+        train_loop_config=train_loop_config,
         scaling_config=scaling_config,
+        datasets={"train": train_ds, "val": val_ds},
+        dataset_config=dataset_config,
+        preprocessor=data.get_preprocessor(),
     )
 
     # Run configuration
-    stopping_criteria = {"training_iteration": args["num_epochs"]}  # auto incremented at every train step
+    checkpoint_config = CheckpointConfig(num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min")
+    stopping_criteria = {"training_iteration": train_loop_config["num_epochs"]}  # auto incremented at every train step
     run_config = RunConfig(
         callbacks=[MLflowLoggerCallbackFixed(
-            tracking_uri=config.MLFLOW_TRACKING_URI,
+            tracking_uri=MLFLOW_TRACKING_URI,
             experiment_name=experiment_name,
             save_artifact=True)],
-        stop=stopping_criteria
+        checkpoint_config=checkpoint_config,
+        stop=stopping_criteria,
     )
 
     # Parameter space
     param_space = {
         "train_loop_config": {
-            "dropout_p": tune.uniform(0.3, 0.7),
-            "lr": tune.loguniform(1e-5, 1e-3)
+            "dropout_p": tune.uniform(0.3, 0.9),
+            "lr": tune.loguniform(1e-5, 5e-4),
+            "lr_factor": tune.uniform(0.1, 0.9),
+            "lr_patience": tune.uniform(1, 10),
         }
     }
 
     # Stopping criteria
     scheduler = AsyncHyperBandScheduler(
-        max_t=args["num_epochs"],  # max epoch (<time_attr>) per trial
+        max_t=train_loop_config["num_epochs"],  # max epoch (<time_attr>) per trial
         grace_period=1,  # min epoch (<time_attr>) per trial
     )
 
@@ -88,8 +136,19 @@ def tune_models(experiment_name: str, num_runs: int = 10, num_workers: int = 1,
 
     # Tune
     result_grid = tuner.fit()
+
+    # Save best config
+    if not smoke_test:
+        best_trial = result_grid.get_best_result(metric="val_loss", mode="min")
+        train_loop_config = {**train_loop_config, **best_trial.config["train_loop_config"]}
+        del train_loop_config["device"]
+        utils.save_dict(train_loop_config, path=CONFIG_FP)
+
     return result_grid
 
 
 if __name__ == "__main__":
+    if ray.is_initialized():
+        ray.shutdown()
+    ray.init()
     app()

@@ -1,4 +1,5 @@
 # config.py
+import os
 import mlflow
 from pathlib import Path
 import pretty_errors
@@ -8,28 +9,23 @@ BASE_DIR = Path(__file__).parent.parent.absolute()
 CONFIG_DIR = Path(BASE_DIR, "config")
 DATA_DIR = Path(BASE_DIR, "data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-ARGS_FP = Path(CONFIG_DIR, "args.json")
+CONFIG_FP = Path(CONFIG_DIR, "config.json")
 
 # Config MLflow
-try:
-    MODEL_REGISTRY = Path("/mnt/user_storage/mlruns")  # needs write access
-    Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
-except OSError:
-    MODEL_REGISTRY = Path("/tmp/mlruns")
-    Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
+mlflow_dir = "/mnt/user_storage"
+MODEL_REGISTRY = Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
+Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
 MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
 # Datasets
-DATASETS_URL = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets"
-LABELED_PROJECTS_URL = f"{DATASETS_URL}/labeled_projects.csv"
-
-# Misc
+# DATASET_URL = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/labeled_projects.csv"
+DATASET_URL = "~/Desktop/data/labeled_projects.csv"
 ACCEPTED_TAGS = [
     "natural-language-processing",
     "computer-vision",
     "mlops",
-    "graph-learning",
+    "other",
 ]
 STOPWORDS = [
     "i",

@@ -1,21 +1,42 @@
 # madewithml/predict.py
-import mlflow
-from ray.train.torch import TorchCheckpoint
+import pandas as pd
+from typing import Any, Dict, Iterable, List
 
-def predict_tag(texts, tokenizer, model, label_encoder):
-    encoded_input = tokenizer(texts, return_tensors="pt", padding=True)
-    inputs = [encoded_input["input_ids"], encoded_input["attention_mask"]]
-    y_pred = model.predict(inputs=inputs)
-    label = label_encoder.decode(y_pred)
-    return label
+import ray
+
+def decode(indices: Iterable[Any], index_to_class: Dict) -> List:
+    """Decode indices to labels.
+
+    Args:
+        indices (Iterable[Any]): Iterable (list, array, etc.) with indices.
+        index_to_class (Dict): mapping between indices and labels.
+
+    Returns:
+        List: list of labels.
+    """
+    return [index_to_class[index] for index in indices]
+
+def predict_tags(df: pd.DataFrame, predictor: ray.train.Predictor, index_to_class: Dict) -> List:
+    """Predict tags for input data from a dataframe.
+
+    Args:
+        df (pd.DataFrame): dataframe with input features.
+        predictor (ray.train.Predictor): loaded predictor from a checkpoint.
+        index_to_class (Dict): mapping between indices and labels.
+
+    Returns:
+        List: list of predicted labels.
+    """
+    z = predictor.predict(data=df)["predictions"]
+    predictions = decode(z.argmax(1), index_to_class)
+    return predictions
+
+@app.command()
+def predict_tag():
+    pass
 
 
-def predict(texts, experiment_name=None):
-    """Predict labels using a model from an experiment (or best experiment)."""
-    # Sorted runs
-    sorted_runs = mlflow.search_runs(
-        experiment_names=[experiment_name],
-        order_by=["metrics.val_loss ASC"],
-        search_all_experiments=True,  # only honored if experiment_names is None
-    )
+if __name__ == "__main__":
+    app()
+
 

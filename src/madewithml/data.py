@@ -1,216 +1,138 @@
 # madewithml/data.py
-from collections import Counter
-import json
-from nltk.stem import PorterStemmer
+from functools import partial
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import ray.train as train
 import re
-from sklearn.model_selection import train_test_split
-import torch
 from transformers import BertTokenizer
+from typing import Dict, List, Tuple
 
-from config import config
-from madewithml import utils
+import ray
+from ray.data.preprocessors import Chain, BatchMapper
+
+from config.config import ACCEPTED_TAGS, DATASET_URL, STOPWORDS
 
 
-def clean_text(text, lower=True, stem=False, stopwords=config.STOPWORDS):
-    """Clean raw text."""
+
+def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Dataset:
+    """Load data from source into a Ray Dataset.
+
+    Args:
+        num_samples (int, optional): The number of samples to load. Defaults to None.
+        num_partitions (int, optional): Number of shards to separate the data into. Defaults to 1.
+
+    Returns:
+        ray.data.Dataset: Our dataset represented by a Ray Dataset.
+    """
+    ds = ray.data.read_csv(DATASET_URL).repartition(num_partitions)
+    ds = ds.random_shuffle(seed=1234)
+    ds = ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
+    return ds
+
+
+def split_data(ds: ray.data.Dataset, test_size: float) -> Tuple[ray.data.Dataset]:
+    """Split the dataset into train, val and test splits.
+
+    Args:
+        ds (ray.data.Dataset): Ray Dataset to split.
+        test_size (float): proportion of entire dataset to use for the test split.
+            Train and val splits will equally split the remaining proportion of the dataset.
+
+    Returns:
+        Tuple[ray.data.Dataset]: three data splits (train, val and test).
+    """
+    train_ds, _ = ds.train_test_split(test_size=test_size)
+    val_ds, test_ds = _.train_test_split(test_size=0.5)
+    return train_ds, val_ds, test_ds
+
+
+def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
+    """Clean raw text string.
+
+    Args:
+        text (str): Raw text to clean.
+        stopwords (List, optional): _description_. Defaults to STOPWORDS.
+
+    Returns:
+        str: _description_
+    """
     # Lower
-    if lower:
-        text = text.lower()
+    text = text.lower()
 
     # Remove stopwords
-    if len(stopwords):
-        pattern = re.compile(r'\b(' + r"|".join(stopwords) + r")\b\s*")
-        text = pattern.sub('', text)
+    pattern = re.compile(r'\b(' + r"|".join(stopwords) + r")\b\s*")
+    text = pattern.sub('', text)
 
     # Spacing and filters
-    text = re.sub(
-        r"([!\"'#$%&()*\+,-./:;<=>?@\\\[\]^_`{|}~])", r" \1 ", text
-    )  # add spacing between objects to be filtered
+    text = re.sub(r"([!\"'#$%&()*\+,-./:;<=>?@\\\[\]^_`{|}~])", r" \1 ", text)  # add spacing
     text = re.sub("[^A-Za-z0-9]+", " ", text)  # remove non alphanumeric chars
     text = re.sub(" +", " ", text)  # remove multiple spaces
     text = text.strip()  # strip white space at the ends
-
-    # Remove links
-    text = re.sub(r"http\S+", "", text)
-
-    # Stemming
-    if stem:
-        stemmer = PorterStemmer()
-        text = " ".join([stemmer.stem(word, to_lowercase=lower) for word in text.split(" ")])
+    text = re.sub(r"http\S+", "", text)  #  remove links
 
     return text
 
 
-def replace_oos_labels(df, labels, label_col, oos_label="other"):
-    """Replace out of scope (oos) labels."""
-    oos_tags = [item for item in df[label_col].unique() if item not in labels]
-    df[label_col] = df[label_col].apply(lambda x: oos_label if x in oos_tags else x)
-    return df
+def preprocess(df: pd.DataFrame) -> pd.DataFrame:
+    """Preprocess the data in our dataframe.
 
+    Args:
+        df (pd.DataFrame): Raw dataframe to preprocess.
 
-def replace_minority_labels(df, label_col, min_freq, new_label="other"):
-    """Replace minority labels with another label."""
-    labels = Counter(df[label_col].values)
-    labels_above_freq = Counter(label for label in labels.elements() if (labels[label] >= min_freq))
-    df[label_col] = df[label_col].apply(lambda label: label if label in labels_above_freq else None)
-    df[label_col] = df[label_col].fillna(new_label)
-    return df
-
-
-def preprocess(df, lower, stem, min_freq):
-    """Preprocess the data."""
+    Returns:
+        pd.DataFrame: Dataframe with preprocessing applied to it.
+    """
     df["text"] = df.title + " " + df.description  # feature engineering
-    df.text = df.text.apply(clean_text, lower=lower, stem=stem)  # clean text
-    df = replace_oos_labels(df=df, labels=config.ACCEPTED_TAGS, label_col="tag", oos_label="other")  # replace OOS labels
-    df = replace_minority_labels(df=df, label_col="tag", min_freq=min_freq, new_label="other")  # replace labels below min freq
+    df["text"] = df.text.apply(clean_text)  # clean text
+    df = df.drop(columns=["id", "created_on", "title", "description"], errors="ignore")  # drop columns
+    df["tag"] = df.tag.apply(lambda x: x if x in ACCEPTED_TAGS else "other")  # replace OOS tags
+    df = df[["text", "tag"]]  # rearrange columns
     return df
 
 
-class LabelEncoder(object):
-    """Encode labels into unique indices."""
-    def __init__(self, class_to_index={}):
-        self.class_to_index = class_to_index or {}  # mutable defaults ;)
-        self.index_to_class = {v: k for k, v in self.class_to_index.items()}
-        self.classes = list(self.class_to_index.keys())
+def tokenize(batch: Dict) -> Dict:
+    """Tokenize the text input in our batch using a tokenizer.
 
-    def __len__(self):
-        return len(self.class_to_index)
+    Args:
+        batch (Dict): batch of data with the text inputs to tokenize.
 
-    def __str__(self):
-        return f"<LabelEncoder(num_classes={len(self)})>"
-
-    def fit(self, y):
-        classes = np.unique(y)
-        for i, class_ in enumerate(classes):
-            self.class_to_index[class_] = i
-        self.index_to_class = {v: k for k, v in self.class_to_index.items()}
-        self.classes = list(self.class_to_index.keys())
-        return self
-
-    def encode(self, y):
-        encoded = np.zeros((len(y)), dtype=int)
-        for i, item in enumerate(y):
-            encoded[i] = self.class_to_index[item]
-        return encoded
-
-    def decode(self, y):
-        classes = []
-        for i, item in enumerate(y):
-            classes.append(self.index_to_class[item])
-        return classes
-
-    def save(self, fp):
-        with open(fp, "w") as fp:
-            contents = {"class_to_index": self.class_to_index}
-            json.dump(contents, fp, indent=4, sort_keys=False)
-
-    @classmethod
-    def load(cls, fp):
-        with open(fp, "r") as fp:
-            kwargs = json.load(fp=fp)
-        return cls(**kwargs)
-
-
-def get_data_splits(X, y, train_size=0.7):
-    """Generate balanced data splits."""
-    X_train, X_, y_train, y_ = train_test_split(
-        X, y, train_size=train_size, stratify=y)
-    X_val, X_test, y_val, y_test = train_test_split(
-        X_, y_, train_size=0.5, stratify=y_)
-    return X_train, X_val, X_test, y_train, y_val, y_test
-
-
-def tokenize_data(X, tokenizer):
-    encoded_input = tokenizer(X, return_tensors="pt", padding=True)
-    ids = encoded_input["input_ids"]
-    masks = encoded_input["attention_mask"]
-    return ids, masks
-
-
-def prep_data(args):
-    # Set up
-    utils.set_seeds()
-    df = pd.read_csv(config.LABELED_PROJECTS_URL)  # ingest
-    df = df.sample(frac=1).reset_index(drop=True)  # shuffle
-    df = df[: args["num_samples"]]  # subset
-
-    # Preprocess
-    df = preprocess(df, lower=args["lower"], stem=args["stem"], min_freq=args["min_freq"])  # preprocess
-
-    # Split
-    X, y = df.text.to_list(), df.tag.to_list()  # inputs and outputs
-    label_encoder = LabelEncoder().fit(y)  # encode labels
-    X_train, X_val, X_test, y_train, y_val, y_test = get_data_splits(X=X, y=label_encoder.encode(y))
-    class_weights = {i: 1.0/count for i, count in enumerate(np.bincount(y_train))}
-
-    # Tokenize
+    Returns:
+        Dict: batch of data with the results of tokenization (`input_ids` and `attention_mask`) on the text inputs.
+    """
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    X_train_ids, X_train_masks = tokenize_data(X_train, tokenizer=tokenizer)
-    X_val_ids, X_val_masks = tokenize_data(X_val, tokenizer=tokenizer)
-    X_test_ids, X_test_masks = tokenize_data(X_test, tokenizer=tokenizer)
-
-    return [X_train_ids, X_train_masks, y_train], \
-           [X_val_ids, X_val_masks, y_val], \
-           [X_test_ids, X_test_masks, y_test], \
-           label_encoder, class_weights
+    encoded_inputs = tokenizer(batch["text"].tolist(), return_tensors="np", padding="max_length", max_length=50)
+    return dict(ids=encoded_inputs["input_ids"], masks=encoded_inputs["attention_mask"], targets=np.array(batch["tag"]))
 
 
-class TransformerTextDataset(torch.utils.data.Dataset):
-    def __init__(self, ids, masks, targets):
-        self.ids = ids
-        self.masks = masks
-        self.targets = targets
+def to_one_hot(batch: Dict, num_classes: int) -> Dict:
+    """Convert the encoded labels into one-hot vectors.
 
-    def __len__(self):
-        return len(self.targets)
+    Args:
+        batch (Dict): batch of data with targets to make into one-hot vectors.
+        num_classes (int): number of classes so we can determine width of our one-hot vectors.
 
-    def __str__(self):
-        return f"<Dataset(N={len(self)})>"
-
-    def __getitem__(self, index):
-        ids = self.ids[index]
-        masks = self.masks[index]
-        targets = self.targets[index]
-        return ids, masks, targets
-
-    def create_dataloader(self, batch_size, shuffle=False, drop_last=False):
-        return torch.utils.data.DataLoader(
-            dataset=self,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            drop_last=drop_last,
-            pin_memory=False)
+    Returns:
+        Dict: batch of data with one-hot encoded targets.
+    """
+    targets = batch["targets"]
+    one_hot = np.zeros((len(targets), num_classes))
+    one_hot[np.arange(len(targets)), targets] = 1
+    batch["targets"] = one_hot
+    return batch
 
 
-def to_one_hot(x):
-    one_hot = np.zeros((x.size, x.max()+1))
-    one_hot[np.arange(x.size), x] = 1
-    return one_hot
+def get_preprocessor() -> ray.data.preprocessor.Preprocessor:
+    """Create the preprocessor for our task.
+
+    Returns:
+        ray.data.preprocessor.Preprocessor: A single combined `Preprocessor` created from our multiple preprocessors.
+    """
+    num_classes = len(ACCEPTED_TAGS)
+    preprocessor = Chain(
+        BatchMapper(preprocess, batch_format="pandas"),
+        ray.data.preprocessors.LabelEncoder(label_column="tag"),
+        BatchMapper(tokenize, batch_format="pandas"),
+        BatchMapper(partial(to_one_hot, num_classes=num_classes), batch_format="numpy"))
+    return preprocessor
 
 
-def prep_data_loaders(train_data, val_data, test_data, batch_size):
-    # Separate data
-    X_train_ids, X_train_masks, y_train = train_data
-    X_val_ids, X_val_masks, y_val = val_data
-    X_test_ids, X_test_masks, y_test = test_data
 
-    # Dataset
-    train_dataset = TransformerTextDataset(ids=X_train_ids, masks=X_train_masks, targets=to_one_hot(y_train))
-    val_dataset = TransformerTextDataset(ids=X_val_ids, masks=X_val_masks, targets=to_one_hot(y_val))
-    test_dataset = TransformerTextDataset(ids=X_test_ids, masks=X_test_masks, targets=to_one_hot(y_test))
-
-    # Create dataloader
-    train_dataloader = train_dataset.create_dataloader(batch_size=batch_size)
-    val_dataloader = val_dataset.create_dataloader(batch_size=batch_size)
-    test_dataloader = test_dataset.create_dataloader(batch_size=batch_size)
-
-    # Prepare dataloader
-    train_dataloader = train.torch.prepare_data_loader(train_dataloader)
-    val_dataloader = train.torch.prepare_data_loader(val_dataloader)
-    test_dataloader = train.torch.prepare_data_loader(test_dataloader)
-
-    return train_dataloader, val_dataloader, test_dataloader
