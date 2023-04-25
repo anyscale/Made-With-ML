@@ -59,6 +59,7 @@ dev = [
     "madewithml[docs]",
     "madewithml[style]",
     "madewithml[test]",
+    "fastapi-0.95.1",
     "pre-commit==2.19.0",
     "rich==13.3.4",
     "typer==0.7.0",

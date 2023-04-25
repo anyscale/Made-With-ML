@@ -2,11 +2,14 @@
 import json
 import os
 import random
+from datetime import datetime
+from functools import wraps
 from typing import Any, Dict, List
 
 import numpy as np
 import ray
 import torch
+from starlette.requests import Request
 
 
 def set_seeds(seed: int = 42):
@@ -59,3 +62,23 @@ def get_values(ds: ray.data.Dataset, col: str) -> List:
         List: a list of the column's values.
     """
     return ds.select_columns([col]).to_pandas()[col].tolist()
+
+
+def construct_response(f):
+    """Construct a JSON response for an endpoint."""
+
+    @wraps(f)
+    def wrap(request: Request, *args, **kwargs) -> Dict:
+        results = f(request, *args, **kwargs)
+        response = {
+            "message": results["message"],
+            "method": request.method,
+            "status-code": results["status-code"],
+            "timestamp": datetime.now().isoformat(),
+            "url": request.url._url,
+        }
+        if "data" in results:
+            response["data"] = results["data"]
+        return response
+
+    return wrap
