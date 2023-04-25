@@ -1,26 +1,81 @@
 # config.py
+import logging
 import os
-import mlflow
+import sys
 from pathlib import Path
-import pretty_errors
+
+import mlflow
+import pretty_errors  # NOQA: F401 (imported but unused)
+from rich.logging import RichHandler
 
 # Directories
 BASE_DIR = Path(__file__).parent.parent.absolute()
 CONFIG_DIR = Path(BASE_DIR, "config")
+CONFIG_FP = Path(CONFIG_DIR, "config.json")
 DATA_DIR = Path(BASE_DIR, "data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-CONFIG_FP = Path(CONFIG_DIR, "config.json")
+LOGS_DIR = Path(BASE_DIR, "logs")
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Config MLflow
 mlflow_dir = "/mnt/user_storage"
-MODEL_REGISTRY = Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
+MODEL_REGISTRY = (
+    Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
+)
 Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
 MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
+# Logger
+logging_config = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "minimal": {"format": "%(message)s"},
+        "detailed": {
+            "format": "%(levelname)s %(asctime)s [%(name)s:%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "minimal",
+            "level": logging.DEBUG,
+        },
+        "info": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": Path(LOGS_DIR, "info.log"),
+            "maxBytes": 10485760,  # 1 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "level": logging.INFO,
+        },
+        "error": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": Path(LOGS_DIR, "error.log"),
+            "maxBytes": 10485760,  # 1 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "level": logging.ERROR,
+        },
+    },
+    "root": {
+        "handlers": ["console", "info", "error"],
+        "level": logging.INFO,
+        "propagate": True,
+    },
+}
+
+# Logger
+logging.config.dictConfig(logging_config)
+logger = logging.getLogger()
+logger.handlers[0] = RichHandler(markup=True)  # pretty formatting
+
 # Datasets
-# DATASET_URL = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/labeled_projects.csv"
-DATASET_URL = "~/Desktop/data/labeled_projects.csv"
+DATASET_URL = (
+    "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/labeled_projects.csv"
+)
 ACCEPTED_TAGS = [
     "natural-language-processing",
     "computer-vision",

@@ -1,17 +1,22 @@
 # madewithml/train.py
-import numpy as np
-import torch
-import torch.nn as nn
-from transformers import BertModel
-import typer
 from typing import Tuple
 
+import numpy as np
 import ray
-from ray.air import Checkpoint, session
-from ray.air.config import CheckpointConfig, DatasetConfig, RunConfig, ScalingConfig
-from ray.air.integrations.mlflow import MLflowLoggerCallback
 import ray.train as train
+import torch
+import torch.nn as nn
+import typer
+from ray.air import session
+from ray.air.config import (
+    CheckpointConfig,
+    DatasetConfig,
+    RunConfig,
+    ScalingConfig,
+)
+from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.train.torch import TorchCheckpoint, TorchTrainer
+from transformers import BertModel
 
 from config.config import ACCEPTED_TAGS, CONFIG_FP, MLFLOW_TRACKING_URI
 from madewithml import data, utils
@@ -21,9 +26,14 @@ from madewithml.models import FinetunedLLM
 app = typer.Typer()
 
 
-def train_step(ds: ray.data.Dataset, batch_size: int, model: nn.Module,
-               loss_fn: torch.nn.modules.loss._WeightedLoss,
-               optimizer: torch.optim.Optimizer, device: str) -> float:
+def train_step(
+    ds: ray.data.Dataset,
+    batch_size: int,
+    model: nn.Module,
+    loss_fn: torch.nn.modules.loss._WeightedLoss,
+    optimizer: torch.optim.Optimizer,
+    device: str,
+) -> float:
     """Train step.
 
     Args:
@@ -50,9 +60,13 @@ def train_step(ds: ray.data.Dataset, batch_size: int, model: nn.Module,
     return loss
 
 
-def eval_step(ds: ray.data.Dataset, batch_size: int, model: nn.Module,
-               loss_fn: torch.nn.modules.loss._WeightedLoss,
-               device: str) -> Tuple[float, np.array, np.array]:
+def eval_step(
+    ds: ray.data.Dataset,
+    batch_size: int,
+    model: nn.Module,
+    loss_fn: torch.nn.modules.loss._WeightedLoss,
+    device: str,
+) -> Tuple[float, np.array, np.array]:
     """Eval step.
 
     Args:
@@ -79,7 +93,6 @@ def eval_step(ds: ray.data.Dataset, batch_size: int, model: nn.Module,
     return loss, np.vstack(y_trues), np.vstack(y_preds)
 
 
-
 def train_loop_per_worker(config: dict) -> None:
     """Training loop that each worker will execute.
 
@@ -104,19 +117,22 @@ def train_loop_per_worker(config: dict) -> None:
 
     # Model
     llm = BertModel.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    model = FinetunedLLM(llm=llm, dropout_p=dropout_p,
-                         embedding_dim=llm.config.hidden_size,
-                         num_classes=len(ACCEPTED_TAGS))
+    model = FinetunedLLM(
+        llm=llm,
+        dropout_p=dropout_p,
+        embedding_dim=llm.config.hidden_size,
+        num_classes=len(ACCEPTED_TAGS),
+    )
     model = train.torch.prepare_model(model)
 
     # Training components
     loss_fn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=lr_factor, patience=lr_patience)
+        optimizer, mode="min", factor=lr_factor, patience=lr_patience
+    )
 
     # Train
-    best_val_loss = np.inf
     batch_size_per_worker = batch_size // session.get_world_size()
     for epoch in range(num_epochs):
         # Step
@@ -125,16 +141,25 @@ def train_loop_per_worker(config: dict) -> None:
         scheduler.step(val_loss)
 
         # Checkpoint
-        artifacts = dict(epoch=epoch, model=model.state_dict())
-        metrics = dict(epoch=epoch, lr=optimizer.param_groups[0]["lr"], train_loss=train_loss, val_loss=val_loss)
+        metrics = dict(
+            epoch=epoch,
+            lr=optimizer.param_groups[0]["lr"],
+            train_loss=train_loss,
+            val_loss=val_loss,
+        )
         session.report(metrics, checkpoint=TorchCheckpoint.from_model(model=model))
 
 
 @app.command()
-def train_model(experiment_name: str, use_gpu: bool = False,
-                num_cpu_workers: int = 1, num_gpu_workers: int = 1,
-                num_samples: int = None, num_epochs: int = None,
-                batch_size: int = None) -> ray.air.result.Result:
+def train_model(
+    experiment_name: str,
+    use_gpu: bool = False,
+    num_cpu_workers: int = 1,
+    num_gpu_workers: int = 1,
+    num_samples: int = None,
+    num_epochs: int = None,
+    batch_size: int = None,
+) -> ray.air.result.Result:
     """Main train function to train our model as a distributed workload.
 
     Args:
@@ -157,7 +182,9 @@ def train_model(experiment_name: str, use_gpu: bool = False,
     # Set up
     train_loop_config = utils.load_dict(path=CONFIG_FP)
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
+    train_loop_config["num_samples"] = (
+        num_samples if num_samples else train_loop_config["num_samples"]
+    )
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
@@ -169,14 +196,19 @@ def train_model(experiment_name: str, use_gpu: bool = False,
     )
 
     # Run config
-    checkpoint_config = CheckpointConfig(num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min")
+    checkpoint_config = CheckpointConfig(
+        num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
+    )
     run_config = RunConfig(
-        callbacks=[MLflowLoggerCallback(
-            tracking_uri=MLFLOW_TRACKING_URI,
-            experiment_name=experiment_name,
-            save_artifact=True)],
+        callbacks=[
+            MLflowLoggerCallback(
+                tracking_uri=MLFLOW_TRACKING_URI,
+                experiment_name=experiment_name,
+                save_artifact=True,
+            )
+        ],
         checkpoint_config=checkpoint_config,
-)
+    )
 
     # Dataset
     ds = data.load_data(num_samples=train_loop_config["num_samples"])

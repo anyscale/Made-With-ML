@@ -1,17 +1,21 @@
 # madewithml/tune.py
-import typer
-
 import ray
+import typer
 from ray import tune
-from ray.air.config import CheckpointConfig, DatasetConfig, RunConfig, ScalingConfig
+from ray.air.config import (
+    CheckpointConfig,
+    DatasetConfig,
+    RunConfig,
+    ScalingConfig,
+)
 from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.train.torch import TorchTrainer
 from ray.tune import Tuner
+from ray.tune.experiment import Trial
 from ray.tune.schedulers import AsyncHyperBandScheduler
 
 from config.config import CONFIG_FP, MLFLOW_TRACKING_URI
 from madewithml import data, train, utils
-
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -31,11 +35,17 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):
 
 
 @app.command()
-def tune_models(experiment_name: str, use_gpu: bool = False,
-                num_cpu_workers: int = 1, num_gpu_workers: int = 1,
-                num_runs: int = 1, num_samples: int = None,
-                num_epochs: int = None, batch_size: int = None,
-                smoke_test: bool = False) -> ray.tune.result_grid.ResultGrid:
+def tune_models(
+    experiment_name: str,
+    use_gpu: bool = False,
+    num_cpu_workers: int = 1,
+    num_gpu_workers: int = 1,
+    num_runs: int = 1,
+    num_samples: int = None,
+    num_epochs: int = None,
+    batch_size: int = None,
+    smoke_test: bool = False,
+) -> ray.tune.result_grid.ResultGrid:
     """Hyperparameter tuning experiment.
 
     Args:
@@ -61,7 +71,9 @@ def tune_models(experiment_name: str, use_gpu: bool = False,
     utils.set_seeds()
     train_loop_config = utils.load_dict(path=CONFIG_FP)
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
+    train_loop_config["num_samples"] = (
+        num_samples if num_samples else train_loop_config["num_samples"]
+    )
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
@@ -91,13 +103,20 @@ def tune_models(experiment_name: str, use_gpu: bool = False,
     )
 
     # Run configuration
-    checkpoint_config = CheckpointConfig(num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min")
-    stopping_criteria = {"training_iteration": train_loop_config["num_epochs"]}  # auto incremented at every train step
+    checkpoint_config = CheckpointConfig(
+        num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
+    )
+    stopping_criteria = {
+        "training_iteration": train_loop_config["num_epochs"]
+    }  # auto incremented at every train step
     run_config = RunConfig(
-        callbacks=[MLflowLoggerCallbackFixed(
-            tracking_uri=MLFLOW_TRACKING_URI,
-            experiment_name=experiment_name,
-            save_artifact=True)],
+        callbacks=[
+            MLflowLoggerCallbackFixed(
+                tracking_uri=MLFLOW_TRACKING_URI,
+                experiment_name=experiment_name,
+                save_artifact=True,
+            )
+        ],
         checkpoint_config=checkpoint_config,
         stop=stopping_criteria,
     )
@@ -120,10 +139,7 @@ def tune_models(experiment_name: str, use_gpu: bool = False,
 
     # Tune config
     tune_config = tune.TuneConfig(
-        metric="val_loss",
-        mode="min",
-        num_samples=num_runs,
-        scheduler=scheduler
+        metric="val_loss", mode="min", num_samples=num_runs, scheduler=scheduler
     )
 
     # Tuner

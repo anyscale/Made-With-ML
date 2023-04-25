@@ -1,16 +1,15 @@
 # madewithml/data.py
-from functools import partial
-import numpy as np
-import pandas as pd
 import re
-from transformers import BertTokenizer
+from functools import partial
 from typing import Dict, List, Tuple
 
+import numpy as np
+import pandas as pd
 import ray
-from ray.data.preprocessors import Chain, BatchMapper
+from ray.data.preprocessors import BatchMapper, Chain
+from transformers import BertTokenizer
 
 from config.config import ACCEPTED_TAGS, DATASET_URL, STOPWORDS
-
 
 
 def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Dataset:
@@ -25,7 +24,9 @@ def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Data
     """
     ds = ray.data.read_csv(DATASET_URL).repartition(num_partitions)
     ds = ds.random_shuffle(seed=1234)
-    ds = ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
+    ds = (
+        ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
+    )
     return ds
 
 
@@ -59,15 +60,15 @@ def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
     text = text.lower()
 
     # Remove stopwords
-    pattern = re.compile(r'\b(' + r"|".join(stopwords) + r")\b\s*")
-    text = pattern.sub('', text)
+    pattern = re.compile(r"\b(" + r"|".join(stopwords) + r")\b\s*")
+    text = pattern.sub("", text)
 
     # Spacing and filters
     text = re.sub(r"([!\"'#$%&()*\+,-./:;<=>?@\\\[\]^_`{|}~])", r" \1 ", text)  # add spacing
     text = re.sub("[^A-Za-z0-9]+", " ", text)  # remove non alphanumeric chars
     text = re.sub(" +", " ", text)  # remove multiple spaces
     text = text.strip()  # strip white space at the ends
-    text = re.sub(r"http\S+", "", text)  #  remove links
+    text = re.sub(r"http\S+", "", text)  # remove links
 
     return text
 
@@ -83,7 +84,9 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     """
     df["text"] = df.title + " " + df.description  # feature engineering
     df["text"] = df.text.apply(clean_text)  # clean text
-    df = df.drop(columns=["id", "created_on", "title", "description"], errors="ignore")  # drop columns
+    df = df.drop(
+        columns=["id", "created_on", "title", "description"], errors="ignore"
+    )  # drop columns
     df["tag"] = df.tag.apply(lambda x: x if x in ACCEPTED_TAGS else "other")  # replace OOS tags
     df = df[["text", "tag"]]  # rearrange columns
     return df
@@ -99,8 +102,14 @@ def tokenize(batch: Dict) -> Dict:
         Dict: batch of data with the results of tokenization (`input_ids` and `attention_mask`) on the text inputs.
     """
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    encoded_inputs = tokenizer(batch["text"].tolist(), return_tensors="np", padding="max_length", max_length=50)
-    return dict(ids=encoded_inputs["input_ids"], masks=encoded_inputs["attention_mask"], targets=np.array(batch["tag"]))
+    encoded_inputs = tokenizer(
+        batch["text"].tolist(), return_tensors="np", padding="max_length", max_length=50
+    )
+    return dict(
+        ids=encoded_inputs["input_ids"],
+        masks=encoded_inputs["attention_mask"],
+        targets=np.array(batch["tag"]),
+    )
 
 
 def to_one_hot(batch: Dict, num_classes: int) -> Dict:
@@ -131,8 +140,6 @@ def get_preprocessor() -> ray.data.preprocessor.Preprocessor:
         BatchMapper(preprocess, batch_format="pandas"),
         ray.data.preprocessors.LabelEncoder(label_column="tag"),
         BatchMapper(tokenize, batch_format="pandas"),
-        BatchMapper(partial(to_one_hot, num_classes=num_classes), batch_format="numpy"))
+        BatchMapper(partial(to_one_hot, num_classes=num_classes), batch_format="numpy"),
+    )
     return preprocessor
-
-
-

@@ -58,7 +58,10 @@ python src/madewithml/tune.py llm \
 
 ### Inference
 ```bash
-python src/madewithml/predict.py
+python src/madewithml/predict.py \
+    --title "Transfer learning with transformers" \
+    --description "Using transformers for transfer learning on text classification tasks." \
+    --experiment-name llm
 ```
 
 ### Smoke tests
@@ -87,4 +90,3 @@ Now we can open up a notebook → Kernel (top menu bar) → Change Kernel → `v
 jupyter kernelspec list  # show see our venv
 jupyter kernelspec uninstall venv
 ```
-

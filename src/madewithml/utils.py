@@ -1,16 +1,12 @@
 # madewithml/utils.py
-import os
 import json
-import mlflow
-import numpy as np
-from pathlib import Path
+import os
 import random
-import torch
 from typing import Any, Dict, List
-from urllib.parse import urlparse
 
+import numpy as np
 import ray
-from ray.air import Checkpoint
+import torch
 
 
 def set_seeds(seed: int = 42):
@@ -63,20 +59,3 @@ def get_values(ds: ray.data.Dataset, col: str) -> List:
         List: a list of the column's values.
     """
     return ds.select_columns([col]).to_pandas()[col].tolist()
-
-
-def get_best_checkpoint(run_id: str) ->  ray.train.Checkpoint:
-    """Get the best checkpoint (by performance) from a specific run.
-
-    Args:
-        run_id (str): ID of the run to get the best checkpoint from.
-
-    Returns:
-        ray.train.Checkpoint: Best Checkpoint from the run.
-    """
-    artifact_uri = mlflow.get_run(run_id).to_dictionary()["info"]["artifact_uri"]
-    artifact_dir = urlparse(artifact_uri).path
-    checkpoint_dirs = sorted([f for f in os.listdir(artifact_dir) if f.startswith("checkpoint_")])
-    best_checkpoint_dir = checkpoint_dirs[-2] if len(checkpoint_dirs) > 1 else checkpoint_dirs[-1]
-    best_checkpoint = Checkpoint.from_directory(path=Path(artifact_dir, best_checkpoint_dir))
-    return best_checkpoint
