@@ -9,7 +9,6 @@ import mlflow
 import pandas as pd
 import ray
 import torch
-import torch.nn.functional as F
 import typer
 from numpyencoder import NumpyEncoder
 from ray.air import Checkpoint
@@ -66,7 +65,7 @@ def predict_with_probs(
         List: list of predicted labels.
     """
     z = predictor.predict(data=df)["predictions"]
-    y_prob = F.softmax(torch.from_numpy(z[0])).numpy()
+    y_prob = torch.tensor(z).softmax(dim=1).numpy()
     results = []
     for i, prob in enumerate(y_prob):
         tag = decode([z[i].argmax()], index_to_class)

@@ -28,7 +28,7 @@ def evaluate_ds(
 
     # y_pred
     z = predictor.predict(data=ds.to_pandas())["predictions"]
-    y_pred = z.argmax(1)
+    y_pred = np.stack(z).argmax(1)
 
     # Evaluate
     metrics = precision_recall_fscore_support(y_true, y_pred, average="weighted")

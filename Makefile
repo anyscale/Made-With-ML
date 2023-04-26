@@ -14,10 +14,11 @@ venv:
 	source venv/bin/activate && \
 	python3 -m pip install --upgrade pip setuptools wheel && \
 	python3 -m pip install -e ".[dev]"
+	@echo -e "\nVirtual environment created -> run 'source venv/bin/activate'"
 
 # Testing
 test:
-	echo "testing"
+	@echo "testing"
 
 # Styling
 .PHONY: style
