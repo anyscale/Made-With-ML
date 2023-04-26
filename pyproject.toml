@@ -18,7 +18,7 @@ dependencies = [
     "numpyencoder==0.3.0",
     "pandas==1.4.4",
     "pretty-errors==1.2.25",
-    "ray[air]==2.3.0",
+    "ray==2.4.0",
     "scikit-learn==1.2.2",
     "snorkel==0.9.9",
     "torch==2.0.0",
