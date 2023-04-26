@@ -77,6 +77,25 @@ python src/madewithml/tune.py test \
     --smoke-test
 ```
 
+## Serve
+```bash
+# via Bash
+ray start --head  # already running if using Anyscale
+python src/app/api.py
+curl -G \
+  --data-urlencode 'title=Transfer learning with transformers for text classification.' \
+  --data-urlencode 'description=Using transformers for transfer learning on text classification tasks.' \
+  http://127.0.0.1:8000/
+ray stop
+```
+```python
+# via Python
+import requests
+title = "Transfer learning with transformers for text classification."
+description = "Using transformers for transfer learning on text classification tasks."
+requests.get("http://127.0.0.1:8000/", params={"title": title, "description": description}).json()
+```
+
 ## FAQ
 
 ### Jupyter notebook kernels
