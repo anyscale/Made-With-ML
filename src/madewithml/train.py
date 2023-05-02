@@ -1,4 +1,3 @@
-# madewithml/train.py
 from typing import Tuple
 
 import numpy as np
@@ -15,6 +14,7 @@ from ray.air.config import (
     ScalingConfig,
 )
 from ray.air.integrations.mlflow import MLflowLoggerCallback
+from ray.data import Dataset
 from ray.train.torch import TorchCheckpoint, TorchTrainer
 from transformers import BertModel
 
@@ -27,17 +27,17 @@ app = typer.Typer()
 
 
 def train_step(
-    ds: ray.data.Dataset,
+    ds: Dataset,
     batch_size: int,
     model: nn.Module,
     loss_fn: torch.nn.modules.loss._WeightedLoss,
     optimizer: torch.optim.Optimizer,
     device: str,
-) -> float:
+) -> float:  # pragma: no cover, tested via train workload
     """Train step.
 
     Args:
-        ds (ray.data.Dataset): dataset to iterate batches from.
+        ds (Dataset): dataset to iterate batches from.
         batch_size (int): size of each batch.
         model (nn.Module): model to train.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
@@ -61,16 +61,16 @@ def train_step(
 
 
 def eval_step(
-    ds: ray.data.Dataset,
+    ds: Dataset,
     batch_size: int,
     model: nn.Module,
     loss_fn: torch.nn.modules.loss._WeightedLoss,
     device: str,
-) -> Tuple[float, np.array, np.array]:
+) -> Tuple[float, np.array, np.array]:  # pragma: no cover, tested via train workload
     """Eval step.
 
     Args:
-        ds (ray.data.Dataset): dataset to iterate batches from.
+        ds (Dataset): dataset to iterate batches from.
         batch_size (int): size of each batch.
         model (nn.Module): model to train.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
@@ -93,7 +93,7 @@ def eval_step(
     return loss, np.vstack(y_trues), np.vstack(y_preds)
 
 
-def train_loop_per_worker(config: dict) -> None:
+def train_loop_per_worker(config: dict) -> None:  # pragma: no cover, tested via train workload
     """Training loop that each worker will execute.
 
     Args:
@@ -188,6 +188,16 @@ def train_model(
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
+    # Dataset
+    ds = data.load_data(
+        num_samples=train_loop_config["num_samples"], num_partitions=num_cpu_workers
+    )
+    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+    dataset_config = {
+        "train": DatasetConfig(randomize_block_order=False),
+        "val": DatasetConfig(randomize_block_order=False),
+    }
+
     # Scaling config
     scaling_config = ScalingConfig(
         num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
@@ -195,28 +205,22 @@ def train_model(
         _max_cpu_fraction_per_node=0.8,
     )
 
-    # Run config
+    # Checkpoint config
     checkpoint_config = CheckpointConfig(
         num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
     )
+
+    # MLflow callback
+    mlflow_callback = MLflowLoggerCallback(
+        tracking_uri=MLFLOW_TRACKING_URI,
+        experiment_name=experiment_name,
+        save_artifact=True)
+
+    # Run config
     run_config = RunConfig(
-        callbacks=[
-            MLflowLoggerCallback(
-                tracking_uri=MLFLOW_TRACKING_URI,
-                experiment_name=experiment_name,
-                save_artifact=True,
-            )
-        ],
+        callbacks=[mlflow_callback],
         checkpoint_config=checkpoint_config,
     )
-
-    # Dataset
-    ds = data.load_data(num_samples=train_loop_config["num_samples"])
-    train_ds, val_ds, test_ds = data.split_data(ds=ds, test_size=0.3)
-    dataset_config = {
-        "train": DatasetConfig(randomize_block_order=False),
-        "val": DatasetConfig(randomize_block_order=False),
-    }
 
     # Trainer
     trainer = TorchTrainer(

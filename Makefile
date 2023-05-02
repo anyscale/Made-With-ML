@@ -18,7 +18,7 @@ venv:
 
 # Testing
 test:
-	@echo "testing"
+	python3 -m pytest --cov src/madewithml --cov-report html --disable-warnings
 
 # Styling
 .PHONY: style
@@ -36,4 +36,4 @@ clean: style
 	find . | grep -E ".pytest_cache" | xargs rm -rf
 	find . | grep -E ".ipynb_checkpoints" | xargs rm -rf
 	find . | grep -E ".trash" | xargs rm -rf
-	rm -f .coverage
+	rm -f .coverage*

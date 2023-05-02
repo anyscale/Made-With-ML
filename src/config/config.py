@@ -6,7 +6,6 @@ from pathlib import Path
 
 import mlflow
 import pretty_errors  # NOQA: F401 (imported but unused)
-from rich.logging import RichHandler
 
 # Directories
 BASE_DIR = Path(__file__).parent.parent.absolute()
@@ -70,12 +69,11 @@ logging_config = {
 # Logger
 logging.config.dictConfig(logging_config)
 logger = logging.getLogger()
-logger.handlers[0] = RichHandler(markup=True)  # pretty formatting
 
 # Datasets
-DATASET_URL = (
-    "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/labeled_projects.csv"
-)
+DATASET_DIR = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml"
+DATASET_URL = f"{DATASET_DIR}/dataset.csv"
+HOLDOUT_URL = f"{DATASET_DIR}/holdout.csv"
 ACCEPTED_TAGS = [
     "natural-language-processing",
     "computer-vision",

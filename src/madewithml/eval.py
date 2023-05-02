@@ -1,21 +1,19 @@
-# madewithml/evaluate.py
 from typing import Dict
 
 import numpy as np
 import ray
 import ray.train.torch  # NOQA: F401 (imported but unused)
+from ray.data import Dataset
 from sklearn.metrics import precision_recall_fscore_support
 
 from madewithml import utils
 
 
-def evaluate_ds(
-    ds: ray.data.Dataset, predictor: ray.train.torch.torch_predictor.TorchPredictor
-) -> Dict:
+def evaluate_ds(ds: Dataset, predictor: ray.train.torch.torch_predictor.TorchPredictor) -> Dict:
     """Evaluate a model's performance on a labeled dataset.
 
     Args:
-        ds (ray.data.Dataset): Ray Dataset with labels.
+        ds (Dataset): Ray Dataset with labels.
         predictor (ray.train.torch.torch_predictor.TorchPredictor): Ray Predictor from a checkpoint.
 
     Returns:

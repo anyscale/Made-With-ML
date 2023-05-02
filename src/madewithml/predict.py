@@ -1,4 +1,3 @@
-# madewithml/predict.py
 import json
 import os
 from pathlib import Path
@@ -13,6 +12,7 @@ import typer
 from numpyencoder import NumpyEncoder
 from ray.air import Checkpoint
 from ray.train.torch import TorchPredictor
+from ray.train.torch.torch_checkpoint import TorchCheckpoint
 
 from config.config import logger  # also needed to set MLflow URI
 
@@ -53,7 +53,7 @@ def predict_with_probs(
     df: pd.DataFrame,
     predictor: ray.train.torch.torch_predictor.TorchPredictor,
     index_to_class: Dict,
-) -> List:
+) -> List:  # pragma: no cover, tested with inference workload
     """Predict tags (with probabilities) for input data from a dataframe.
 
     Args:
@@ -73,14 +73,32 @@ def predict_with_probs(
     return results
 
 
-def get_best_checkpoint(run_id: str) -> ray.train.torch.torch_checkpoint.TorchCheckpoint:
+def get_best_run_id(experiment_name: str, metric: str, direction: str) -> str:  # pragma: no cover, mlflow logic
+    """Get the best run_id from an MLflow experiment.
+
+    Args:
+        experiment_name (str): name of the experiment.
+        metric (str): metric to filter by.
+        direction (str): direction of metric (ASC/DESC).
+
+    Returns:
+        str: best run id from experiment.
+    """
+    sorted_runs = mlflow.search_runs(
+        experiment_names=[experiment_name], order_by=[f"metrics.{metric} {direction}"]
+    )
+    run_id = sorted_runs.iloc[0].run_id
+    return run_id
+
+
+def get_best_checkpoint(run_id: str) -> TorchCheckpoint:
     """Get the best checkpoint (by performance) from a specific run.
 
     Args:
         run_id (str): ID of the run to get the best checkpoint from.
 
     Returns:
-        ray.train.torch.torch_checkpoint.TorchCheckpoint: Best `TorchCheckpoint` from the run.
+        TorchCheckpoint: Best checkpoint from the run.
     """
     artifact_uri = mlflow.get_run(run_id).to_dictionary()["info"]["artifact_uri"]
     artifact_dir = urlparse(artifact_uri).path
@@ -91,28 +109,17 @@ def get_best_checkpoint(run_id: str) -> ray.train.torch.torch_checkpoint.TorchCh
 
 
 @app.command()
-def predict(
-    title: str = "", description: str = "", experiment_name: str = None, run_id: str = None
-) -> Dict:
+def predict(title: str = "", description: str = "", run_id: str = None) -> Dict:  # pragma: no cover, tested with inference workload
     """Predict the tag for a project given it's title and description.
 
     Args:
         title (str, optional): project title. Defaults to "".
         description (str, optional): project description. Defaults to "".
-        experiment_name (str, optional): name of the experiment (used to find best
-            `run_id` if it's not provided. Defaults to None.
-        run_id (str, optional): id of the specific run to load from. Defaults to None.
+        run_id (str): id of the specific run to load from. Defaults to None.
 
     Returns:
         Dict: prediction results for the input data.
     """
-    # Run ID
-    if not run_id:
-        sorted_runs = mlflow.search_runs(
-            experiment_names=[experiment_name], order_by=["metrics.val_loss ASC"]
-        )
-        run_id = sorted_runs.iloc[0].run_id
-
     # Load components
     best_checkpoint = get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)

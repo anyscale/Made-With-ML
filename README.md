@@ -26,9 +26,9 @@ python3 -m pip install -e ".[notebook]"
 jupyter lab notebooks/finetune_llm.ipynb
 ```
 
-### Scripts
+### Development
 
-Execute the commands below inside the virtual environment to load the files necessary for running through our entire application.
+Execute the commands below inside the virtual environment to prepare for development.
 
 ```bash
 python3 -m pip install -e ".[dev]"
@@ -56,38 +56,70 @@ python src/madewithml/tune.py llm \
     --num-gpu-workers 2
 ```
 
+### Evaluation
+```bash
+```
+
 ### Inference
 ```bash
+# Get run ID
+run_id=$(python -c "
+from madewithml import predict
+run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+print(run_id)")
+echo "Run ID: $run_id"
+
+# Predict
 python src/madewithml/predict.py \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks." \
-    --experiment-name llm
+    --run-id $run_id
+```
+```json
+[{
+  "pred": [
+    "natural-language-processing"
+  ],
+  "prob": {
+    "computer-vision": 0.0009767753,
+    "mlops": 0.0008223939,
+    "natural-language-processing": 0.99762577,
+    "other": 0.000575123
+  }
+}]
 ```
 
-### Smoke tests
-```bash
-python src/madewithml/tune.py test \
-    --use-gpu \
-    --num-cpu-workers 40 \
-    --num-gpu-workers 2 \
-    --num-runs 1 \
-    --num-samples 100 \
-    --num-epochs 1 \
-    --batch-size 32 \
-    --smoke-test
+## Batch inference (offline)
 ```
 
-## Serve
+```
+
+## Online inference (Serve)
 ```bash
-# via Bash
+# Set up
 ray start --head  # already running if using Anyscale
-python src/app/api.py
+
+# Get run ID
+run_id=$(python -c "
+from madewithml import predict
+run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+print(run_id)")
+echo "Run ID: $run_id"
+
+# Run application
+python src/madewithml/serve.py --run_id $run_id
+
+# Prediction
 curl -G \
   --data-urlencode 'title=Transfer learning with transformers for text classification.' \
   --data-urlencode 'description=Using transformers for transfer learning on text classification tasks.' \
   http://127.0.0.1:8000/
+
+# Shutdown
 ray stop
 ```
+
+While the application is running, we can use it via Python as well:
 ```python
 # via Python
 import requests

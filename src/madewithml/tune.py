@@ -1,4 +1,3 @@
-# madewithml/tune.py
 import ray
 import typer
 from ray import tune
@@ -13,6 +12,8 @@ from ray.train.torch import TorchTrainer
 from ray.tune import Tuner
 from ray.tune.experiment import Trial
 from ray.tune.schedulers import AsyncHyperBandScheduler
+from ray.tune.search import ConcurrencyLimiter
+from ray.tune.search.hyperopt import HyperOptSearch
 
 from config.config import CONFIG_FP, MLFLOW_TRACKING_URI
 from madewithml import data, train, utils
@@ -22,7 +23,7 @@ app = typer.Typer()
 
 
 # Fixing https://github.com/ray-project/ray/blob/3aa6ede43743a098b5e0eb37ec11505f46100313/python/ray/air/integrations/mlflow.py#L301
-class MLflowLoggerCallbackFixed(MLflowLoggerCallback):
+class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, tested in larger tune workload
     def log_trial_start(self, trial: "Trial"):
         if trial not in self._trial_runs:
             tags = self.tags.copy()
@@ -44,7 +45,6 @@ def tune_models(
     num_samples: int = None,
     num_epochs: int = None,
     batch_size: int = None,
-    smoke_test: bool = False,
 ) -> ray.tune.result_grid.ResultGrid:
     """Hyperparameter tuning experiment.
 
@@ -62,7 +62,6 @@ def tune_models(
             If this is passed in, it will override the config. Defaults to None.
         batch_size (int, optional): number of samples per batch.
             If this is passed in, it will override the config. Defaults to None.
-        smoke_test (bool, optional): will not save new config after tuning experiment. Defaults to False.
 
     Returns:
         ray.tune.result_grid.ResultGrid: results of the tuning experiment.
@@ -77,20 +76,22 @@ def tune_models(
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
+    # Dataset
+    ds = data.load_data(
+        num_samples=train_loop_config["num_samples"], num_partitions=num_cpu_workers
+    )
+    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+    dataset_config = {
+        "train": DatasetConfig(randomize_block_order=False),
+        "val": DatasetConfig(randomize_block_order=False),
+    }
+
     # Scaling config
     scaling_config = ScalingConfig(
         num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
         use_gpu=use_gpu,
         _max_cpu_fraction_per_node=0.8,
     )
-
-    # Dataset
-    ds = data.load_data(num_samples=train_loop_config["num_samples"])
-    train_ds, val_ds, test_ds = data.split_data(ds=ds, test_size=0.3)
-    dataset_config = {
-        "train": DatasetConfig(randomize_block_order=False),
-        "val": DatasetConfig(randomize_block_order=False),
-    }
 
     # Trainer
     trainer = TorchTrainer(
@@ -102,24 +103,34 @@ def tune_models(
         preprocessor=data.get_preprocessor(),
     )
 
-    # Run configuration
+    # Checkpoint configuration
     checkpoint_config = CheckpointConfig(
         num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
     )
     stopping_criteria = {
         "training_iteration": train_loop_config["num_epochs"]
     }  # auto incremented at every train step
+
+    # Run configuration
+    mlflow_callback = MLflowLoggerCallbackFixed(
+        tracking_uri=MLFLOW_TRACKING_URI,
+        experiment_name=experiment_name,
+        save_artifact=True,
+    )
     run_config = RunConfig(
-        callbacks=[
-            MLflowLoggerCallbackFixed(
-                tracking_uri=MLFLOW_TRACKING_URI,
-                experiment_name=experiment_name,
-                save_artifact=True,
-            )
-        ],
+        callbacks=[mlflow_callback],
         checkpoint_config=checkpoint_config,
         stop=stopping_criteria,
     )
+
+    # Hyperparameters to start with
+    initial_params = [
+        {"train_loop_config": {"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}}
+    ]
+    search_alg = HyperOptSearch(points_to_evaluate=initial_params)
+    search_alg = ConcurrencyLimiter(
+        search_alg, max_concurrent=2
+    )  # trade off b/w optimization and search space
 
     # Parameter space
     param_space = {
@@ -139,7 +150,11 @@ def tune_models(
 
     # Tune config
     tune_config = tune.TuneConfig(
-        metric="val_loss", mode="min", num_samples=num_runs, scheduler=scheduler
+        metric="val_loss",
+        mode="min",
+        search_alg=search_alg,
+        scheduler=scheduler,
+        num_samples=num_runs,
     )
 
     # Tuner
@@ -151,16 +166,9 @@ def tune_models(
     )
 
     # Tune
-    result_grid = tuner.fit()
+    results = tuner.fit()
 
-    # Save best config
-    if not smoke_test:
-        best_trial = result_grid.get_best_result(metric="val_loss", mode="min")
-        train_loop_config = {**train_loop_config, **best_trial.config["train_loop_config"]}
-        del train_loop_config["device"]
-        utils.save_dict(train_loop_config, path=CONFIG_FP)
-
-    return result_grid
+    return results
 
 
 if __name__ == "__main__":

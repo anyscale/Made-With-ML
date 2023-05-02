@@ -1,5 +1,5 @@
-# app/api.py
-import mlflow
+import argparse
+
 import pandas as pd
 import ray
 from ray import serve
@@ -31,6 +31,8 @@ class FinetunedLLMDeployment:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run_id", help="run ID to use for serving.")
+    args = parser.parse_args()
     ray.init(address="auto")
-    sorted_runs = mlflow.search_runs(experiment_names=["llm"], order_by=["metrics.val_loss ASC"])
-    serve.run(FinetunedLLMDeployment.bind(run_id=sorted_runs.iloc[0].run_id))
+    serve.run(FinetunedLLMDeployment.bind(run_id=args.run_id))

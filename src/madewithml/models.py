@@ -1,9 +1,8 @@
-# madewithml/models.py
 import torch
 import torch.nn as nn
 
 
-class FinetunedLLM(nn.Module):
+class FinetunedLLM(nn.Module):  # pragma: no cover, torch model
     def __init__(self, llm, dropout_p, embedding_dim, num_classes):
         super(FinetunedLLM, self).__init__()
         self.llm = llm

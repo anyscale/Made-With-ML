@@ -1,4 +1,3 @@
-# madewithml/data.py
 import re
 from functools import partial
 from typing import Dict, List, Tuple
@@ -6,13 +5,15 @@ from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
 import ray
+from ray.data import Dataset
 from ray.data.preprocessors import BatchMapper, Chain
+from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
 
 from config.config import ACCEPTED_TAGS, DATASET_URL, STOPWORDS
 
 
-def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Dataset:
+def load_data(num_samples: int = None, num_partitions: int = 1) -> Dataset:
     """Load data from source into a Ray Dataset.
 
     Args:
@@ -20,7 +21,7 @@ def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Data
         num_partitions (int, optional): Number of shards to separate the data into. Defaults to 1.
 
     Returns:
-        ray.data.Dataset: Our dataset represented by a Ray Dataset.
+        Dataset: Our dataset represented by a Ray Dataset.
     """
     ds = ray.data.read_csv(DATASET_URL).repartition(num_partitions)
     ds = ds.random_shuffle(seed=1234)
@@ -30,20 +31,54 @@ def load_data(num_samples: int = None, num_partitions: int = 1) -> ray.data.Data
     return ds
 
 
-def split_data(ds: ray.data.Dataset, test_size: float) -> Tuple[ray.data.Dataset]:
-    """Split the dataset into train, val and test splits.
+def stratify_split(
+    ds: Dataset, stratify: str, test_size: float, shuffle: bool = True, seed: int = 1234
+) -> Tuple[Dataset, Dataset]:
+    """Split a dataset into train and test splits with equal
+    amounts of data points from each class in the column we
+    want to stratify on.
 
     Args:
-        ds (ray.data.Dataset): Ray Dataset to split.
-        test_size (float): proportion of entire dataset to use for the test split.
-            Train and val splits will equally split the remaining proportion of the dataset.
+        ds (Dataset): Input dataset to split.
+        stratify (str): Name of column to split on.
+        test_size (float): Proportion of dataset to split for test set.
+        shuffle (bool, optional): whether to shuffle the dataset. Defaults to True.
+        seed (int, optional): seed for shuffling. Defaults to 1234.
 
     Returns:
-        Tuple[ray.data.Dataset]: three data splits (train, val and test).
+        Tuple[Dataset, Dataset]: the stratified train and test datasets.
     """
-    train_ds, _ = ds.train_test_split(test_size=test_size)
-    val_ds, test_ds = _.train_test_split(test_size=0.5)
-    return train_ds, val_ds, test_ds
+
+    def _add_split(df: pd.DataFrame) -> pd.DataFrame:  # pragma: no cover, used in parent function
+        """Naively split a dataframe into train and test splits.
+        Add a column specifying whether it's the train or test split."""
+        train, test = train_test_split(df, test_size=test_size, shuffle=False)
+        train["_split"] = "train"
+        test["_split"] = "test"
+        return pd.concat([train, test])
+
+    def _filter_split(df: pd.DataFrame, split: str) -> pd.DataFrame:  # pragma: no cover, used in parent function
+        """Filter by data points that match the split column's value
+        and return the dataframe with the _split column dropped."""
+        return df[df["_split"] == split].drop("_split", axis=1)
+
+    # Train, test split with stratify
+    grouped = ds.groupby(stratify).map_groups(
+        _add_split, batch_format="pandas"
+    )  # group by each unique value in the column we want to stratify on
+    train_ds = grouped.map_batches(
+        _filter_split, fn_kwargs={"split": "train"}, batch_format="pandas"
+    )  # Combine data points from all groups for train split
+    test_ds = grouped.map_batches(
+        _filter_split, fn_kwargs={"split": "test"}, batch_format="pandas"
+    )  # Combine data points from all groups for test split
+
+    # Shuffle each split
+    if shuffle:
+        train_ds = train_ds.random_shuffle(seed=seed)
+        test_ds = test_ds.random_shuffle(seed=seed)
+
+    return train_ds, test_ds
 
 
 def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
@@ -61,7 +96,7 @@ def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
 
     # Remove stopwords
     pattern = re.compile(r"\b(" + r"|".join(stopwords) + r")\b\s*")
-    text = pattern.sub("", text)
+    text = pattern.sub(" ", text)
 
     # Spacing and filters
     text = re.sub(r"([!\"'#$%&()*\+,-./:;<=>?@\\\[\]^_`{|}~])", r" \1 ", text)  # add spacing
@@ -103,8 +138,7 @@ def tokenize(batch: Dict) -> Dict:
     """
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
     encoded_inputs = tokenizer(
-        batch["text"].tolist(), return_tensors="np", padding="max_length", max_length=50
-    )
+        batch["text"].tolist(), return_tensors="np", padding="longest")
     return dict(
         ids=encoded_inputs["input_ids"],
         masks=encoded_inputs["attention_mask"],
@@ -129,7 +163,7 @@ def to_one_hot(batch: Dict, num_classes: int) -> Dict:
     return batch
 
 
-def get_preprocessor() -> ray.data.preprocessor.Preprocessor:
+def get_preprocessor() -> ray.data.preprocessor.Preprocessor:  # pragma: no cover, just returns a chained preprocessor
     """Create the preprocessor for our task.
 
     Returns:
