@@ -4,17 +4,18 @@ import numpy as np
 import ray
 import ray.train.torch  # NOQA: F401 (imported but unused)
 from ray.data import Dataset
+from ray.train.torch.torch_predictor import TorchPredictor
 from sklearn.metrics import precision_recall_fscore_support
 
 from madewithml import utils
 
 
-def evaluate_ds(ds: Dataset, predictor: ray.train.torch.torch_predictor.TorchPredictor) -> Dict:
+def evaluate_ds(ds: Dataset, predictor: TorchPredictor) -> Dict:  # pragma: no cover, eval workload
     """Evaluate a model's performance on a labeled dataset.
 
     Args:
         ds (Dataset): Ray Dataset with labels.
-        predictor (ray.train.torch.torch_predictor.TorchPredictor): Ray Predictor from a checkpoint.
+        predictor (TorchPredictor): Ray Predictor from a checkpoint.
 
     Returns:
         Dict: model's performance metrics on the dataset.

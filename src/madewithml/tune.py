@@ -23,7 +23,9 @@ app = typer.Typer()
 
 
 # Fixing https://github.com/ray-project/ray/blob/3aa6ede43743a098b5e0eb37ec11505f46100313/python/ray/air/integrations/mlflow.py#L301
-class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, tested in larger tune workload
+class MLflowLoggerCallbackFixed(
+    MLflowLoggerCallback
+):  # pragma: no cover, tested in larger tune workload
     def log_trial_start(self, trial: "Trial"):
         if trial not in self._trial_runs:
             tags = self.tags.copy()
@@ -171,7 +173,7 @@ def tune_models(
     return results
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover, application
     if ray.is_initialized():
         ray.shutdown()
     ray.init()

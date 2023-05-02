@@ -37,7 +37,6 @@ notebook = [
     "jupyterlab==3.6.3",
     "lime==0.2.0.1",
     "seaborn==0.12.2",
-    "send2trash==1.8.2",
     "wordcloud==1.8.2.2",
 ]
 docs = [
@@ -95,7 +94,7 @@ virtual_env = "venv"
 [tool.flake8]
 exclude = "venv"
 ignore = ["E501", "W503", "E226"]
-max-line-length = 79
+max-line-length = 100
 # E501: Line too long
 # W503: Line break occurred before binary operator
 # E226: Missing white space around arithmetic operator
@@ -107,3 +106,7 @@ py39plus = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+
+# Pytest cov
+[tool.coverage.run]
+omit=["src/madewithml/evaluate.py", "src/madewithml/serve.py"]

@@ -212,9 +212,8 @@ def train_model(
 
     # MLflow callback
     mlflow_callback = MLflowLoggerCallback(
-        tracking_uri=MLFLOW_TRACKING_URI,
-        experiment_name=experiment_name,
-        save_artifact=True)
+        tracking_uri=MLFLOW_TRACKING_URI, experiment_name=experiment_name, save_artifact=True
+    )
 
     # Run config
     run_config = RunConfig(
@@ -238,7 +237,7 @@ def train_model(
     return result
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover, application
     if ray.is_initialized():
         ray.shutdown()
     ray.init()

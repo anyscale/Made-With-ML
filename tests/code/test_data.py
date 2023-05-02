@@ -5,11 +5,13 @@ import ray
 
 from madewithml import data
 
+
 @pytest.fixture(scope="module")
 def df():
     data = [{"title": "a0", "description": "b0", "tag": "c0"}]
     df = pd.DataFrame(data)
     return df
+
 
 def test_load_data():
     num_samples = 10
@@ -19,7 +21,7 @@ def test_load_data():
 
 def test_stratify_split():
     n_per_class = 10
-    targets = n_per_class*["c1"] + n_per_class*["c2"]
+    targets = n_per_class * ["c1"] + n_per_class * ["c2"]
     ds = ray.data.from_items([dict(target=t) for t in targets])
     train_ds, test_ds = data.stratify_split(ds, stratify="target", test_size=0.5)
     train_target_counts = train_ds.to_pandas().target.value_counts().to_dict()
@@ -61,5 +63,4 @@ def test_tokenize(df):
 def test_to_one_hot():
     in_batch = {"targets": [1]}
     out_batch = data.to_one_hot(in_batch, num_classes=3)
-    assert np.array_equal(out_batch["targets"], [[0., 1., 0.]])
-
+    assert np.array_equal(out_batch["targets"], [[0.0, 1.0, 0.0]])

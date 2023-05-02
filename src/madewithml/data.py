@@ -57,7 +57,9 @@ def stratify_split(
         test["_split"] = "test"
         return pd.concat([train, test])
 
-    def _filter_split(df: pd.DataFrame, split: str) -> pd.DataFrame:  # pragma: no cover, used in parent function
+    def _filter_split(
+        df: pd.DataFrame, split: str
+    ) -> pd.DataFrame:  # pragma: no cover, used in parent function
         """Filter by data points that match the split column's value
         and return the dataframe with the _split column dropped."""
         return df[df["_split"] == split].drop("_split", axis=1)
@@ -137,8 +139,7 @@ def tokenize(batch: Dict) -> Dict:
         Dict: batch of data with the results of tokenization (`input_ids` and `attention_mask`) on the text inputs.
     """
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    encoded_inputs = tokenizer(
-        batch["text"].tolist(), return_tensors="np", padding="longest")
+    encoded_inputs = tokenizer(batch["text"].tolist(), return_tensors="np", padding="longest")
     return dict(
         ids=encoded_inputs["input_ids"],
         masks=encoded_inputs["attention_mask"],
@@ -163,7 +164,9 @@ def to_one_hot(batch: Dict, num_classes: int) -> Dict:
     return batch
 
 
-def get_preprocessor() -> ray.data.preprocessor.Preprocessor:  # pragma: no cover, just returns a chained preprocessor
+def get_preprocessor() -> (
+    ray.data.preprocessor.Preprocessor
+):  # pragma: no cover, just returns a chained preprocessor
     """Create the preprocessor for our task.
 
     Returns:

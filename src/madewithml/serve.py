@@ -11,7 +11,7 @@ from madewithml import predict
 
 
 @serve.deployment(route_prefix="/")
-class FinetunedLLMDeployment:
+class FinetunedLLMDeployment:  # pragma: no cover, tested with inference workload
     def __init__(self, run_id):
         best_checkpoint = predict.get_best_checkpoint(run_id=run_id)
         self.predictor = TorchPredictor.from_checkpoint(best_checkpoint)

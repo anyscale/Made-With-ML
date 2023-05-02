@@ -73,7 +73,9 @@ def predict_with_probs(
     return results
 
 
-def get_best_run_id(experiment_name: str, metric: str, direction: str) -> str:  # pragma: no cover, mlflow logic
+def get_best_run_id(
+    experiment_name: str, metric: str, direction: str
+) -> str:  # pragma: no cover, mlflow logic
     """Get the best run_id from an MLflow experiment.
 
     Args:
@@ -91,7 +93,7 @@ def get_best_run_id(experiment_name: str, metric: str, direction: str) -> str:  
     return run_id
 
 
-def get_best_checkpoint(run_id: str) -> TorchCheckpoint:
+def get_best_checkpoint(run_id: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
     """Get the best checkpoint (by performance) from a specific run.
 
     Args:
@@ -109,7 +111,9 @@ def get_best_checkpoint(run_id: str) -> TorchCheckpoint:
 
 
 @app.command()
-def predict(title: str = "", description: str = "", run_id: str = None) -> Dict:  # pragma: no cover, tested with inference workload
+def predict(
+    title: str = "", description: str = "", run_id: str = None
+) -> Dict:  # pragma: no cover, tested with inference workload
     """Predict the tag for a project given it's title and description.
 
     Args:
@@ -133,5 +137,5 @@ def predict(title: str = "", description: str = "", run_id: str = None) -> Dict:
     return results
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover, application
     app()
