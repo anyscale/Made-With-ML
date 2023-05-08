@@ -6,11 +6,12 @@ import numpy as np
 import pandas as pd
 import ray
 from ray.data import Dataset
+from ray.data.preprocessor import Preprocessor
 from ray.data.preprocessors import BatchMapper, Chain
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
 
-from config.config import ACCEPTED_TAGS, DATASET_URL, STOPWORDS
+from config.config import ACCEPTED_TAGS, DATASET_LOC, STOPWORDS
 
 
 def load_data(num_samples: int = None, num_partitions: int = 1) -> Dataset:
@@ -23,16 +24,18 @@ def load_data(num_samples: int = None, num_partitions: int = 1) -> Dataset:
     Returns:
         Dataset: Our dataset represented by a Ray Dataset.
     """
-    ds = ray.data.read_csv(DATASET_URL).repartition(num_partitions)
+    ds = ray.data.read_csv(DATASET_LOC).repartition(num_partitions)
     ds = ds.random_shuffle(seed=1234)
-    ds = (
-        ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
-    )
+    ds = ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
     return ds
 
 
 def stratify_split(
-    ds: Dataset, stratify: str, test_size: float, shuffle: bool = True, seed: int = 1234
+    ds: Dataset,
+    stratify: str,
+    test_size: float,
+    shuffle: bool = True,
+    seed: int = 1234,
 ) -> Tuple[Dataset, Dataset]:
     """Split a dataset into train and test splits with equal
     amounts of data points from each class in the column we
@@ -49,7 +52,9 @@ def stratify_split(
         Tuple[Dataset, Dataset]: the stratified train and test datasets.
     """
 
-    def _add_split(df: pd.DataFrame) -> pd.DataFrame:  # pragma: no cover, used in parent function
+    def _add_split(
+        df: pd.DataFrame,
+    ) -> pd.DataFrame:  # pragma: no cover, used in parent function
         """Naively split a dataframe into train and test splits.
         Add a column specifying whether it's the train or test split."""
         train, test = train_test_split(df, test_size=test_size, shuffle=False)
@@ -57,9 +62,7 @@ def stratify_split(
         test["_split"] = "test"
         return pd.concat([train, test])
 
-    def _filter_split(
-        df: pd.DataFrame, split: str
-    ) -> pd.DataFrame:  # pragma: no cover, used in parent function
+    def _filter_split(df: pd.DataFrame, split: str) -> pd.DataFrame:  # pragma: no cover, used in parent function
         """Filter by data points that match the split column's value
         and return the dataframe with the _split column dropped."""
         return df[df["_split"] == split].drop("_split", axis=1)
@@ -121,9 +124,7 @@ def preprocess(df: pd.DataFrame) -> pd.DataFrame:
     """
     df["text"] = df.title + " " + df.description  # feature engineering
     df["text"] = df.text.apply(clean_text)  # clean text
-    df = df.drop(
-        columns=["id", "created_on", "title", "description"], errors="ignore"
-    )  # drop columns
+    df = df.drop(columns=["id", "created_on", "title", "description"], errors="ignore")  # drop columns
     df["tag"] = df.tag.apply(lambda x: x if x in ACCEPTED_TAGS else "other")  # replace OOS tags
     df = df[["text", "tag"]]  # rearrange columns
     return df
@@ -164,13 +165,11 @@ def to_one_hot(batch: Dict, num_classes: int) -> Dict:
     return batch
 
 
-def get_preprocessor() -> (
-    ray.data.preprocessor.Preprocessor
-):  # pragma: no cover, just returns a chained preprocessor
+def get_preprocessor() -> Preprocessor:  # pragma: no cover, just returns a chained preprocessor
     """Create the preprocessor for our task.
 
     Returns:
-        ray.data.preprocessor.Preprocessor: A single combined `Preprocessor` created from our multiple preprocessors.
+        Preprocessor: A single combined `Preprocessor` created from our multiple preprocessors.
     """
     num_classes = len(ACCEPTED_TAGS)
     preprocessor = Chain(

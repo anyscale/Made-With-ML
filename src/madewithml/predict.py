@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 from urllib.parse import urlparse
@@ -65,17 +64,17 @@ def predict_with_probs(
         List: list of predicted labels.
     """
     z = predictor.predict(data=df)["predictions"]
-    y_prob = torch.tensor(z).softmax(dim=1).numpy()
+    import numpy as np
+
+    y_prob = torch.tensor(np.stack(z)).softmax(dim=1).numpy()
     results = []
     for i, prob in enumerate(y_prob):
         tag = decode([z[i].argmax()], index_to_class)
-        results.append({"pred": tag, "prob": format_prob(prob, index_to_class)})
+        results.append({"prediction": tag, "probabilities": format_prob(prob, index_to_class)})
     return results
 
 
-def get_best_run_id(
-    experiment_name: str, metric: str, direction: str
-) -> str:  # pragma: no cover, mlflow logic
+def get_best_run_id(experiment_name: str, metric: str, direction: str) -> str:  # pragma: no cover, mlflow logic
     """Get the best run_id from an MLflow experiment.
 
     Args:
@@ -87,26 +86,29 @@ def get_best_run_id(
         str: best run id from experiment.
     """
     sorted_runs = mlflow.search_runs(
-        experiment_names=[experiment_name], order_by=[f"metrics.{metric} {direction}"]
+        experiment_names=[experiment_name],
+        order_by=[f"metrics.{metric} {direction}"],
     )
     run_id = sorted_runs.iloc[0].run_id
     return run_id
 
 
-def get_best_checkpoint(run_id: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
+def get_best_checkpoint(run_id: str, metric: str, direction: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
     """Get the best checkpoint (by performance) from a specific run.
 
     Args:
         run_id (str): ID of the run to get the best checkpoint from.
+        metric (str): name of metric to search by.
+        direction (str): direction of metric (min/max).
 
     Returns:
         TorchCheckpoint: Best checkpoint from the run.
     """
     artifact_uri = mlflow.get_run(run_id).to_dictionary()["info"]["artifact_uri"]
     artifact_dir = urlparse(artifact_uri).path
-    checkpoint_dirs = sorted([f for f in os.listdir(artifact_dir) if f.startswith("checkpoint_")])
-    best_checkpoint_dir = checkpoint_dirs[-2] if len(checkpoint_dirs) > 1 else checkpoint_dirs[-1]
-    best_checkpoint = Checkpoint.from_directory(path=Path(artifact_dir, best_checkpoint_dir))
+    progress_df = pd.read_csv(Path(artifact_dir, "progress.csv"))
+    best_epoch = progress_df[metric].argmin() if direction == "min" else progress_df[metric].argmax()
+    best_checkpoint = Checkpoint.from_directory(path=Path(artifact_dir, f"checkpoint_{str(best_epoch).zfill(6)}"))
     return best_checkpoint
 
 
@@ -125,7 +127,7 @@ def predict(
         Dict: prediction results for the input data.
     """
     # Load components
-    best_checkpoint = get_best_checkpoint(run_id=run_id)
+    best_checkpoint = get_best_checkpoint(run_id=run_id, metric="val_loss", direction="min")
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
     label_encoder = predictor.get_preprocessor().preprocessors[1]
     index_to_class = {v: k for k, v in label_encoder.stats_["unique_values(tag)"].items()}

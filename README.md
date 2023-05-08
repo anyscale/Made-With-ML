@@ -56,31 +56,58 @@ python src/madewithml/tune.py llm \
     --num-gpu-workers 2
 ```
 
-### Evaluation
+### View/compare experiments (MLflow)
 ```bash
+MODEL_REGISTRY=$(python -c "
+from config import config
+print(config.MODEL_REGISTRY)")
+echo "MODEL_REGISTRY: $MODEL_REGISTRY"
+
+mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
+```
+
+### Evaluation
+To save the evaluation metrics to a file, just add `> metrics.json` to the end of the command below.
+```bash
+RUN_ID=$(python -c "
+from madewithml import predict
+run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+print(run_id)")
+echo "Run ID: $RUN_ID"
+
+python src/madewithml/evaluate.py \
+    --run-id $RUN_ID \
+    --num-cpu-workers 2
+```
+```json
+{
+  "precision": 0.9164145614485539,
+  "recall": 0.9162303664921466,
+  "f1": 0.9152388901535271
+}
 ```
 
 ### Inference
 ```bash
 # Get run ID
-run_id=$(python -c "
+RUN_ID=$(python -c "
 from madewithml import predict
 run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
 print(run_id)")
-echo "Run ID: $run_id"
+echo "Run ID: $RUN_ID"
 
 # Predict
 python src/madewithml/predict.py \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks." \
-    --run-id $run_id
+    --run-id $RUN_ID
 ```
 ```json
 [{
-  "pred": [
+  "prediction": [
     "natural-language-processing"
   ],
-  "prob": {
+  "probabilities": {
     "computer-vision": 0.0009767753,
     "mlops": 0.0008223939,
     "natural-language-processing": 0.99762577,
@@ -89,25 +116,20 @@ python src/madewithml/predict.py \
 }]
 ```
 
-## Batch inference (offline)
-```
-
-```
-
-## Online inference (Serve)
+## Serve
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
 
 # Get run ID
-run_id=$(python -c "
+RUN_ID=$(python -c "
 from madewithml import predict
 run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
 print(run_id)")
-echo "Run ID: $run_id"
+echo "Run ID: $RUN_ID"
 
 # Run application
-python src/madewithml/serve.py --run_id $run_id
+python src/madewithml/serve.py --run_id $RUN_ID
 
 # Prediction
 curl -G \
@@ -117,6 +139,26 @@ curl -G \
 
 # Shutdown
 ray stop
+```
+
+## Testing
+### Code
+```bash
+python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
+open htmlcov/index.html  # with coverage report
+```
+### Data
+```bash
+pytest tests/data --disable-warnings
+```
+### Model
+```bash
+RUN_ID=$(python -c "
+from madewithml import predict
+run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+print(run_id)")
+echo "Run ID: $RUN_ID"
+pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
 While the application is running, we can use it via Python as well:

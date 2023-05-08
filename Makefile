@@ -18,8 +18,7 @@ venv:
 
 # Testing
 test:
-	python3 -m pytest --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-	open htmlcov/index.html
+	python3 -m pytest tests/code -m "not training" --disable-warnings
 	rm -rf .coverage*
 
 # Styling

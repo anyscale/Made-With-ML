@@ -10,7 +10,7 @@ repos:
     -   id: check-added-large-files
     -   id: check-added-large-files
         args: ['--maxkb=1000']
-        exclude: "notebooks/finetune_llm.ipynb"
+        exclude: "notebooks"
     -   id: check-yaml
         exclude: "mkdocs.yml"
 - repo: local

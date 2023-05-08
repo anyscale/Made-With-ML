@@ -32,7 +32,6 @@ def train_step(
     model: nn.Module,
     loss_fn: torch.nn.modules.loss._WeightedLoss,
     optimizer: torch.optim.Optimizer,
-    device: str,
 ) -> float:  # pragma: no cover, tested via train workload
     """Train step.
 
@@ -42,14 +41,13 @@ def train_step(
         model (nn.Module): model to train.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
         optimizer (torch.optimizer.Optimizer): optimizer to use for updating the model's weights.
-        device (str, optional): which device (cpu or cuda) to run on.
 
     Returns:
         float: cumulative loss for the dataset.
     """
     model.train()
     loss = 0.0
-    ds_generator = ds.iter_torch_batches(batch_size=batch_size, device=device)
+    ds_generator = ds.iter_torch_batches(batch_size=batch_size, collate_fn=utils.collate_fn)
     for i, batch in enumerate(ds_generator):
         optimizer.zero_grad()  # reset gradients
         z = model(batch)  # forward pass
@@ -61,11 +59,7 @@ def train_step(
 
 
 def eval_step(
-    ds: Dataset,
-    batch_size: int,
-    model: nn.Module,
-    loss_fn: torch.nn.modules.loss._WeightedLoss,
-    device: str,
+    ds: Dataset, batch_size: int, model: nn.Module, loss_fn: torch.nn.modules.loss._WeightedLoss
 ) -> Tuple[float, np.array, np.array]:  # pragma: no cover, tested via train workload
     """Eval step.
 
@@ -82,7 +76,7 @@ def eval_step(
     model.eval()
     loss = 0.0
     y_trues, y_preds = [], []
-    ds_generator = ds.iter_torch_batches(batch_size=batch_size, device=device)
+    ds_generator = ds.iter_torch_batches(batch_size=batch_size, collate_fn=utils.collate_fn)
     with torch.inference_mode():
         for i, batch in enumerate(ds_generator):
             z = model(batch)
@@ -93,7 +87,9 @@ def eval_step(
     return loss, np.vstack(y_trues), np.vstack(y_preds)
 
 
-def train_loop_per_worker(config: dict) -> None:  # pragma: no cover, tested via train workload
+def train_loop_per_worker(
+    config: dict,
+) -> None:  # pragma: no cover, tested via train workload
     """Training loop that each worker will execute.
 
     Args:
@@ -109,7 +105,6 @@ def train_loop_per_worker(config: dict) -> None:  # pragma: no cover, tested via
     lr_patience = config["lr_patience"]
     batch_size = config["batch_size"]
     num_epochs = config["num_epochs"]
-    device = config["device"]
 
     # Get datasets
     train_ds = session.get_dataset_shard("train")
@@ -136,8 +131,8 @@ def train_loop_per_worker(config: dict) -> None:  # pragma: no cover, tested via
     batch_size_per_worker = batch_size // session.get_world_size()
     for epoch in range(num_epochs):
         # Step
-        train_loss = train_step(train_ds, batch_size_per_worker, model, loss_fn, optimizer, device)
-        val_loss, _, _ = eval_step(val_ds, batch_size_per_worker, model, loss_fn, device)
+        train_loss = train_step(train_ds, batch_size_per_worker, model, loss_fn, optimizer)
+        val_loss, _, _ = eval_step(val_ds, batch_size_per_worker, model, loss_fn)
         scheduler.step(val_loss)
 
         # Checkpoint
@@ -182,15 +177,14 @@ def train_model(
     # Set up
     train_loop_config = utils.load_dict(path=CONFIG_FP)
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = (
-        num_samples if num_samples else train_loop_config["num_samples"]
-    )
+    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
     # Dataset
     ds = data.load_data(
-        num_samples=train_loop_config["num_samples"], num_partitions=num_cpu_workers
+        num_samples=train_loop_config["num_samples"],
+        num_partitions=num_cpu_workers,
     )
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
     dataset_config = {
@@ -207,12 +201,16 @@ def train_model(
 
     # Checkpoint config
     checkpoint_config = CheckpointConfig(
-        num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
+        num_to_keep=1,
+        checkpoint_score_attribute="val_loss",
+        checkpoint_score_order="min",
     )
 
     # MLflow callback
     mlflow_callback = MLflowLoggerCallback(
-        tracking_uri=MLFLOW_TRACKING_URI, experiment_name=experiment_name, save_artifact=True
+        tracking_uri=MLFLOW_TRACKING_URI,
+        experiment_name=experiment_name,
+        save_artifact=True,
     )
 
     # Run config

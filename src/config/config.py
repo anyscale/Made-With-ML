@@ -8,19 +8,17 @@ import mlflow
 import pretty_errors  # NOQA: F401 (imported but unused)
 
 # Directories
-BASE_DIR = Path(__file__).parent.parent.absolute()
-CONFIG_DIR = Path(BASE_DIR, "config")
+ROOT_DIR = Path(__file__).parent.parent.parent.absolute()
+CONFIG_DIR = Path(ROOT_DIR, "src", "config")
 CONFIG_FP = Path(CONFIG_DIR, "config.json")
-DATA_DIR = Path(BASE_DIR, "data")
+DATA_DIR = Path(ROOT_DIR, "data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
-LOGS_DIR = Path(BASE_DIR, "logs")
+LOGS_DIR = Path(ROOT_DIR, "logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Config MLflow
 mlflow_dir = "/mnt/user_storage"
-MODEL_REGISTRY = (
-    Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
-)
+MODEL_REGISTRY = Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
 Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
 MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
@@ -71,9 +69,8 @@ logging.config.dictConfig(logging_config)
 logger = logging.getLogger()
 
 # Datasets
-DATASET_DIR = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml"
-DATASET_URL = f"{DATASET_DIR}/dataset.csv"
-HOLDOUT_URL = f"{DATASET_DIR}/holdout.csv"
+DATASET_LOC = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+HOLDOUT_LOC = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 ACCEPTED_TAGS = [
     "natural-language-processing",
     "computer-vision",

@@ -23,9 +23,7 @@ app = typer.Typer()
 
 
 # Fixing https://github.com/ray-project/ray/blob/3aa6ede43743a098b5e0eb37ec11505f46100313/python/ray/air/integrations/mlflow.py#L301
-class MLflowLoggerCallbackFixed(
-    MLflowLoggerCallback
-):  # pragma: no cover, tested in larger tune workload
+class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, tested in larger tune workload
     def log_trial_start(self, trial: "Trial"):
         if trial not in self._trial_runs:
             tags = self.tags.copy()
@@ -72,15 +70,14 @@ def tune_models(
     utils.set_seeds()
     train_loop_config = utils.load_dict(path=CONFIG_FP)
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = (
-        num_samples if num_samples else train_loop_config["num_samples"]
-    )
+    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
     # Dataset
     ds = data.load_data(
-        num_samples=train_loop_config["num_samples"], num_partitions=num_cpu_workers
+        num_samples=train_loop_config["num_samples"],
+        num_partitions=num_cpu_workers,
     )
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
     dataset_config = {
@@ -107,11 +104,11 @@ def tune_models(
 
     # Checkpoint configuration
     checkpoint_config = CheckpointConfig(
-        num_to_keep=1, checkpoint_score_attribute="val_loss", checkpoint_score_order="min"
+        num_to_keep=1,
+        checkpoint_score_attribute="val_loss",
+        checkpoint_score_order="min",
     )
-    stopping_criteria = {
-        "training_iteration": train_loop_config["num_epochs"]
-    }  # auto incremented at every train step
+    stopping_criteria = {"training_iteration": train_loop_config["num_epochs"]}  # auto incremented at every train step
 
     # Run configuration
     mlflow_callback = MLflowLoggerCallbackFixed(
@@ -127,12 +124,17 @@ def tune_models(
 
     # Hyperparameters to start with
     initial_params = [
-        {"train_loop_config": {"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}}
+        {
+            "train_loop_config": {
+                "dropout_p": 0.5,
+                "lr": 1e-4,
+                "lr_factor": 0.8,
+                "lr_patience": 3,
+            }
+        }
     ]
     search_alg = HyperOptSearch(points_to_evaluate=initial_params)
-    search_alg = ConcurrencyLimiter(
-        search_alg, max_concurrent=2
-    )  # trade off b/w optimization and search space
+    search_alg = ConcurrencyLimiter(search_alg, max_concurrent=2)  # trade off b/w optimization and search space
 
     # Parameter space
     param_space = {

@@ -1,10 +1,14 @@
 import json
 import os
 import random
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import numpy as np
 import torch
+from ray.air._internal.torch_utils import (
+    convert_ndarray_batch_to_torch_tensor_batch,
+    get_device,
+)
 from ray.data import Dataset
 
 
@@ -47,7 +51,7 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
         fp.write("\n")
 
 
-def get_values(ds: Dataset, col: str) -> List:
+def get_values(ds: Dataset, col: str) -> np.ndarray:
     """Return a list of values from a specific column in a Ray Dataset.
 
     Args:
@@ -55,6 +59,39 @@ def get_values(ds: Dataset, col: str) -> List:
         col (str): name of the column to extract values from.
 
     Returns:
-        List: a list of the column's values.
+        np.array: an array of the column's values.
     """
-    return ds.select_columns([col]).to_pandas()[col].tolist()
+    return np.stack(ds.select_columns([col]).to_pandas()[col])
+
+
+def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:
+    """Pad an 2D array with zeros until all rows in the
+    2D array are of the same length as a the longest
+    row in the 2D array.
+
+    Args:
+        arr (np.array): input array
+
+    Returns:
+        np.array: zero padded array
+    """
+    max_len = max(len(row) for row in arr)
+    padded_arr = np.zeros((arr.shape[0], max_len), dtype=dtype)
+    for i, row in enumerate(arr):
+        padded_arr[i][: len(row)] = row
+    return padded_arr
+
+
+def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
+    """Convert a batch of numpy arrays to tensors.
+
+    Args:
+        batch (Dict[str, np.ndarray]): input batch as a dictionary of numpy arrays.
+
+    Returns:
+        Dict[str, torch.Tensor]: output batch as a dictionary of tensors.
+    """
+    for k, v in batch.items():
+        batch[k] = pad_array(v)
+    dtypes = {"ids": torch.int32, "masks": torch.int32, "targets": torch.float64}
+    return convert_ndarray_batch_to_torch_tensor_batch(batch, dtypes=dtypes, device=get_device())
