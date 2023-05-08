@@ -20,6 +20,10 @@ python3 -m pip install -e ".[dev]"
 ## Workloads
 
 1. Start by exploring the interactive [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
+```bash
+# Start notebook
+jupyter lab notebooks/madewithml.ipynb
+```
 2. Then execute the same workloads using the clean Python scripts following software engineering best practices (testing, documentation, logging, serving, versioning, etc.)
 
 **Note**: Change the `--use-gpu`, `--num-cpu-workers` and `--num-gpu-workers` configurations based on your system's resources.
