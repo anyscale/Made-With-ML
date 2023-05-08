@@ -7,36 +7,20 @@ git clone https://github.com/anyscale/mmwl-playground.git mwml-playground
 cd mwml-playground
 ```
 
-### Virtual environment
+### Environment
 ```bash
-mkdir src
 python3 -m venv venv  # use Python >= 3.9
 source venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install -e ".[dev]"
 ```
 
 > We highly recommend using Python `3.9.1` (required: `>=3.9`). You can use [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows) to quickly install and set local python versions for this project.
 
-### Notebook
-
-Execute the commands below inside the virtual environment to load the files necessary for running through our [notebook](notebooks/madewithml.ipynb).
-
-```bash
-python3 -m pip install -e ".[notebook]"
-jupyter lab notebooks/finetune_llm.ipynb
-```
-
-### Development
-
-Execute the commands below inside the virtual environment to prepare for development.
-
-```bash
-python3 -m pip install -e ".[dev]"
-pre-commit install
-pre-commit autoupdate
-```
-
 ## Workloads
+
+1. Start by exploring the interactive [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
+2. Then execute the same workloads using the clean Python scripts following software engineering best practices (testing, documentation, logging, serving, versioning, etc.)
 
 **Note**: Change the `--use-gpu`, `--num-cpu-workers` and `--num-gpu-workers` configurations based on your system's resources.
 
@@ -116,7 +100,7 @@ python src/madewithml/predict.py \
 }]
 ```
 
-## Serve
+### Serve
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
@@ -140,27 +124,6 @@ curl -G \
 # Shutdown
 ray stop
 ```
-
-## Testing
-### Code
-```bash
-python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-open htmlcov/index.html  # with coverage report
-```
-### Data
-```bash
-pytest tests/data --disable-warnings
-```
-### Model
-```bash
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
-pytest --run-id=$RUN_ID tests/model --disable-warnings
-```
-
 While the application is running, we can use it via Python as well:
 ```python
 # via Python
@@ -168,6 +131,24 @@ import requests
 title = "Transfer learning with transformers for text classification."
 description = "Using transformers for transfer learning on text classification tasks."
 requests.get("http://127.0.0.1:8000/", params={"title": title, "description": description}).json()
+```
+
+### Testing
+```bash
+# Code
+python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
+open htmlcov/index.html
+
+# Data
+pytest tests/data --disable-warnings
+
+# Model
+RUN_ID=$(python -c "
+from madewithml import predict
+run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+print(run_id)")
+echo "Run ID: $RUN_ID"
+pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
 ## FAQ

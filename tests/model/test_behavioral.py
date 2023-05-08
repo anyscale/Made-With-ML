@@ -42,7 +42,7 @@ def get_label_fixture(predictor, index_to_class):
         ),
     ],
 )
-def test_inv(input_a, input_b, label, get_label_fixture):
+def test_invariance(input_a, input_b, label, get_label_fixture):
     """INVariance via verb injection (changes should not affect outputs)."""
     label_a = get_label_fixture(input_a)
     label_b = get_label_fixture(input_b)
@@ -66,7 +66,7 @@ def test_inv(input_a, input_b, label, get_label_fixture):
         ),
     ],
 )
-def test_dir(input, label, get_label_fixture):
+def test_directional(input, label, get_label_fixture):
     """DIRectional expectations (changes with known outputs)."""
     prediction = get_label_fixture(text=input)
     assert label == prediction
