@@ -118,23 +118,30 @@ echo "Run ID: $RUN_ID"
 
 # Run application
 python src/madewithml/serve.py --run_id $RUN_ID
-
-# Prediction
-curl -G \
-  --data-urlencode 'title=Transfer learning with transformers for text classification.' \
-  --data-urlencode 'description=Using transformers for transfer learning on text classification tasks.' \
-  http://127.0.0.1:8000/
-
-# Shutdown
-ray stop
 ```
-While the application is running, we can use it via Python as well:
+
+While the application is running, we can use it via cURL, Python, etc.
+```bash
+# via cURL
+curl -X POST -H "Content-Type: application/json" -d '{
+  "title": "Transfer learning with transformers",
+  "description": "Using transformers for transfer learning on text classification tasks."
+}' http://127.0.0.1:8000/
+```
 ```python
 # via Python
+import json
 import requests
-title = "Transfer learning with transformers for text classification."
+title = "Transfer learning with transformers"
 description = "Using transformers for transfer learning on text classification tasks."
-requests.get("http://127.0.0.1:8000/", params={"title": title, "description": description}).json()
+json_data = json.dumps({"title": title, "description": description})
+requests.post("http://127.0.0.1:8000/", data=json_data).json()
+```
+
+Once we're done, we can shut down the application:
+```
+# Shutdown
+ray stop
 ```
 
 ### Testing

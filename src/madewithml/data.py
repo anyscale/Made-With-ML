@@ -57,7 +57,7 @@ def stratify_split(
     ) -> pd.DataFrame:  # pragma: no cover, used in parent function
         """Naively split a dataframe into train and test splits.
         Add a column specifying whether it's the train or test split."""
-        train, test = train_test_split(df, test_size=test_size, shuffle=False)
+        train, test = train_test_split(df, test_size=test_size, shuffle=shuffle, random_state=seed)
         train["_split"] = "train"
         test["_split"] = "test"
         return pd.concat([train, test])
@@ -78,10 +78,9 @@ def stratify_split(
         _filter_split, fn_kwargs={"split": "test"}, batch_format="pandas"
     )  # Combine data points from all groups for test split
 
-    # Shuffle each split
-    if shuffle:
-        train_ds = train_ds.random_shuffle(seed=seed)
-        test_ds = test_ds.random_shuffle(seed=seed)
+    # Shuffle each split (required)
+    train_ds = train_ds.random_shuffle(seed=seed)
+    test_ds = test_ds.random_shuffle(seed=seed)
 
     return train_ds, test_ds
 

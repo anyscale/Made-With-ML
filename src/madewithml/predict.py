@@ -69,7 +69,7 @@ def predict_with_probs(
     y_prob = torch.tensor(np.stack(z)).softmax(dim=1).numpy()
     results = []
     for i, prob in enumerate(y_prob):
-        tag = decode([z[i].argmax()], index_to_class)
+        tag = decode([z[i].argmax()], index_to_class)[0]
         results.append({"prediction": tag, "probabilities": format_prob(prob, index_to_class)})
     return results
 

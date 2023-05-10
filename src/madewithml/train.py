@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import typer
 from ray.air import session
+from ray.air._internal.torch_utils import get_device
 from ray.air.config import (
     CheckpointConfig,
     DatasetConfig,
@@ -120,8 +121,16 @@ def train_loop_per_worker(
     )
     model = train.torch.prepare_model(model)
 
+    # Class weights
+    batch_counts = []
+    for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=data.collate_fn):
+        batch_counts.append(np.bincount(batch["targets"].argmax(1)))
+    counts = [sum(count) for count in zip(*batch_counts)]
+    class_weights = np.array([1.0 / count for i, count in enumerate(counts)])
+    class_weights_tensor = torch.Tensor(class_weights, device=get_device())
+
     # Training components
-    loss_fn = nn.BCEWithLogitsLoss()
+    loss_fn = nn.BCEWithLogitsLoss(weight=class_weights_tensor)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=lr_factor, patience=lr_patience
@@ -181,17 +190,6 @@ def train_model(
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
-    # Dataset
-    ds = data.load_data(
-        num_samples=train_loop_config["num_samples"],
-        num_partitions=num_cpu_workers,
-    )
-    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
-    dataset_config = {
-        "train": DatasetConfig(randomize_block_order=False),
-        "val": DatasetConfig(randomize_block_order=False),
-    }
-
     # Scaling config
     scaling_config = ScalingConfig(
         num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
@@ -219,6 +217,26 @@ def train_model(
         checkpoint_config=checkpoint_config,
     )
 
+    # Dataset
+    ds = data.load_data(
+        num_samples=train_loop_config["num_samples"],
+        num_partitions=num_cpu_workers,
+    )
+    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+
+    # Dataset config
+    dataset_config = {
+        "train": DatasetConfig(fit=False, transform=False, randomize_block_order=False),
+        "val": DatasetConfig(fit=False, transform=False, randomize_block_order=False),
+    }
+
+    # Preprocess
+    preprocessor = data.get_preprocessor()
+    train_ds = preprocessor.fit_transform(train_ds)
+    val_ds = preprocessor.transform(val_ds)
+    train_ds = train_ds.materialize()
+    val_ds = val_ds.materialize()
+
     # Trainer
     trainer = TorchTrainer(
         train_loop_per_worker=train_loop_per_worker,
@@ -227,7 +245,7 @@ def train_model(
         run_config=run_config,
         datasets={"train": train_ds, "val": val_ds},
         dataset_config=dataset_config,
-        preprocessor=data.get_preprocessor(),
+        preprocessor=preprocessor,
     )
 
     # Train

@@ -13,8 +13,8 @@ venv:
 	python3 -m venv venv
 	source venv/bin/activate && \
 	python3 -m pip install --upgrade pip setuptools wheel && \
-	python3 -m pip install -e ".[dev]"
-	pre-commit install
+	python3 -m pip install -e ".[dev]" && \
+	pre-commit install && \
 	pre-commit autoupdate
 	@echo -e "\nVirtual environment created -> run 'source venv/bin/activate'"
 
@@ -38,5 +38,4 @@ clean: style
 	find . | grep -E "(__pycache__|\.pyc|\.pyo)" | xargs rm -rf
 	find . | grep -E ".pytest_cache" | xargs rm -rf
 	find . | grep -E ".ipynb_checkpoints" | xargs rm -rf
-	find . | grep -E ".trash" | xargs rm -rf
 	rm -rf .coverage*

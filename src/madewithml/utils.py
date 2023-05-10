@@ -51,8 +51,8 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
         fp.write("\n")
 
 
-def get_values(ds: Dataset, col: str) -> np.ndarray:
-    """Return a list of values from a specific column in a Ray Dataset.
+def get_arr_col(ds: Dataset, col: str) -> np.ndarray:
+    """Return an array of values from a specific array column in a Ray Dataset.
 
     Args:
         ds (Dataset): Ray Dataset.
@@ -61,7 +61,8 @@ def get_values(ds: Dataset, col: str) -> np.ndarray:
     Returns:
         np.array: an array of the column's values.
     """
-    return np.stack(ds.select_columns([col]).to_pandas()[col])
+    values = ds.map_batches(lambda batch: batch[col].values)
+    return np.stack(values.take_all())
 
 
 def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:

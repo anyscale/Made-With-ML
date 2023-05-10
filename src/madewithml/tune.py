@@ -74,23 +74,32 @@ def tune_models(
     train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
     train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
 
-    # Dataset
-    ds = data.load_data(
-        num_samples=train_loop_config["num_samples"],
-        num_partitions=num_cpu_workers,
-    )
-    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
-    dataset_config = {
-        "train": DatasetConfig(randomize_block_order=False),
-        "val": DatasetConfig(randomize_block_order=False),
-    }
-
     # Scaling config
     scaling_config = ScalingConfig(
         num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
         use_gpu=use_gpu,
         _max_cpu_fraction_per_node=0.8,
     )
+
+    # Dataset
+    ds = data.load_data(
+        num_samples=train_loop_config["num_samples"],
+        num_partitions=num_cpu_workers,
+    )
+    train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+
+    # Dataset config
+    dataset_config = {
+        "train": DatasetConfig(fit=False, transform=False, randomize_block_order=False),
+        "val": DatasetConfig(fit=False, transform=False, randomize_block_order=False),
+    }
+
+    # Preprocess
+    preprocessor = data.get_preprocessor()
+    train_ds = preprocessor.fit_transform(train_ds)
+    val_ds = preprocessor.transform(val_ds)
+    train_ds = train_ds.materialize()
+    val_ds = val_ds.materialize()
 
     # Trainer
     trainer = TorchTrainer(
@@ -99,7 +108,7 @@ def tune_models(
         scaling_config=scaling_config,
         datasets={"train": train_ds, "val": val_ds},
         dataset_config=dataset_config,
-        preprocessor=data.get_preprocessor(),
+        preprocessor=preprocessor,
     )
 
     # Checkpoint configuration

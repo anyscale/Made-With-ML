@@ -123,7 +123,7 @@ def evaluate(ds: Dataset, predictor: TorchPredictor) -> Dict:  # pragma: no cove
     """
     # y_true
     preprocessor = predictor.get_preprocessor()
-    targets = utils.get_values(preprocessor.transform(ds), col="targets")
+    targets = utils.get_arr_col(preprocessor.transform(ds), col="targets")
     y_true = targets.argmax(1)
 
     # y_pred

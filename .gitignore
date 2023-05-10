@@ -104,3 +104,6 @@ airflow/airflow.db
 
 # MacOS
 .DS_Store
+
+# Clean up
+.trash/
