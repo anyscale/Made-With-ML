@@ -123,7 +123,7 @@ def train_loop_per_worker(
 
     # Class weights
     batch_counts = []
-    for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=data.collate_fn):
+    for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=utils.collate_fn):
         batch_counts.append(np.bincount(batch["targets"].cpu().numpy().argmax(1)))
     counts = [sum(count) for count in zip(*batch_counts)]
     class_weights = np.array([1.0 / count for i, count in enumerate(counts)])

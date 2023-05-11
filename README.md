@@ -148,6 +148,7 @@ ray stop
 ```bash
 # Code
 python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
+make clean
 open htmlcov/index.html
 
 # Data
