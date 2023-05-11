@@ -3,8 +3,8 @@
 
 ### Git instructions
 ```
-git clone https://github.com/anyscale/mmwl-playground.git mwml-playground
-cd mwml-playground
+git clone https://github.com/anyscale/mlops-course.git mlops-course
+cd mlops-course
 ```
 
 ### Environment

@@ -124,10 +124,10 @@ def train_loop_per_worker(
     # Class weights
     batch_counts = []
     for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=data.collate_fn):
-        batch_counts.append(np.bincount(batch["targets"].argmax(1)))
+        batch_counts.append(np.bincount(batch["targets"].cpu().numpy().argmax(1)))
     counts = [sum(count) for count in zip(*batch_counts)]
     class_weights = np.array([1.0 / count for i, count in enumerate(counts)])
-    class_weights_tensor = torch.Tensor(class_weights, device=get_device())
+    class_weights_tensor = torch.Tensor(class_weights).to(get_device())
 
     # Training components
     loss_fn = nn.BCEWithLogitsLoss(weight=class_weights_tensor)
