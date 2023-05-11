@@ -8,7 +8,6 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
-    -   id: check-added-large-files
         args: ['--maxkb=1000']
         exclude: "notebooks"
     -   id: check-yaml
@@ -16,7 +15,7 @@ repos:
 - repo: local
   hooks:
     -   id: clean  # clean before test so we don't run expensive test runs again
-        name: clean
+        name: clean before test
         entry: make
         args: ["clean"]
         language: system
@@ -28,7 +27,7 @@ repos:
         language: system
         pass_filenames: false
     -   id: clean  # clean after test to remove any unwanted artifacts from testing
-        name: clean
+        name: clean after test
         entry: make
         args: ["clean"]
         language: system
