@@ -30,18 +30,37 @@ jupyter lab notebooks/madewithml.ipynb
 
 ### Train a single model
 ```bash
+train_loop_config='{
+  "dropout_p": 0.5,
+  "lr": 1e-4,
+  "lr_factor": 0.8,
+  "lr_patience": 3
+}'
 python src/madewithml/train.py llm \
-    --use-gpu \
-    --num-cpu-workers 40 \
-    --num-gpu-workers 2
+    $train_loop_config \
+    --num-cpu-workers 6 \
+    --num-gpu-workers 0 \
+    --num-epochs 1 \
+    --batch-size 128
 ```
 
 ### Tuning experiment
 ```bash
+initial_params='[{
+    "train_loop_config": {
+        "dropout_p": 0.5,
+        "lr": 1e-4,
+        "lr_factor": 0.8,
+        "lr_patience": 3
+    }
+}]'
 python src/madewithml/tune.py llm \
-    --num-runs 10 \
-    --num-cpu-workers 40 \
-    --num-gpu-workers 2
+    $initial_params \
+    --num-runs 2 \
+    --num-cpu-workers 6 \
+    --num-gpu-workers 0 \
+    --num-epochs 1 \
+    --batch-size 128
 ```
 
 ### View/compare experiments (MLflow)

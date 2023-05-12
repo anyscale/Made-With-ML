@@ -10,9 +10,6 @@ import pretty_errors  # NOQA: F401 (imported but unused)
 # Directories
 ROOT_DIR = Path(__file__).parent.parent.parent.absolute()
 CONFIG_DIR = Path(ROOT_DIR, "src", "config")
-CONFIG_FP = Path(CONFIG_DIR, "config.json")
-DATA_DIR = Path(ROOT_DIR, "data")
-DATA_DIR.mkdir(parents=True, exist_ok=True)
 LOGS_DIR = Path(ROOT_DIR, "logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 

@@ -1,3 +1,4 @@
+import json
 from typing import Tuple
 
 import numpy as np
@@ -19,9 +20,8 @@ from ray.data import Dataset
 from ray.train.torch import TorchCheckpoint, TorchTrainer
 from transformers import BertModel
 
-from config.config import ACCEPTED_TAGS, CONFIG_FP, MLFLOW_TRACKING_URI
-from madewithml import data, utils
-from madewithml.models import FinetunedLLM
+from madewithml import data, models, utils
+from madewithml.config import ACCEPTED_TAGS, MLFLOW_TRACKING_URI
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -113,7 +113,7 @@ def train_loop_per_worker(
 
     # Model
     llm = BertModel.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    model = FinetunedLLM(
+    model = models.FinetunedLLM(
         llm=llm,
         dropout_p=dropout_p,
         embedding_dim=llm.config.hidden_size,
@@ -157,6 +157,7 @@ def train_loop_per_worker(
 @app.command()
 def train_model(
     experiment_name: str,
+    train_loop_config: str,
     use_gpu: bool = False,
     num_cpu_workers: int = 1,
     num_gpu_workers: int = 1,
@@ -168,6 +169,7 @@ def train_model(
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
+        train_loop_config (str): arguments to use for training.
         use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
         num_cpu_workers (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
@@ -184,11 +186,11 @@ def train_model(
         ray.air.result.Result: training results.
     """
     # Set up
-    train_loop_config = utils.load_dict(path=CONFIG_FP)
+    train_loop_config = json.loads(train_loop_config)
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
-    train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
-    train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
+    train_loop_config["num_samples"] = num_samples
+    train_loop_config["num_epochs"] = num_epochs
+    train_loop_config["batch_size"] = batch_size
 
     # Scaling config
     scaling_config = ScalingConfig(

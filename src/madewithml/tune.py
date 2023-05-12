@@ -1,3 +1,5 @@
+import json
+
 import ray
 import typer
 from ray import tune
@@ -15,8 +17,8 @@ from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.search import ConcurrencyLimiter
 from ray.tune.search.hyperopt import HyperOptSearch
 
-from config.config import CONFIG_FP, MLFLOW_TRACKING_URI
 from madewithml import data, train, utils
+from madewithml.config import MLFLOW_TRACKING_URI
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -38,6 +40,7 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, test
 @app.command()
 def tune_models(
     experiment_name: str,
+    initial_params: str,
     use_gpu: bool = False,
     num_cpu_workers: int = 1,
     num_gpu_workers: int = 1,
@@ -50,6 +53,7 @@ def tune_models(
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
+        initial_train_loop_config (Dict[str, Any]): initial config for the tuning workload.
         use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
         num_cpu_workers (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
@@ -68,11 +72,11 @@ def tune_models(
     """
     # Set up
     utils.set_seeds()
-    train_loop_config = utils.load_dict(path=CONFIG_FP)
+    train_loop_config = {}
     train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
-    train_loop_config["num_samples"] = num_samples if num_samples else train_loop_config["num_samples"]
-    train_loop_config["num_epochs"] = num_epochs if num_epochs else train_loop_config["num_epochs"]
-    train_loop_config["batch_size"] = batch_size if batch_size else train_loop_config["batch_size"]
+    train_loop_config["num_samples"] = num_samples
+    train_loop_config["num_epochs"] = num_epochs
+    train_loop_config["batch_size"] = batch_size
 
     # Scaling config
     scaling_config = ScalingConfig(
@@ -132,16 +136,9 @@ def tune_models(
     )
 
     # Hyperparameters to start with
-    initial_params = [
-        {
-            "train_loop_config": {
-                "dropout_p": 0.5,
-                "lr": 1e-4,
-                "lr_factor": 0.8,
-                "lr_patience": 3,
-            }
-        }
-    ]
+    print(initial_params)
+    print(json.loads(initial_params))
+    initial_params = json.loads(initial_params)
     search_alg = HyperOptSearch(points_to_evaluate=initial_params)
     search_alg = ConcurrencyLimiter(search_alg, max_concurrent=2)  # trade off b/w optimization and search space
 

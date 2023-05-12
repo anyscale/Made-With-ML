@@ -12,9 +12,8 @@ from ray.train.torch.torch_predictor import TorchPredictor
 from sklearn.metrics import precision_recall_fscore_support
 from snorkel.slicing import PandasSFApplier, slicing_function
 
-from config import config
-from config.config import logger
 from madewithml import predict, utils
+from madewithml.config import HOLDOUT_LOC, logger
 
 
 def get_overall_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:  # pragma: no cover, eval workload
@@ -150,7 +149,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Evaluate
-    ds = ray.data.read_csv(config.HOLDOUT_LOC).repartition(args.num_cpu_workers)
+    ds = ray.data.read_csv(HOLDOUT_LOC).repartition(args.num_cpu_workers)
     best_checkpoint = predict.get_best_checkpoint(run_id=args.run_id, metric="val_loss", direction="min")
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
     metrics = evaluate(ds=ds, predictor=predictor)

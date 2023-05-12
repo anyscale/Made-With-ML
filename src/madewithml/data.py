@@ -11,7 +11,7 @@ from ray.data.preprocessors import BatchMapper, Chain
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
 
-from config.config import ACCEPTED_TAGS, DATASET_LOC, STOPWORDS
+from madewithml.config import ACCEPTED_TAGS, DATASET_LOC, STOPWORDS
 
 
 def load_data(num_samples: int = None, num_partitions: int = 1) -> Dataset:

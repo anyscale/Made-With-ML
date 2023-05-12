@@ -13,7 +13,7 @@ from ray.air import Checkpoint
 from ray.train.torch import TorchPredictor
 from ray.train.torch.torch_checkpoint import TorchCheckpoint
 
-from config.config import logger  # also needed to set MLflow URI
+from madewithml.config import logger
 
 # Initialize Typer CLI app
 app = typer.Typer()

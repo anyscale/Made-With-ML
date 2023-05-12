@@ -7,14 +7,14 @@ from ray import serve
 from ray.train.torch import TorchPredictor
 from starlette.requests import Request
 
-from config import config
 from madewithml import predict
+from madewithml.config import MLFLOW_TRACKING_URI
 
 
 @serve.deployment
 class Model:
     def __init__(self, run_id):
-        mlflow.set_tracking_uri(config.MLFLOW_TRACKING_URI)  # so workers have access to model registry
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)  # so workers have access to model registry
         best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", direction="min")
         self.predictor = TorchPredictor.from_checkpoint(best_checkpoint)
         self.label_encoder = self.predictor.get_preprocessor().preprocessors[1]
