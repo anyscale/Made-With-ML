@@ -1,3 +1,4 @@
+import datetime
 import json
 from typing import Tuple
 
@@ -21,7 +22,7 @@ from ray.train.torch import TorchCheckpoint, TorchTrainer
 from transformers import BertModel
 
 from madewithml import data, models, utils
-from madewithml.config import ACCEPTED_TAGS, MLFLOW_TRACKING_URI
+from madewithml.config import ACCEPTED_TAGS, MLFLOW_TRACKING_URI, logger
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -164,6 +165,7 @@ def train_model(
     num_samples: int = None,
     num_epochs: int = None,
     batch_size: int = None,
+    results_fp: str = None,
 ) -> ray.air.result.Result:
     """Main train function to train our model as a distributed workload.
 
@@ -181,6 +183,7 @@ def train_model(
             If this is passed in, it will override the config. Defaults to None.
         batch_size (int, optional): number of samples per batch.
             If this is passed in, it will override the config. Defaults to None.
+        results_fp (str, optional): filepath to save results to. Defaults to None.
 
     Returns:
         ray.air.result.Result: training results.
@@ -251,8 +254,17 @@ def train_model(
     )
 
     # Train
-    result = trainer.fit()
-    return result
+    results = trainer.fit()
+    d = {
+        "timestamp": int(datetime.datetime.now().timestamp()),
+        "run_id": utils.get_run_id(experiment_name=experiment_name, trial_id=results.metrics["trial_id"]),
+        "params": results.config["train_loop_config"],
+        "metrics": results.metrics_dataframe.to_dict(),
+    }
+    logger.info(json.dumps(d, indent=2))
+    if results_fp:  # pragma: no cover, saving results
+        utils.save_dict(d, results_fp)
+    return results
 
 
 if __name__ == "__main__":  # pragma: no cover, application

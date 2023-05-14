@@ -1,6 +1,6 @@
 import uuid
 
-import mlflow
+from madewithml.config import mlflow
 
 
 def generate_experiment_name(prefix: str = "test") -> str:

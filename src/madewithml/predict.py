@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List
 from urllib.parse import urlparse
 
-import mlflow
 import pandas as pd
 import ray
 import torch
@@ -13,7 +12,7 @@ from ray.air import Checkpoint
 from ray.train.torch import TorchPredictor
 from ray.train.torch.torch_checkpoint import TorchCheckpoint
 
-from madewithml.config import logger
+from madewithml.config import logger, mlflow
 
 # Initialize Typer CLI app
 app = typer.Typer()

@@ -8,16 +8,6 @@ help:
 	@echo "style   : executes style formatting."
 	@echo "clean   : cleans all unnecessary files."
 
-# Environment
-venv:
-	python3 -m venv venv
-	source venv/bin/activate && \
-	python3 -m pip install --upgrade pip setuptools wheel && \
-	python3 -m pip install -e ".[dev]" && \
-	pre-commit install && \
-	pre-commit autoupdate
-	@echo -e "\nVirtual environment created -> run 'source venv/bin/activate'"
-
 # Testing
 test:
 	python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings

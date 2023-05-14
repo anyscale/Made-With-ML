@@ -11,6 +11,8 @@ from ray.air._internal.torch_utils import (
 )
 from ray.data import Dataset
 
+from madewithml.config import mlflow
+
 
 def set_seeds(seed: int = 42):
     """Set seeds for reproducibility."""
@@ -61,8 +63,8 @@ def get_arr_col(ds: Dataset, col: str) -> np.ndarray:
     Returns:
         np.array: an array of the column's values.
     """
-    values = ds.map_batches(lambda batch: batch[col].values)
-    return np.stack(values.take_all())
+    values = ds.map_batches(lambda batch: {col: batch[col]}, batch_format="numpy")
+    return np.stack([item[col] for item in values.take_all()])
 
 
 def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:
@@ -96,3 +98,20 @@ def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
         batch[k] = pad_array(v)
     dtypes = {"ids": torch.int32, "masks": torch.int32, "targets": torch.float64}
     return convert_ndarray_batch_to_torch_tensor_batch(batch, dtypes=dtypes, device=get_device())
+
+
+def get_run_id(experiment_name: str, trial_id: str) -> str:  # pragma: no cover, mlflow functionality
+    """Get the MLflow run ID for a specific Ray trial ID.
+
+    Args:
+        experiment_name (str): name of the experiment.
+        trial_id (str): id of the trial.
+
+    Returns:
+        str: run id of the trial.
+    """
+    trial_name = f"TorchTrainer_{trial_id}"
+    run = mlflow.search_runs(
+        experiment_names=[experiment_name], filter_string=f"tags.trial_name = '{trial_name}'"
+    ).iloc[0]
+    return run.run_id

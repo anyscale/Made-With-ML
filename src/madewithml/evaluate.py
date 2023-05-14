@@ -1,4 +1,3 @@
-import argparse
 import json
 from collections import OrderedDict
 from typing import Dict
@@ -6,6 +5,7 @@ from typing import Dict
 import numpy as np
 import ray
 import ray.train.torch  # NOQA: F401 (imported but unused)
+import typer
 from ray.data import Dataset
 from ray.data.preprocessor import Preprocessor
 from ray.train.torch.torch_predictor import TorchPredictor
@@ -13,7 +13,10 @@ from sklearn.metrics import precision_recall_fscore_support
 from snorkel.slicing import PandasSFApplier, slicing_function
 
 from madewithml import predict, utils
-from madewithml.config import HOLDOUT_LOC, logger
+from madewithml.config import logger
+
+# Initialize Typer CLI app
+app = typer.Typer()
 
 
 def get_overall_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:  # pragma: no cover, eval workload
@@ -110,16 +113,30 @@ def get_slice_metrics(
     return slice_metrics
 
 
-def evaluate(ds: Dataset, predictor: TorchPredictor) -> Dict:  # pragma: no cover, eval workload
-    """Evaluate a model's performance on a labeled dataset.
+@app.command()
+def evaluate(
+    dataset_loc: str = "",
+    num_cpu_workers: int = 1,
+    run_id: str = "",
+    results_fp: str = None,
+) -> Dict:  # pragma: no cover, eval workload
+    """_summary_
 
     Args:
-        ds (Dataset): Ray Dataset with labels.
-        predictor (TorchPredictor): Ray Predictor from a checkpoint.
+        dataset_loc (str): dataset (with labels) to evaluate on.
+        num_cpu_workers (int, optional): number of cpu workers to use for
+            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
+        run_id (str): id of the specific run to load from. Defaults to None.
+        results_fp (str, optional): Location to save evaluation results to. Defaults to None.
 
     Returns:
         Dict: model's performance metrics on the dataset.
     """
+    # Load
+    ds = ray.data.read_csv(dataset_loc).repartition(num_cpu_workers)
+    best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", direction="min")
+    predictor = TorchPredictor.from_checkpoint(best_checkpoint)
+
     # y_true
     preprocessor = predictor.get_preprocessor()
     targets = utils.get_arr_col(preprocessor.transform(ds), col="targets")
@@ -139,18 +156,11 @@ def evaluate(ds: Dataset, predictor: TorchPredictor) -> Dict:  # pragma: no cove
         "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=class_to_index),
         "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds, preprocessor=preprocessor),
     }
+    logger.info(json.dumps(metrics, indent=2))
+    if results_fp:  # pragma: no cover, saving results
+        utils.save_dict(d=metrics, path=results_fp)
     return metrics
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--run-id", help="run ID to use for serving.")
-    parser.add_argument("--num-cpu-workers", type=int, help="num of workers to process the dataset")
-    args = parser.parse_args()
-
-    # Evaluate
-    ds = ray.data.read_csv(HOLDOUT_LOC).repartition(args.num_cpu_workers)
-    best_checkpoint = predict.get_best_checkpoint(run_id=args.run_id, metric="val_loss", direction="min")
-    predictor = TorchPredictor.from_checkpoint(best_checkpoint)
-    metrics = evaluate(ds=ds, predictor=predictor)
-    logger.info(json.dumps(metrics, indent=2))
+    app()

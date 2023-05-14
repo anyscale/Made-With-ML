@@ -1,3 +1,4 @@
+import datetime
 import json
 
 import ray
@@ -18,7 +19,7 @@ from ray.tune.search import ConcurrencyLimiter
 from ray.tune.search.hyperopt import HyperOptSearch
 
 from madewithml import data, train, utils
-from madewithml.config import MLFLOW_TRACKING_URI
+from madewithml.config import MLFLOW_TRACKING_URI, logger
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -48,6 +49,7 @@ def tune_models(
     num_samples: int = None,
     num_epochs: int = None,
     batch_size: int = None,
+    results_fp: str = None,
 ) -> ray.tune.result_grid.ResultGrid:
     """Hyperparameter tuning experiment.
 
@@ -66,6 +68,7 @@ def tune_models(
             If this is passed in, it will override the config. Defaults to None.
         batch_size (int, optional): number of samples per batch.
             If this is passed in, it will override the config. Defaults to None.
+        results_fp (str, optional): filepath to save the tuning results. Defaults to None.
 
     Returns:
         ray.tune.result_grid.ResultGrid: results of the tuning experiment.
@@ -87,7 +90,7 @@ def tune_models(
 
     # Dataset
     ds = data.load_data(
-        num_samples=train_loop_config["num_samples"],
+        num_samples=train_loop_config.get("num_samples", None),
         num_partitions=num_cpu_workers,
     )
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
@@ -136,8 +139,6 @@ def tune_models(
     )
 
     # Hyperparameters to start with
-    print(initial_params)
-    print(json.loads(initial_params))
     initial_params = json.loads(initial_params)
     search_alg = HyperOptSearch(points_to_evaluate=initial_params)
     search_alg = ConcurrencyLimiter(search_alg, max_concurrent=2)  # trade off b/w optimization and search space
@@ -177,7 +178,16 @@ def tune_models(
 
     # Tune
     results = tuner.fit()
-
+    best_trial = results.get_best_result(metric="val_loss", mode="min")
+    d = {
+        "timestamp": int(datetime.datetime.now().timestamp()),
+        "run_id": utils.get_run_id(experiment_name=experiment_name, trial_id=best_trial.metrics["trial_id"]),
+        "params": best_trial.config["train_loop_config"],
+        "metrics": best_trial.metrics_dataframe.to_dict(),
+    }
+    logger.info(json.dumps(d, indent=2))
+    if results_fp:  # pragma: no cover, saving results
+        utils.save_dict(d, results_fp)
     return results
 
 

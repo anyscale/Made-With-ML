@@ -29,8 +29,8 @@ def test_save_and_load_dict():
 
 
 def test_get_arr_col():
-    ds = ray.data.from_items([{"a": np.array([0, 0, 1, 0]), "b": np.array([1, 0, 0, 0])}])
-    assert np.array_equal(utils.get_arr_col(ds, "a"), np.array([[0, 0, 1, 0]]))
+    ds = ray.data.from_items([{"a": [0, 0, 1, 0]}, {"a": [1, 0, 0, 0]}])
+    assert np.array_equal(utils.get_arr_col(ds, "a"), np.array([[0, 0, 1, 0], [1, 0, 0, 0]]))
 
 
 def test_pad_array():
