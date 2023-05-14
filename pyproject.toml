@@ -43,6 +43,7 @@ notebook = [
 docs = [
     "mkdocs==1.4.2",
     "mkdocstrings==0.21.2",
+    "mkdocstrings[python]>=0.18",
 ]
 style = [
     "black==23.3.0",

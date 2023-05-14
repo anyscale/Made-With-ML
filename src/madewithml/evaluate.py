@@ -162,5 +162,5 @@ def evaluate(
     return metrics
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover, checked during evaluation workload
     app()

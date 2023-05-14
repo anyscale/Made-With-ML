@@ -70,7 +70,6 @@ def eval_step(
         batch_size (int): size of each batch.
         model (nn.Module): model to train.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
-        device (str, optional): which device (cpu or cuda) to run on.
 
     Returns:
         Tuple[float, np.array, np.array]: cumulative loss, ground truths and predictions.

@@ -8,8 +8,9 @@ nav:
     - models: madewithml/models.md
     - train: madewithml/train.md
     - tune: madewithml/tune.md
-    - eval: madewithml/eval.md
+    - evaluate: madewithml/evaluate.md
     - predict: madewithml/predict.md
+    - serve: madewithml/serve.md
     - utils: madewithml/utils.md
 theme: readthedocs
 plugins:

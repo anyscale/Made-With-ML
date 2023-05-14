@@ -55,7 +55,7 @@ def tune_models(
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
-        initial_train_loop_config (Dict[str, Any]): initial config for the tuning workload.
+        initial_params (str): initial config for the tuning workload.
         use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
         num_cpu_workers (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
