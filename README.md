@@ -44,8 +44,9 @@ train_loop_config='{
 }'
 python src/madewithml/train.py llm \
     $train_loop_config \
-    --num-cpu-workers 6 \
-    --num-gpu-workers 0 \
+    --use-gpu \
+    --num-cpu-workers 40 \
+    --num-gpu-workers 2 \
     --num-epochs 10 \
     --batch-size 256
 ```
@@ -63,9 +64,10 @@ initial_params='[{
 python src/madewithml/tune.py llm \
     $initial_params \
     --num-runs 2 \
-    --num-cpu-workers 6 \
-    --num-gpu-workers 0 \
-    --num-epochs 1 \
+    --use-gpu \
+    --num-cpu-workers 40 \
+    --num-gpu-workers 2 \
+    --num-epochs 10 \
     --batch-size 256
 ```
 
