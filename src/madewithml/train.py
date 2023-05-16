@@ -157,6 +157,7 @@ def train_loop_per_worker(
 @app.command()
 def train_model(
     experiment_name: str,
+    dataset_loc: str,
     train_loop_config: str,
     use_gpu: bool = False,
     num_cpu_workers: int = 1,
@@ -170,6 +171,7 @@ def train_model(
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
+        dataset_loc (str): location of the dataset.
         train_loop_config (str): arguments to use for training.
         use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
         num_cpu_workers (int, optional): number of cpu workers to use for
@@ -223,6 +225,7 @@ def train_model(
 
     # Dataset
     ds = data.load_data(
+        dataset_loc=dataset_loc,
         num_samples=train_loop_config["num_samples"],
         num_partitions=num_cpu_workers,
     )

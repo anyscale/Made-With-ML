@@ -65,9 +65,7 @@ logging_config = {
 logging.config.dictConfig(logging_config)
 logger = logging.getLogger()
 
-# Datasets
-DATASET_LOC = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-HOLDOUT_LOC = "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+# Constraints
 ACCEPTED_TAGS = [
     "natural-language-processing",
     "computer-vision",

@@ -41,6 +41,7 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, test
 @app.command()
 def tune_models(
     experiment_name: str,
+    dataset_loc: str,
     initial_params: str,
     use_gpu: bool = False,
     num_cpu_workers: int = 1,
@@ -55,6 +56,7 @@ def tune_models(
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
+        dataset_loc (str): location of the dataset.
         initial_params (str): initial config for the tuning workload.
         use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
         num_cpu_workers (int, optional): number of cpu workers to use for
@@ -90,6 +92,7 @@ def tune_models(
 
     # Dataset
     ds = data.load_data(
+        dataset_loc=dataset_loc,
         num_samples=train_loop_config.get("num_samples", None),
         num_partitions=num_cpu_workers,
     )

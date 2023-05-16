@@ -13,9 +13,9 @@ def df():
     return df
 
 
-def test_load_data():
+def test_load_data(dataset_loc):
     num_samples = 10
-    ds = data.load_data(num_samples=num_samples)
+    ds = data.load_data(dataset_loc=dataset_loc, num_samples=num_samples)
     assert ds.count() == num_samples
 
 

@@ -11,20 +11,21 @@ from ray.data.preprocessors import BatchMapper, Chain
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
 
-from madewithml.config import ACCEPTED_TAGS, DATASET_LOC, STOPWORDS
+from madewithml.config import ACCEPTED_TAGS, STOPWORDS
 
 
-def load_data(num_samples: int = None, num_partitions: int = 1) -> Dataset:
+def load_data(dataset_loc: str, num_samples: int = None, num_partitions: int = 1) -> Dataset:
     """Load data from source into a Ray Dataset.
 
     Args:
+        dataset_loc (str): Location of the dataset.
         num_samples (int, optional): The number of samples to load. Defaults to None.
         num_partitions (int, optional): Number of shards to separate the data into. Defaults to 1.
 
     Returns:
         Dataset: Our dataset represented by a Ray Dataset.
     """
-    ds = ray.data.read_csv(DATASET_LOC).repartition(num_partitions)
+    ds = ray.data.read_csv(dataset_loc).repartition(num_partitions)
     ds = ds.random_shuffle(seed=1234)
     ds = ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
     return ds

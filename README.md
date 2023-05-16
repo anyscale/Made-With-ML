@@ -1,20 +1,20 @@
 
 ## Set up
 
-### Git instructions
+### Git clone
 ```
 git clone https://github.com/anyscale/mlops-course.git mlops-course
 cd mlops-course
 ```
 
-### Environment
+### Virtual environment
+> Highly recommend using Python `3.10` and using [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows).
 ```bash
 python3 -m venv venv  # recommended to use Python 3.10
 source venv/bin/activate
 python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install -e ".[dev]"
 ```
-> We highly recommend using Python `3.10` and using [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows) to quickly install and set local python versions for this project.
 
 ### Install Ray
 Install Ray from the [latest nightly wheel](https://docs.ray.io/en/latest/ray-overview/installation.html#daily-releases-nightlies) for your specific OS.
@@ -22,6 +22,13 @@ Install Ray from the [latest nightly wheel](https://docs.ray.io/en/latest/ray-ov
 # MacOS (arm64)
 python3 -m pip install -U https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-macosx_11_0_arm64.whl
 python3 -m pip install "ray[air]==3.0.0.dev0"
+```
+
+### Environment variables
+```bash
+DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+TRAIN_LOOP_CONFIG="{'dropout_p': 0.5, 'lr': 1e-4, 'lr_factor': 0.8, 'lr_patience': 3}"
 ```
 
 ## Workloads
@@ -36,14 +43,9 @@ jupyter lab notebooks/madewithml.ipynb
 
 ### Train a single model
 ```bash
-train_loop_config='{
-  "dropout_p": 0.5,
-  "lr": 1e-4,
-  "lr_factor": 0.8,
-  "lr_patience": 3
-}'
 python src/madewithml/train.py llm \
-    $train_loop_config \
+    "$DATASET_LOC" \
+    "$TRAIN_LOOP_CONFIG" \
     --use-gpu \
     --num-cpu-workers 40 \
     --num-gpu-workers 2 \
@@ -53,16 +55,10 @@ python src/madewithml/train.py llm \
 
 ### Tuning experiment
 ```bash
-initial_params='[{
-    "train_loop_config": {
-        "dropout_p": 0.5,
-        "lr": 1e-4,
-        "lr_factor": 0.8,
-        "lr_patience": 3
-    }
-}]'
+INITIAL_PARAMS="[{'train_loop_config': $TRAIN_LOOP_CONFIG}]"
 python src/madewithml/tune.py llm \
-    $initial_params \
+    "$DATASET_LOC" \
+    "$INITIAL_PARAMS" \
     --num-runs 2 \
     --use-gpu \
     --num-cpu-workers 40 \
@@ -73,26 +69,13 @@ python src/madewithml/tune.py llm \
 
 ### View/compare experiments (MLflow)
 ```bash
-MODEL_REGISTRY=$(python -c "
-from madewithml import config
-print(config.MODEL_REGISTRY)")
-echo "MODEL_REGISTRY: $MODEL_REGISTRY"
-
+MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
 mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 ```
 
 ### Evaluation
 ```bash
-HOLDOUT_LOC=$(python -c "
-from madewithml import config
-print(config.HOLDOUT_LOC)")
-echo "Holdout: $HOLDOUT_LOC"
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
-
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
 python src/madewithml/evaluate.py \
     --dataset-loc $HOLDOUT_LOC \
     --num-cpu-workers 2 \
@@ -109,13 +92,7 @@ python src/madewithml/evaluate.py \
 ### Inference
 ```bash
 # Get run ID
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
-
-# Predict
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
 python src/madewithml/predict.py \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks." \
@@ -139,15 +116,7 @@ python src/madewithml/predict.py \
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
-
-# Get run ID
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
-
-# Run application
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
 python src/madewithml/serve.py --run_id $RUN_ID
 ```
 
