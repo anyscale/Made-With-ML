@@ -49,16 +49,5 @@ Cluster compute is now `train_config`. Put into `job_train.yaml`.
 ## Run training job
 
 ```bash
-> anyscale cluster-env build cluster_env.yaml -n mlops_env           
-Authenticating
 
-Output
-(anyscale +2.1s) Creating new cluster environment mlops_env
-(anyscale +2.9s) Waiting for cluster environment to build. View progress at https://console.anyscale.com/configurations/app-config-details/bld_vwda4gle2kxy3ubbkyknbmiwqh.
-(anyscale +2.9s) status: pending
-(anyscale +17.9s) status: pending
-(anyscale +33.2s) status: in_progress
-...
-(anyscale +9m28.3s) status: in_progress
-(anyscale +9m28.6s) Cluster environment successfully finished building.
 ```
