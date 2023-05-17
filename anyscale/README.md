@@ -49,13 +49,16 @@ Cluster compute is now `train_config`. Put into `job_train.yaml`.
 ## Run training job
 
 ```bash
-> anyscale job submit job_train.yaml --name train                   
+> anyscale cluster-env build cluster_env.yaml -n mlops_env           
 Authenticating
 
 Output
-(anyscale +4.0s) Maximum uptime is disabled for clusters launched by this job.
-(anyscale +4.0s) Job prodjob_97f11mft6wcgce77khvj29m3pd has been successfully submitted. Current state of job: PENDING.
-(anyscale +4.0s) Query the status of the job with `anyscale job list --job-id prodjob_97f11mft6wcgce77khvj29m3pd`.
-(anyscale +4.0s) Get the logs for the job with `anyscale job logs --job-id prodjob_97f11mft6wcgce77khvj29m3pd --follow`.
-(anyscale +4.0s) View the job in the UI at https://console.anyscale.com/jobs/prodjob_97f11mft6wcgce77khvj29m3pd
+(anyscale +2.1s) Creating new cluster environment mlops_env
+(anyscale +2.9s) Waiting for cluster environment to build. View progress at https://console.anyscale.com/configurations/app-config-details/bld_vwda4gle2kxy3ubbkyknbmiwqh.
+(anyscale +2.9s) status: pending
+(anyscale +17.9s) status: pending
+(anyscale +33.2s) status: in_progress
+...
+(anyscale +9m28.3s) status: in_progress
+(anyscale +9m28.6s) Cluster environment successfully finished building.
 ```
