@@ -1,0 +1,6 @@
+name: service-mlops
+cluster_env: mlops_env:2
+ray_serve_config:
+  import_path: anyscale.service:entrypoint
+  runtime_env:
+    working_dir: "https://github.com/anyscale/mlops-course/archive/refs/heads/kf-dev.zip"
