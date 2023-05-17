@@ -1,0 +1,5 @@
+entrypoint: bash anyscale/job_train.sh
+runtime_env:
+  working_dir: "https://github.com/anyscale/mlops-course/archive/refs/heads/kf-dev.zip"
+  cluster_env: cli_cluster_env_17_05_23_10_00_38_415984:1
+  compute_config: cpt_767ylk6m215svuc8e32p23zcxa
