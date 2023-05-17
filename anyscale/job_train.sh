@@ -6,7 +6,7 @@ TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience
 
 python ./src/madewithml/train.py llm \
     "$DATASET_LOC" \
-    \'"$TRAIN_LOOP_CONFIG"\' \
+    "$TRAIN_LOOP_CONFIG" \
     --use-gpu \
     --num-cpu-workers 40 \
     --num-gpu-workers 2 \
