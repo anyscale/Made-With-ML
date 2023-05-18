@@ -1,8 +1,9 @@
 name: service-mlops
 ray_serve_config:
-  import_path: anyscale_service:entrypoint
+  import_path: anyscale.service:entrypoint
   runtime_env:
-    working_dir: "https://github.com/anyscale/mlops-course/archive/refs/heads/kf-dev.zip"
-project_id: prj_7b48zz24ac275yc4j3emjmz55p
+    working_dir: .
+    upload_path: s3://kf-mlops-dev/workingdir/service
+project_id: prj_dkx8ez3enhj57j8gu6qyuetgzv
 cluster_env: mlops_env:1
 compute_config: train_config
