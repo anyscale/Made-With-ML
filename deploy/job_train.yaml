@@ -3,7 +3,7 @@ runtime_env:
   working_dir: .
   upload_path: s3://kf-mlops-dev/workingdir/job
 project_id: prj_dkx8ez3enhj57j8gu6qyuetgzv
-cluster_env: mlops_env:1
+cluster_env: mlops_env:4
 compute_config:
   cloud_id: cld_9b2d7fppgayt6t7ivudst2gwet
   region: us-west2
