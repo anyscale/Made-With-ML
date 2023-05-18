@@ -1,0 +1,28 @@
+name: service-mlops
+ray_serve_config:
+  import_path: deploy.service:entrypoint
+  runtime_env:
+    working_dir: .
+    upload_path: s3://kf-mlops-dev/workingdir/service
+project_id: prj_dkx8ez3enhj57j8gu6qyuetgzv
+cluster_env: mlops_env:1
+compute_config:
+  cloud: anyscale-v2-cloud-fast-startup
+  max_workers: 20
+
+  head_node_type:
+    name: head_node_type
+    instance_type: m5.4xlarge
+
+  worker_node_types:
+  - name: gpu_worker
+    instance_type: g4dn.4xlarge
+    min_workers: 1
+    max_workers: 8
+
+  aws:
+    BlockDeviceMappings:
+    - DeviceName: "/dev/sda1"
+      Ebs:
+        VolumeSize: 500
+        DeleteOnTermination: true
