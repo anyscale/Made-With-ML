@@ -37,26 +37,26 @@ logging_config = {
             "formatter": "minimal",
             "level": logging.DEBUG,
         },
-        # conflicts in tune runs!
-        # "info": {
-        #     "class": "logging.handlers.RotatingFileHandler",
-        #     "filename": Path(LOGS_DIR, "info.log"),
-        #     "maxBytes": 10485760,  # 1 MB
-        #     "backupCount": 10,
-        #     "formatter": "detailed",
-        #     "level": logging.INFO,
-        # },
-        # "error": {
-        #     "class": "logging.handlers.RotatingFileHandler",
-        #     "filename": Path(LOGS_DIR, "error.log"),
-        #     "maxBytes": 10485760,  # 1 MB
-        #     "backupCount": 10,
-        #     "formatter": "detailed",
-        #     "level": logging.ERROR,
-        # },
+        "info": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": Path(LOGS_DIR, "info.log"),
+            "maxBytes": 10485760,  # 1 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "level": logging.INFO,
+        },
+        "error": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": Path(LOGS_DIR, "error.log"),
+            "maxBytes": 10485760,  # 1 MB
+            "backupCount": 10,
+            "formatter": "detailed",
+            "level": logging.ERROR,
+        },
     },
     "root": {
-        "handlers": ["console", "info", "error"],
+        # everything other than console conflicts in tune runs!
+        "handlers": ["console"],
         "level": logging.INFO,
         "propagate": True,
     },
