@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -xe
+
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
@@ -20,6 +22,7 @@ aws s3 sync "$MODEL_REGISTRY" s3://kf-mlops-dev/mlflow
 
 
 # Print best run ID
+set +x
 echo "####TRAIN_OUT####"
 cat ./training_result.json
 echo "####TRAIN_END####"

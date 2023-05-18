@@ -1,10 +1,12 @@
 #!/bin/bash
 
+set -xe
+
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 
-INITIAL_PARAMS="[{'train_loop_config': $TRAIN_LOOP_CONFIG}]"
+INITIAL_PARAMS='[{"train_loop_config": '"$TRAIN_LOOP_CONFIG"'}]'
 python src/madewithml/tune.py llm \
     "$DATASET_LOC" \
     "$INITIAL_PARAMS" \
@@ -21,6 +23,7 @@ MODEL_REGISTRY=$(python -c "from madewithml.config import MODEL_REGISTRY; print(
 aws s3 sync "$MODEL_REGISTRY" s3://kf-mlops-dev/mlflow
 
 # Print best run ID
+set +x
 echo "####TUNE_OUT####"
 cat ./tuning_results.json
 echo "####TUNE_END####"
