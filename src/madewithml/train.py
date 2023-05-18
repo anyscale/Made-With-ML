@@ -19,7 +19,6 @@ from ray.air.config import (
 from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.data import Dataset
 from ray.train.torch import TorchCheckpoint, TorchTrainer
-from transformers import BertModel
 
 from madewithml import data, models, utils
 from madewithml.config import ACCEPTED_TAGS, MLFLOW_TRACKING_URI, logger
@@ -96,6 +95,8 @@ def train_loop_per_worker(
     Args:
         config (dict): arguments to use for training.
     """
+    from transformers import BertModel
+
     # Set up
     utils.set_seeds()
 
