@@ -55,8 +55,7 @@ logging_config = {
         },
     },
     "root": {
-        # everything other than console conflicts in tune runs!
-        "handlers": ["console"],
+        "handlers": ["console", "info", "error"],
         "level": logging.INFO,
         "propagate": True,
     },
