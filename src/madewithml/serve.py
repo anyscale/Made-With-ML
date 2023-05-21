@@ -1,7 +1,6 @@
 import argparse
 from typing import Dict, List, Union
 
-import mlflow
 import pandas as pd
 import ray
 from ray import serve
@@ -9,7 +8,7 @@ from ray.train.torch import TorchPredictor
 from starlette.requests import Request
 
 from madewithml import predict
-from madewithml.config import MLFLOW_TRACKING_URI
+from madewithml.config import MLFLOW_TRACKING_URI, mlflow
 
 
 @serve.deployment

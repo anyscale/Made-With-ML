@@ -115,18 +115,18 @@ def get_slice_metrics(
 
 @app.command()
 def evaluate(
+    run_id: str = "",
     dataset_loc: str = "",
     num_cpu_workers: int = 1,
-    run_id: str = "",
     results_fp: str = None,
 ) -> Dict:  # pragma: no cover, eval workload
     """_summary_
 
     Args:
+        run_id (str): id of the specific run to load from. Defaults to None.
         dataset_loc (str): dataset (with labels) to evaluate on.
         num_cpu_workers (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
-        run_id (str): id of the specific run to load from. Defaults to None.
         results_fp (str, optional): Location to save evaluation results to. Defaults to None.
 
     Returns:
