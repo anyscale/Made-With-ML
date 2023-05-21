@@ -9,7 +9,14 @@ description = "Classify projects that are made with ml."
 authors = [{name = "Goku Mohandas", email = "goku@madewithml.com"}]
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = [
+
+[project.urls]
+homepage = "https://madewithml.com/"
+repository = "https://github.com/GokuMohandas/mlops-course"
+documentation = "https://gokumohandas.github.io/mlops-course/"
+
+[project.optional-dependencies]
+default = [
     "hyperopt==0.2.7",
     "ipywidgets>=8",
     "matplotlib==3.7.1",
@@ -26,13 +33,6 @@ dependencies = [
     "torch==2.0.0",
     "transformers==4.28.1",
 ]
-
-[project.urls]
-homepage = "https://madewithml.com/"
-repository = "https://github.com/GokuMohandas/mlops-course"
-documentation = "https://gokumohandas.github.io/mlops-course/"
-
-[project.optional-dependencies]
 notebook = [
     "cleanlab==2.3.1",
     "jupyterlab==3.6.3",
@@ -58,6 +58,7 @@ test = [
     "pytest-cov==4.0.0",
 ]
 dev = [
+    "madewithml[default]",
     "madewithml[notebook]",
     "madewithml[docs]",
     "madewithml[style]",
