@@ -79,12 +79,12 @@ mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 
 ### Evaluation
 ```bash
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 python src/madewithml/evaluate.py \
-    --run-id $RUN_ID
+    --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2 \
+    --num-cpu-workers 2
 ```
 ```json
 {
@@ -97,11 +97,11 @@ python src/madewithml/evaluate.py \
 ### Inference
 ```bash
 # Get run ID
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 python src/madewithml/predict.py \
+    --run-id $RUN_ID \
     --title "Transfer learning with transformers" \
-    --description "Using transformers for transfer learning on text classification tasks." \
-    --run-id $RUN_ID
+    --description "Using transformers for transfer learning on text classification tasks."
 ```
 ```json
 [{
@@ -121,7 +121,7 @@ python src/madewithml/predict.py \
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('llm', 'val_loss', 'ASC'))")
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 python src/madewithml/serve.py --run_id $RUN_ID
 ```
 
@@ -162,7 +162,7 @@ pytest tests/data --disable-warnings
 # Model
 RUN_ID=$(python -c "
 from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='llm', metric='val_loss', direction='ASC')
+run_id = predict.get_best_run_id(experiment_name='$EXPERIMENT_NAME', metric='val_loss', direction='ASC')
 print(run_id)")
 echo "Run ID: $RUN_ID"
 pytest --run-id=$RUN_ID tests/model --disable-warnings

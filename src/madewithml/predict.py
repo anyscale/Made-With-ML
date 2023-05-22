@@ -113,14 +113,16 @@ def get_best_checkpoint(run_id: str, metric: str, direction: str) -> TorchCheckp
 
 @app.command()
 def predict(
-    title: str = "", description: str = "", run_id: str = None
+    run_id: str = None,
+    title: str = "",
+    description: str = "",
 ) -> Dict:  # pragma: no cover, tested with inference workload
     """Predict the tag for a project given it's title and description.
 
     Args:
+        run_id (str): id of the specific run to load from. Defaults to None.
         title (str, optional): project title. Defaults to "".
         description (str, optional): project description. Defaults to "".
-        run_id (str): id of the specific run to load from. Defaults to None.
 
     Returns:
         Dict: prediction results for the input data.
