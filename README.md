@@ -199,7 +199,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
 ### Setup
 ```bash
-PROJECT_NAME="madewithml"
+export PROJECT_NAME="madewithml"
 anyscale project create -n $PROJECT_NAME
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
@@ -215,8 +215,8 @@ anyscale job submit deploy/jobs/evaluate.yaml
 
 ```bash
 # Set up
-SERVICE_CONFIG="deploy/services/service.yaml"
-SERVICE_NAME="madewithml-service"
+export SERVICE_CONFIG="deploy/services/service.yaml"
+export SERVICE_NAME="madewithml-service"
 
 # Rollout
 anyscale service rollout -f $SERVICE_CONFIG --name $SERVICE_NAME
@@ -225,7 +225,7 @@ anyscale service rollout -f $SERVICE_CONFIG --name $SERVICE_NAME
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{
   "title": "Transfer learning with transformers",
   "description": "Using transformers for transfer learning on text classification tasks."
-}' $SERVICE_ENDPOINT/
+}' $SERVICE_ENDPOINT
 
 # Rollback (to previous version of the Service)
 anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
