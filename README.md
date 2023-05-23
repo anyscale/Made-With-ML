@@ -234,7 +234,27 @@ anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
 anyscale service terminate --name $SERVICE_NAME
 ```
 
+## CI/CD
 
+We're not going to manually deploy our application every time we make a change. Instead, we'll automate this process using GitHub Actions!
+
+1. We'll start by adding the necessary credentials to the [`/settings/secrets/actions`](https://github.com/GokuMohandas/mlops-course/settings/secrets/actions) page of our GitHub repository.
+
+``` bash
+export ANYSCALE_HOST=https://console.anyscale-staging.com
+export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retreved from AWS IAM
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+```
+
+2. Next, we'll create the different GitHub action workflows:
+- Train model: [`/.github/workflows/train.yaml`](/.github/workflows/train.yaml)
+- Evaluate model: [`/.github/workflows/evaluate.yaml`](/.github/workflows/evaluate.yaml)
+- Deploy service: [`/.github/workflows/deploy.yaml`](/.github/workflows/deploy.yaml)
+
+3. Our different workflows will be triggered when we make a change to our repository and push to a branch and trigger a PR to our main branch. Inside that PR, we'll see the different workflows' results, which we can use to decide if we should deploy our new model or not. Merging a PR to main will update the current deployed model with our new model.
+> We can also manually trigger them from the [`/actions`](https://github.com/GokuMohandas/mlops-course/actions) tab of our GitHub repository
 
 ## FAQ
 
