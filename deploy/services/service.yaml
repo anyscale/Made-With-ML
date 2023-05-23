@@ -1,5 +1,5 @@
 name: service-mlops
-project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
+project_id: prj_8tqvub3w9wherks256xlra9ch4
 compute_config: madewithml-compute-config
 cluster_env: madewithml-cluster-env:4
 ray_serve_config:

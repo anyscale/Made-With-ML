@@ -199,7 +199,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
 ### Setup
 ```bash
-export PROJECT_NAME="madewithml"
+export PROJECT_NAME="mlops-course"  # project name should match with repository name
 anyscale project create -n $PROJECT_NAME
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
