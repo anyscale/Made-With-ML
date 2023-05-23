@@ -212,24 +212,26 @@ anyscale job submit deploy/jobs/evaluate.yaml
 ```
 
 ### Services
-```bash
-anyscale service rollout -f deploy/services/service.yaml
-```
 
-### Query
 ```bash
-```
+# Set up
+SERVICE_CONFIG="deploy/services/service.yaml"
+SERVICE_NAME="madewithml-service"
 
-### Upgrade
-```bash
-```
+# Rollout
+anyscale service rollout -f $SERVICE_CONFIG --name $SERVICE_NAME
 
-### Rollout
-```bash
-```
+# Query (retrieved from Service endpoint generated from command above)
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{
+  "title": "Transfer learning with transformers",
+  "description": "Using transformers for transfer learning on text classification tasks."
+}' $SERVICE_ENDPOINT/
 
-### Terminate
-```bash
+# Rollback (to previous version of the Service)
+anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
+
+# Terminate
+anyscale service terminate --name $SERVICE_NAME
 ```
 
 

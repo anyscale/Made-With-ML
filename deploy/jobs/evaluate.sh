@@ -8,7 +8,7 @@ HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/da
 python src/madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2
+    --num-cpu-workers 2 \
     --results-fp ./evaluation_results.json
 
 # Print evaluation results
