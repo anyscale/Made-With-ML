@@ -1,3 +1,19 @@
+# MLOps Course
+
+Learn how to combine machine learning with software engineering best practices to develop, deploy and maintain ML applications in production.
+
+> MLOps concepts are interweaved and cannot be run in isolation, so be sure to complement the code in this repository with the detailed [MLOps lessons](https://madewithml.com/#mlops).
+
+<div align="left">
+    <a target="_blank" href="https://madewithml.com/"><img src="https://img.shields.io/badge/Subscribe-30K-brightgreen"></a>&nbsp;
+    <a target="_blank" href="https://github.com/GokuMohandas/Made-With-ML"><img src="https://img.shields.io/github/stars/GokuMohandas/Made-With-ML.svg?style=social&label=Star"></a>&nbsp;
+    <a target="_blank" href="https://www.linkedin.com/in/goku"><img src="https://img.shields.io/badge/style--5eba00.svg?label=LinkedIn&logo=linkedin&style=social"></a>&nbsp;
+    <a target="_blank" href="https://twitter.com/GokuMohandas"><img src="https://img.shields.io/twitter/follow/GokuMohandas.svg?label=Follow&style=social"></a>
+    <br>
+</div>
+
+- Lessons: https://madewithml.com/#mlops
+- Code: [GokuMohandas/mlops-course](https://github.com/GokuMohandas/mlops-course)
 
 ## Set up
 
@@ -37,10 +53,9 @@ jupyter lab notebooks/madewithml.ipynb
 
 ### Train a single model
 ```bash
-EXPERIMENT_NAME="madewithml-$(openssl rand -hex 4)"
+EXPERIMENT_NAME="llm"
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
-echo "Experiment name: $EXPERIMENT_NAME"
 python src/madewithml/train.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
@@ -54,11 +69,10 @@ python src/madewithml/train.py \
 
 ### Tuning experiment
 ```bash
-EXPERIMENT_NAME="madewithml-$(openssl rand -hex 4)"
+EXPERIMENT_NAME="llm"
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
-echo "Experiment name: $EXPERIMENT_NAME"
 python src/madewithml/tune.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
@@ -79,6 +93,7 @@ mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 
 ### Evaluation
 ```bash
+EXPERIMENT_NAME="llm"
 RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 python src/madewithml/evaluate.py \
@@ -97,6 +112,7 @@ python src/madewithml/evaluate.py \
 ### Inference
 ```bash
 # Get run ID
+EXPERIMENT_NAME="llm"
 RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 python src/madewithml/predict.py \
     --run-id $RUN_ID \
@@ -121,6 +137,7 @@ python src/madewithml/predict.py \
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
+EXPERIMENT_NAME="llm"
 RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 python src/madewithml/serve.py --run_id $RUN_ID
 ```
@@ -160,6 +177,7 @@ open htmlcov/index.html
 pytest tests/data --disable-warnings
 
 # Model
+EXPERIMENT_NAME="llm"
 RUN_ID=$(python -c "
 from madewithml import predict
 run_id = predict.get_best_run_id(experiment_name='$EXPERIMENT_NAME', metric='val_loss', direction='ASC')
@@ -168,32 +186,57 @@ echo "Run ID: $RUN_ID"
 pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
-## Production
+## Deploy
 
 ### Authentication
 ``` bash
-export ANYSCALE_HOST=https://console.anyscale.com
-export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/credentials
+export ANYSCALE_HOST=https://console.anyscale-staging.com
+export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retreved from AWS IAM
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
 ### Setup
 ```bash
-mkdir deploy
+PROJECT_NAME="madewithml"
 anyscale project create -n $PROJECT_NAME
-anyscale cluster-env get --id $CLUSTER_ENV_BUILD_ID > deploy/cluster_env.yml
-anyscale compute-config get --id $CLUSTER_COMPUTE_ID > deploy/compute_config.yml
+anyscale cluster-env build deploy/luster_env.yaml --name madewithml-cluster-env
+anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
+```
 
+### Jobs
+```bash
+anyscale job submit deploy/jobs/train.yaml
+anyscale job submit deploy/jobs/evaluate.yaml
+```
+
+### Services
+```bash
+anyscale service rollout -f deploy/services/service.yaml
+```
+
+### Query
+```bash
+```
+
+### Upgrade
+```bash
+```
+
+### Rollout
+```bash
+```
+
+### Terminate
+```bash
 ```
 
 
-Above Set up isn't really relevant for our user journey.
-1. We create the cluster environment config and compute config using the UI.
-2. We
 
 ## FAQ
 
 ### Jupyter notebook kernels
-
 Issues with configuring the notebooks with jupyter? By default, jupyter will use the kernel with our virtual environment but we can also manually add it to jupyter:
 ```bash
 python3 -m ipykernel install --user --name=venv

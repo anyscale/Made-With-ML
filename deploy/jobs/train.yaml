@@ -1,0 +1,9 @@
+name: train-model
+project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
+compute_config: madewithml-compute-config
+cluster_env: madewithml-cluster-env:1
+runtime_env:
+  working_dir: .
+  upload_path: s3://goku-mlops/workingdir/job
+entrypoint: bash /home/ray/madewithml-cluster-env/mlops-course/deploy/jobs/train.sh
+max_retries: 0
