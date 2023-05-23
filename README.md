@@ -201,7 +201,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```bash
 PROJECT_NAME="madewithml"
 anyscale project create -n $PROJECT_NAME
-anyscale cluster-env build deploy/luster_env.yaml --name madewithml-cluster-env
+anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
 ```
 
