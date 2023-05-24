@@ -1,0 +1,43 @@
+name: testing
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.11'
+      - name: Caching
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install dependencies
+        run: |
+          python -m pip install -e ".[dev]" --no-cache-dir
+      - name: Test code
+        run: |
+          python3 -m pytest tests/code \
+            --cov src/madewithml \
+            --cov-config=pyproject.toml \
+            --cov-report html \
+            --disable-warnings > test_code_results.json
+      - name: Test data
+        run: |
+          DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+          pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings > test_data_results.json
+      - name: Test model
+        run: |
+          EXPERIMENT_NAME="llm"
+          RUN_ID=$(python -c "
+          from madewithml import predict
+          run_id = predict.get_best_run_id(experiment_name='$EXPERIMENT_NAME', metric='val_loss', direction='ASC')
+          print(run_id)")
+          echo "Run ID: $RUN_ID"
+          pytest --run-id=$RUN_ID tests/model --disable-warnings > test_model_results.json

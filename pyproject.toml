@@ -57,13 +57,16 @@ test = [
     "pytest==7.3.1",
     "pytest-cov==4.0.0",
 ]
+deploy = [
+    "anyscale==0.5.110",
+]
 dev = [
     "madewithml[default]",
     "madewithml[notebook]",
     "madewithml[docs]",
     "madewithml[style]",
     "madewithml[test]",
-    "anyscale==0.5.110",
+    "madeithml[deploy]",
     "pre-commit==3.2.2",
     "typer==0.7.0",
 ]
