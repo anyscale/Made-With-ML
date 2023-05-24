@@ -1,0 +1,82 @@
+name: Train model and deploy
+
+on: [push]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e ".[docs]" --no-cache-dir
+
+      - name: Set global vars
+        run: |
+          DATE_STR=$(date +%Y%m%d%H%M%S)
+          PROJECT_NAME=mlops-course
+          PROJECT_ID=$(anyscale project list | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*')
+          BUCKET="s3://kf-mlops-dev"
+          UPLOAD_PATH="$BUCKET/workingdir"
+
+          echo DATE_STR="$DATE_STR" >> $GITHUB_ENV
+          echo PROJECT_NAME="$PROJECT_NAME" >> $GITHUB_ENV
+          echo PROJECT_ID="$PROJECT_ID" >> $GITHUB_ENV
+          echo UPLOAD_PATH="$UPLOAD_PATH" >> $GITHUB_ENV
+
+      - name: Create cluster config
+        run: |
+          # New cluster config name
+          CLUSTER_COMPUTE_NAME="train_config_${DATE_STR}"
+          anyscale cluster-compute create deploy/compute_config.yaml -n $CLUSTER_COMPUTE_NAME
+          echo CLUSTER_COMPUTE_NAME="$CLUSTER_COMPUTE_NAME" >> $GITHUB_ENV
+
+      - name: Create cluster env
+        run: |         
+          # Re-use cluster env name
+          CLUSTER_ENV_NAME=mlops_env
+          
+          # Todo: rebuild cluster env
+          
+          # Todo: this takes forever
+          # CLUSTER_ENV_ID=$(anyscale cluster-env list | grep mlops_env | grep -m 1 -o 'apt_[a-zA-Z0-9]*')
+          CLUSTER_ENV_ID=apt_2uckxewpbec2u7p4b73hjvggkd
+
+          echo CLUSTER_ENV_ID="$CLUSTER_ENV_ID" >> $GITHUB_ENV
+
+      - name: Create configs from templates
+        run: |         
+          sed "s/PROJECT_ID/${PROJECT_ID}/g; \
+               s/COMPUTE_CONFIG_NAME/${COMPUTE_CONFIG_NAME}/g; \
+               s/CLUSTER_ENV_ID/${CLUSTER_ENV_ID}/g; \
+               s/UPLOAD_PATH/${UPLOAD_PATH}/g" \
+          "deploy/jobs/train.yaml.tpl" > "deploy/jobs/train.yaml"
+          
+          cat "deploy/jobs/train.yaml"
+          
+          sed "s/PROJECT_ID/${PROJECT_ID}/g; \
+               s/COMPUTE_CONFIG_NAME/${COMPUTE_CONFIG_NAME}/g; \
+               s/CLUSTER_ENV_ID/${CLUSTER_ENV_ID}/g; \
+               s/UPLOAD_PATH/${UPLOAD_PATH}/g" \
+          "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
+          
+          cat "deploy/services/service.yaml"
+
+      - name: Run training job
+        run: |         
+          TRAIN_JOB_NAME="train_config_${DATE_STR}"
+          anyscale job submit --wait deploy/jobs/train.yaml --name "$TRAIN_JOB_NAME"
+          
+          # Fetch logs
+          JOB_LOGS=$(anyscale job logs --name "$TRAIN_JOB_NAME")
+          # Extract json
+          TRAIN_RESULTS=$(awk 'BEGIN { RS="####TRAIN_OUT####|####TRAIN_END####" } NR%2==0 { data=$0 } END { print data }' <<< "$JOB_LOGS")
+          RUN_ID=$(echo $TRAIN_RESULTS | jq ".run_id")
+          VAL_LOSS=$(echo $TRAIN_RESULTS | jq ".metrics.val_loss[\"9\"]")
