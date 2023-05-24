@@ -69,24 +69,26 @@ jobs:
 
       - name: Create configs from templates
         run: |         
-          sed "s#PROJECT_ID#${PROJECT_ID}#g; \
-               s#CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
-               s#CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
-               s#UPLOAD_PATH#${UPLOAD_PATH}#g" \
+          sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
+               s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
+               s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
+               s#\$BUCKET#${BUCKET}#g" \
+               s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/jobs/train.yaml.tpl" > "deploy/jobs/train.yaml"
           
           cat "deploy/jobs/train.yaml"
           
-          sed "s#PROJECT_ID#${PROJECT_ID}#g; \
-               s#CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
-               s#CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
-               s#UPLOAD_PATH#${UPLOAD_PATH}#g" \
+          sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
+               s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
+               s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
+               s#\$BUCKET#${BUCKET}#g" \
+               s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
           
           cat "deploy/services/service.yaml"
 
       - name: Run training job
-        run: |         
+        run: |
           TRAIN_JOB_NAME="train_config_${DATE_STR}"
           anyscale job submit --wait deploy/jobs/train.yaml --name "$TRAIN_JOB_NAME"
           

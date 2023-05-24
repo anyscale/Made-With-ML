@@ -5,5 +5,7 @@ cluster_env: madewithml-cluster-env:4
 runtime_env:
   working_dir: .
   upload_path: s3://goku-mlops/workingdir/job
+  env_vars:
+    BUCKET: $BUCKET
 entrypoint: bash deploy/jobs/train.sh
 max_retries: 0

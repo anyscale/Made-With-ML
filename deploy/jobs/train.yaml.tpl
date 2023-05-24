@@ -1,9 +1,11 @@
 name: train-model
-project_id: PROJECT_ID
-compute_config: CLUSTER_COMPUTE_NAME
-build_id: CLUSTER_ENV_ID
+project_id: $PROJECT_ID
+compute_config: $CLUSTER_COMPUTE_NAME
+build_id: $CLUSTER_ENV_ID
 runtime_env:
   working_dir: .
-  upload_path: UPLOAD_PATH
+  upload_path: $UPLOAD_PATH
+  env_vars:
+    BUCKET: $BUCKET
 entrypoint: bash deploy/jobs/train.sh
 max_retries: 0
