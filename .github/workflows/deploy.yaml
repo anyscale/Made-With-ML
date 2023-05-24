@@ -63,7 +63,7 @@ jobs:
           
           # Todo: this takes forever. Also, it doesn't work (retrieves apt_ but not bld_)
           # CLUSTER_ENV_ID=$(anyscale cluster-env list | grep mlops_env | grep -m 1 -o 'bld_[a-zA-Z0-9]*')
-          CLUSTER_ENV_ID=bld_52hrh6j9d4hqnzishudptaia2x
+          CLUSTER_ENV_ID=$(python deploy/get_latest_cluster_env_build_id.py "$CLUSTER_ENV_NAME")
 
           echo CLUSTER_ENV_ID="$CLUSTER_ENV_ID" >> $GITHUB_ENV
 
@@ -97,3 +97,10 @@ jobs:
           RUN_ID=$(echo $TRAIN_RESULTS | jq ".run_id")
           VAL_LOSS=$(echo $TRAIN_RESULTS | jq ".metrics.val_loss[\"9\"]")
           echo "Got RUN $RUN_ID and VAL LOSS $VAL_LOSS"
+
+          echo RUN_ID="$RUN_ID" >> $GITHUB_ENV
+
+      - name: Deploy model
+        run: |         
+          export RUN_ID=$RUN_ID
+          anyscale service rollout -f deploy/services/service.yaml

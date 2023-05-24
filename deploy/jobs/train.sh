@@ -20,7 +20,7 @@ python src/madewithml/train.py \
 
 # Workaround for /mnt/user_storage: Upload mlflow to S3
 MODEL_REGISTRY=$(python -c "from madewithml.config import MODEL_REGISTRY; print(str(MODEL_REGISTRY))")
-aws s3 sync "$MODEL_REGISTRY" s3://goku-mlops/mlflow
+aws s3 sync "$MODEL_REGISTRY" "$BUCKET/mlflow"
 
 # Print training results
 set +x
