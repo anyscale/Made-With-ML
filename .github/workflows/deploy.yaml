@@ -33,7 +33,7 @@ jobs:
 
           DATE_STR=$(date +%Y%m%d%H%M%S)
           PROJECT_NAME=mlops-course
-          PROJECT_ID=$(anyscale project list | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*')
+          PROJECT_ID=$(anyscale project list | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*' | tail -n 1)
           BUCKET="s3://kf-mlops-dev"
           UPLOAD_PATH="$BUCKET/workingdir"
 
@@ -45,6 +45,7 @@ jobs:
           echo PROJECT_ID="$PROJECT_ID" >> $GITHUB_ENV
           echo BUCKET="$BUCKET" >> $GITHUB_ENV
           echo UPLOAD_PATH="$UPLOAD_PATH" >> $GITHUB_ENV
+          echo "::add-mask::$ANYSCALE_CLI_TOKEN"
 
       - name: Create cluster config
         run: |
