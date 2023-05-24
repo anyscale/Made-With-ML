@@ -96,3 +96,4 @@ jobs:
           TRAIN_RESULTS=$(awk 'BEGIN { RS="####TRAIN_OUT####|####TRAIN_END####" } NR%2==0 { data=$0 } END { print data }' <<< "$JOB_LOGS")
           RUN_ID=$(echo $TRAIN_RESULTS | jq ".run_id")
           VAL_LOSS=$(echo $TRAIN_RESULTS | jq ".metrics.val_loss[\"9\"]")
+          echo "Got RUN $RUN_ID and VAL LOSS $VAL_LOSS"
