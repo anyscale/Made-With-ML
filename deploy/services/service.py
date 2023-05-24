@@ -10,7 +10,7 @@ from madewithml.serve import CustomLogic, Model
 BUCKET = os.environ.get("BUCKET", "s3://goku-mlops")
 RUN_ID = os.environ.get("RUN_ID", None)
 
-subprocess.check_output(["aws", "s3", "sync", f"${BUCKET}/mlflow", str(MODEL_REGISTRY)])
+subprocess.check_output(["aws", "s3", "sync", f"{BUCKET}/mlflow", str(MODEL_REGISTRY)])
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 experiment_name = os.getenv("EXPERIMENT_NAME", "llm")
 
