@@ -72,7 +72,7 @@ jobs:
           sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
                s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
                s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
-               s#\$BUCKET#${BUCKET}#g" \
+               s#\$BUCKET#${BUCKET}#g; \
                s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/jobs/train.yaml.tpl" > "deploy/jobs/train.yaml"
           
@@ -81,7 +81,7 @@ jobs:
           sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
                s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
                s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
-               s#\$BUCKET#${BUCKET}#g" \
+               s#\$BUCKET#${BUCKET}#g; \
                s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
           
