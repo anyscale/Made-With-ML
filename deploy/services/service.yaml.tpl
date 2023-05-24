@@ -10,3 +10,4 @@ ray_serve_config:
     env_vars:
       EXPERIMENT_NAME: llm
       BUCKET: $BUCKET
+      RUN_ID: $RUN_ID

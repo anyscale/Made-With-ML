@@ -67,7 +67,7 @@ jobs:
 
           echo CLUSTER_ENV_ID="$CLUSTER_ENV_ID" >> $GITHUB_ENV
 
-      - name: Create configs from templates
+      - name: Create job config from template
         run: |         
           sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
                s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
@@ -77,15 +77,6 @@ jobs:
           "deploy/jobs/train.yaml.tpl" > "deploy/jobs/train.yaml"
           
           cat "deploy/jobs/train.yaml"
-          
-          sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
-               s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
-               s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
-               s#\$BUCKET#${BUCKET}#g; \
-               s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
-          "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
-          
-          cat "deploy/services/service.yaml"
 
       - name: Run training job
         run: |
@@ -101,6 +92,18 @@ jobs:
           echo "Got RUN $RUN_ID and VAL LOSS $VAL_LOSS"
 
           echo RUN_ID="$RUN_ID" >> $GITHUB_ENV
+
+      - name: Create service config from template
+        run: |         
+          sed "s#\$PROJECT_ID#${PROJECT_ID}#g; \
+               s#\$CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
+               s#\$CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
+               s#\$BUCKET#${BUCKET}#g; \
+               s#\$RUN_ID#${RUN_ID}#g; \
+               s#\$UPLOAD_PATH#${UPLOAD_PATH}#g" \
+          "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
+          
+          cat "deploy/services/service.yaml"
 
       - name: Deploy model
         run: |         
