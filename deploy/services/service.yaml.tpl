@@ -1,6 +1,6 @@
 name: service-mlops
 project_id: PROJECT_ID
-compute_config: COMPUTE_CONFIG_NAME
+compute_config: CLUSTER_COMPUTE_NAME
 build_id: CLUSTER_ENV_ID
 ray_serve_config:
   import_path: deploy.services.service:entrypoint

@@ -1,6 +1,6 @@
 name: train-model
 project_id: PROJECT_ID
-compute_config: COMPUTE_CONFIG_NAME
+compute_config: CLUSTER_COMPUTE_NAME
 build_id: CLUSTER_ENV_ID
 runtime_env:
   working_dir: .

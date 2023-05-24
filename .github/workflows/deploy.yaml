@@ -47,7 +47,7 @@ jobs:
           echo UPLOAD_PATH="$UPLOAD_PATH" >> $GITHUB_ENV
           echo "::add-mask::$ANYSCALE_CLI_TOKEN"
 
-      - name: Create cluster config
+      - name: Create cluster compute
         run: |
           # New cluster config name
           CLUSTER_COMPUTE_NAME="train_config_${DATE_STR}"
@@ -61,16 +61,16 @@ jobs:
           
           # Todo: rebuild cluster env
           
-          # Todo: this takes forever
-          # CLUSTER_ENV_ID=$(anyscale cluster-env list | grep mlops_env | grep -m 1 -o 'apt_[a-zA-Z0-9]*')
-          CLUSTER_ENV_ID=apt_2uckxewpbec2u7p4b73hjvggkd
+          # Todo: this takes forever. Also, it doesn't work (retrieves apt_ but not bld_)
+          # CLUSTER_ENV_ID=$(anyscale cluster-env list | grep mlops_env | grep -m 1 -o 'bld_[a-zA-Z0-9]*')
+          CLUSTER_ENV_ID=bld_52hrh6j9d4hqnzishudptaia2x
 
           echo CLUSTER_ENV_ID="$CLUSTER_ENV_ID" >> $GITHUB_ENV
 
       - name: Create configs from templates
         run: |         
           sed "s#PROJECT_ID#${PROJECT_ID}#g; \
-               s#COMPUTE_CONFIG_NAME#${COMPUTE_CONFIG_NAME}#g; \
+               s#CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
                s#CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
                s#UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/jobs/train.yaml.tpl" > "deploy/jobs/train.yaml"
@@ -78,7 +78,7 @@ jobs:
           cat "deploy/jobs/train.yaml"
           
           sed "s#PROJECT_ID#${PROJECT_ID}#g; \
-               s#COMPUTE_CONFIG_NAME#${COMPUTE_CONFIG_NAME}#g; \
+               s#CLUSTER_COMPUTE_NAME#${CLUSTER_COMPUTE_NAME}#g; \
                s#CLUSTER_ENV_ID#${CLUSTER_ENV_ID}#g; \
                s#UPLOAD_PATH#${UPLOAD_PATH}#g" \
           "deploy/services/service.yaml.tpl" > "deploy/services/service.yaml"
