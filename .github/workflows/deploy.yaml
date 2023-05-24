@@ -24,9 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -e ".[docs]" --no-cache-dir
-
-      - name: List S3 buckets
-        run: aws s3 ls
+          python -m pip install anyscale
 
       - name: Set global vars
         run: |
