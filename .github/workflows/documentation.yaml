@@ -30,7 +30,7 @@ jobs:
         run: |
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
-          echo "GITHUB_PAGES_URL=https://${REPO_OWNER}.github.io/${REPO_NAME}/" >> "$GITHUB_ENV"
+          echo "GITHUB_PAGES_URL=https://" >> "$GITHUB_ENV"
           echo $GITHUB_PAGES_URL
           echo "hello"
           echo "${{ env.GITHUB_PAGES_URL }}"
