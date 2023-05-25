@@ -170,7 +170,6 @@ ray stop
 ```bash
 # Code
 python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-make clean
 open htmlcov/index.html
 
 # Data
@@ -179,11 +178,7 @@ pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings
 
 # Model
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='$EXPERIMENT_NAME', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 

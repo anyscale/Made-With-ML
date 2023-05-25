@@ -1,11 +1,11 @@
 name: service-mlops
-project_id: prj_8tqvub3w9wherks256xlra9ch4
-compute_config: madewithml-compute-config
-cluster_env: madewithml-cluster-env:4
+project_id: $PROJECT_ID
+compute_config: $CLUSTER_COMPUTE_NAME
+cluster_env: $CLUSTER_ENV_ID
 ray_serve_config:
   import_path: deploy.services.service:entrypoint
   runtime_env:
     working_dir: .
-    upload_path: s3://goku-mlops/workingdir/service
+    upload_path: $UPLOAD_PATH
     env_vars:
-      EXPERIMENT_NAME: llm
+      RUN_ID: $RUN_ID

@@ -42,7 +42,7 @@ class Model:
         return results
 
 
-@serve.deployment
+@serve.deployment(route_prefix="/")
 class CustomLogic:
     """Custom logic to apply to the model's predictions."""
 
