@@ -3,10 +3,8 @@ project_id: $PROJECT_ID
 compute_config: $CLUSTER_COMPUTE_NAME
 cluster_env: $CLUSTER_ENV_ID
 runtime_env:
-  working_dir: .
-  upload_path: $UPLOAD_PATH
+  working_dir: $WORKING_DIR
   env_vars:
-    BRANCH_NAME: $BRANCH_NAME
-    EXPERIMENT_NAME: $EXPERIMENT_NAME
+    experiment_name: $EXPERIMENT_NAME
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
