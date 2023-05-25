@@ -18,8 +18,8 @@ jobs:
           python -m pip install -e ".[deploy]" --no-cache-dir
       - name: Set up environment variables  # we'll reuse these across multiple steps
         run: |
-          echo 'CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py "$CLUSTER_ENV_NAME")' >> "$GITHUB_ENV"`
-          echo 'BRANCH="${GITHUB_REF#refs/heads/}"' >> "$GITHUB_ENV"
+          echo "CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME)" >> "$GITHUB_ENV"
+          echo "BRANCH=${GITHUB_REF#refs/heads/}" >> "$GITHUB_ENV"
       - name: Evaluate model
         run: |
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \

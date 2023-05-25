@@ -197,7 +197,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```bash
 export PROJECT_NAME="mlops-course"  # project name should match with repository name
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py "$CLUSTER_ENV_NAME")
+export CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME)
 anyscale project create -n $PROJECT_NAME  # paste project_id in job commands below
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
