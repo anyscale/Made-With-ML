@@ -203,15 +203,16 @@ anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
 ```
 
+
 ### Evaluation job
 ```bash
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
+# Either experiment_name or run_id must be provided (not both)
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   build_id=$CLUSTER_ENV_ID \
   repo=anyscale/mlops-course \
   branch=dev \
-  run_id=$RUN_ID
+  experiment_name=llm
 ```
 
 Get
