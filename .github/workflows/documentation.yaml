@@ -30,6 +30,8 @@ jobs:
         run: |
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
+          echo $REPO_OWNER
+          echo $REPO_NAME
           echo GITHUB_PAGES_URL="$REPO_NAME" >> $GITHUB_ENV
           echo "${{ env.GITHUB_PAGES_URL }}"
       - name: Display docs URL on PR
