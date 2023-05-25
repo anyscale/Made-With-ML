@@ -34,7 +34,7 @@ jobs:
           echo $REPO_OWNER
           echo $REPO_NAME
           echo $GITHUB_PAGES_URL
-          echo GITHUB_PAGES_URL="$GITHUB_PAGES_URL" >> $GITHUB_ENV
+          echo "GITHUB_PAGES_URL=${GITHUB_PAGES_URL}" >> $GITHUB_ENV
           echo "${{ env.GITHUB_PAGES_URL }}"
       - name: Display docs URL on PR
         uses: actions/github-script@v5
