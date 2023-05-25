@@ -18,12 +18,6 @@ jobs:
           python -m pip install -e ".[docs]" --no-cache-dir
       - name: Deploy documentation
         run: mkdocs gh-deploy --force
-      - name: Set the value
-        run: |
-          echo "action_state=yellow" >> "$GITHUB_ENV"
-      - name: Use the value
-        run: |
-          echo "${{ env.action_state }}" # This will output 'yellow'
       - name: Get GitHub pages URL
         run: |
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
@@ -32,6 +26,7 @@ jobs:
       - name: Use the value
         run: |
           echo "${{ env.GITHUB_PAGES_URL }}"
+          echo $REPO_OWNER
       - name: Display docs URL on PR
         uses: actions/github-script@v5
         with:
