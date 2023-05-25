@@ -217,9 +217,6 @@ python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   experiment_name=llm
 ```
 
-Get
-
-
 
 ### Services
 
