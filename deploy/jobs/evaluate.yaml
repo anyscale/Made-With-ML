@@ -7,5 +7,6 @@ runtime_env:
   upload_path: $UPLOAD_PATH
   env_vars:
     BRANCH_NAME: $BRANCH_NAME
+    EXPERIMENT_NAME: $EXPERIMENT_NAME
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
