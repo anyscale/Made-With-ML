@@ -1,10 +1,10 @@
-name: evaluate-model
+name: evaluation
 on:
   pull_request:
     branches:
     - main
 jobs:
-  build-docs:
+  evaluate-model:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
