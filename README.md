@@ -209,15 +209,18 @@ anyscale job submit deploy/jobs/evaluate.yaml
 
 
 ```bash
-python deploy/jobs/evaluate.py deploy/jobs/evaluate.yaml \
+CLUSTER_ENV_NAME="madewithml-cluster-env"
+CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py "$CLUSTER_ENV_NAME")
+python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   compute_config=madewithml-compute-config \
-  cluster_env=madewithml-cluster-env:4 \
+  build_id=$CLUSTER_ENV_ID \
   repo=anyscale/mlops-course \
   branch=dev \
   experiment_name=llm
 ```
 
+Get
 
 
 

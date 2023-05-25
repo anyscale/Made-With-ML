@@ -1,7 +1,7 @@
 name: evaluate-model
 project_id: $PROJECT_ID
 compute_config: $CLUSTER_COMPUTE_NAME
-cluster_env: $CLUSTER_ENV_ID
+build_id: $CLUSTER_ENV_ID
 runtime_env:
   working_dir: $WORKING_DIR
   env_vars:
