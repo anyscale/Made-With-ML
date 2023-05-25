@@ -6,22 +6,25 @@ on:
 jobs:
   evaluate-model:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      # - name: Set up Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '3.10.11'
-      # - name: Caching
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ${{ env.pythonLocation }}
-      #     key: ${{ env.pythonLocation }}-${{ hashFiles('pyproject.toml') }}
-      # - name: Install dependencies
-      #   run: |
-      #     python -m pip install -e ".[deploy]" --no-cache-dir
-      # - name: Evaluate model
-      #   run: anyscale job submit deploy/jobs/evaluate.yaml
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install -e ".[deploy]" --no-cache-dir
+      - name: Set up environment variables  # we'll reuse these across multiple steps
+        run: |
+          echo 'CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py "$CLUSTER_ENV_NAME")' >> "$GITHUB_ENV"`
+          echo 'BRANCH="${GITHUB_REF#refs/heads/}"' >> "$GITHUB_ENV"
+      - name: Evaluate model
+        run: |
+          python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
+            project_id=prj_8tqvub3w9wherks256xlra9ch4 \
+            build_id=${{ env.CLUSTER_ENV_ID }} \
+            repo=$GITHUB_REPOSITORY \
+            branch=${{ env.BRANCH }} \
+            experiment_name=llm
