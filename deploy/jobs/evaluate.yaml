@@ -14,10 +14,10 @@ compute_config:
   max_workers: 2
   head_node_type:
     name: head_node_type
-    instance_type: m7g.large
+    instance_type: m5.xlarge
   worker_node_types:
   - name: cpu_worker
-    instance_type: m7g.large
+    instance_type: m5.xlarge
     min_workers: 1
     max_workers: 2
   aws:
