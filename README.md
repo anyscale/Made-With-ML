@@ -207,6 +207,20 @@ anyscale job submit deploy/jobs/train.yaml
 anyscale job submit deploy/jobs/evaluate.yaml
 ```
 
+
+```bash
+python deploy/jobs/evaluate.py deploy/jobs/evaluate.yaml \
+  project_id=prj_8tqvub3w9wherks256xlra9ch4 \
+  compute_config=madewithml-compute-config \
+  cluster_env=madewithml-cluster-env:4 \
+  repo=anyscale/mlops-course \
+  branch=dev \
+  experiment_name=llm
+```
+
+
+
+
 ### Services
 
 ```bash

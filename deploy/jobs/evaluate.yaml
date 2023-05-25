@@ -5,6 +5,7 @@ cluster_env: $CLUSTER_ENV_ID
 runtime_env:
   working_dir: $WORKING_DIR
   env_vars:
+    branch: $BRANCH
     experiment_name: $EXPERIMENT_NAME
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
