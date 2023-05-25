@@ -17,7 +17,7 @@ python src/madewithml/train.py \
     --batch-size 256 \
     --results-fp ./training_result.json
 
-# Workaround for /mnt/user_storage: Upload mlflow to S3
+# Sync /mnt/user_storage with S3
 MODEL_REGISTRY=$(python -c "from madewithml.config import MODEL_REGISTRY; print(str(MODEL_REGISTRY))")
 aws s3 sync "$MODEL_REGISTRY" s3://goku-mlops/mlflow
 

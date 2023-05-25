@@ -170,19 +170,15 @@ ray stop
 ```bash
 # Code
 python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-make clean
 open htmlcov/index.html
 
 # Data
-pytest tests/data --disable-warnings
+DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings
 
 # Model
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "
-from madewithml import predict
-run_id = predict.get_best_run_id(experiment_name='$EXPERIMENT_NAME', metric='val_loss', direction='ASC')
-print(run_id)")
-echo "Run ID: $RUN_ID"
+RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
 pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
@@ -243,18 +239,41 @@ We're not going to manually deploy our application every time we make a change. 
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retreved from AWS IAM
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
 2. Next, we'll create the different GitHub action workflows:
-- Train model: [`/.github/workflows/train.yaml`](/.github/workflows/train.yaml)
-- Evaluate model: [`/.github/workflows/evaluate.yaml`](/.github/workflows/evaluate.yaml)
-- Deploy service: [`/.github/workflows/deploy.yaml`](/.github/workflows/deploy.yaml)
+- Test code, data, model: [`/.github/workflows/testing.yaml`](/.github/workflows/testing.yaml)
+- Train model: [`/.github/workflows/training.yaml`](/.github/workflows/training.yaml)
+- Evaluate model: [`/.github/workflows/evaluation.yaml`](/.github/workflows/evaluation.yaml)
+- Deploy service: [`/.github/workflows/serving.yaml`](/.github/workflows/serving.yaml)
 
 3. Our different workflows will be triggered when we make a change to our repository and push to a branch and trigger a PR to our main branch. Inside that PR, we'll see the different workflows' results, which we can use to decide if we should deploy our new model or not. Merging a PR to main will update the current deployed model with our new model.
 > We can also manually trigger them from the [`/actions`](https://github.com/GokuMohandas/mlops-course/actions) tab of our GitHub repository
+
+Our Git workflow looks like this:
+```bash
+# Checkout new branch
+git checkout -b $BRANCH_NAME  # ex. dev
+
+# Develop on branch then push to remote
+git add .
+git commit -m "message"
+git push origin $BRANCH_NAME
+
+# Create and merge PR to main branch (on github.com)
+https://github.com/$USERNAME/$REPO/pull/new/$BRANCH_NAME
+
+# Merge PR to main branch (on local)
+git checkout main
+git pull origin main
+
+# Update branch
+git checkout $BRANCH_NAME
+git merge main  # ready to develop again
+```
 
 ## FAQ
 
