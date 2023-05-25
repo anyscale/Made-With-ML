@@ -9,4 +9,3 @@ runtime_env:
     BRANCH_NAME: $BRANCH_NAME
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
-

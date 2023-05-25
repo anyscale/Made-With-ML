@@ -1,8 +1,10 @@
-import sys
-import yaml
 import subprocess
+import sys
 import tempfile
 from typing import Dict
+
+import yaml
+
 
 def substitute_env_vars(data: Dict, env_vars: Dict) -> Dict:
     for key, value in data.items():
@@ -11,6 +13,7 @@ def substitute_env_vars(data: Dict, env_vars: Dict) -> Dict:
         if isinstance(value, dict):
             data[key] = substitute_env_vars(value, env_vars)
     return data
+
 
 def execute_job(file_path: str, env_vars: Dict) -> None:
     """Execute the Anyscale job with modified yaml config."""
@@ -24,6 +27,7 @@ def execute_job(file_path: str, env_vars: Dict) -> None:
         temp_file_path = temp_file.name
         yaml.dump(data, temp_file, encoding="utf-8")
         subprocess.run(["anyscale", "job", "submit", temp_file_path])
+
 
 if __name__ == "__main__":
     file_path = sys.argv[1]
