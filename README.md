@@ -206,7 +206,9 @@ anyscale compute-config create deploy/compute_config.yaml --name madewithml-comp
 
 ### Evaluation job
 ```bash
-# Either experiment_name or run_id must be provided (not both)
+# Either experiment_name or run_id must be provided
+# If both are provided, run_id will be used
+# If only experiment_id is provided, best run from experiment will be used
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   build_id=$CLUSTER_ENV_ID \
