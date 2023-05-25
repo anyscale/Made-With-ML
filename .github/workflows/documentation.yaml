@@ -22,7 +22,6 @@ jobs:
         id: step_one
         run: |
           echo "action_state=yellow" >> "$GITHUB_ENV"
-          echo "${{ env.action_state }}"
       - name: Use the value
         id: step_two
         run: |
@@ -31,9 +30,10 @@ jobs:
         run: |
           REPO_OWNER=$(echo "${{ github.repository }}" | cut -d/ -f1)
           REPO_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2)
-          echo "GITHUB_PAGES_URL=https://" >> "$GITHUB_ENV"
-          echo $GITHUB_PAGES_URL
-          echo "hello"
+          echo "GITHUB_PAGES_URL=https://${REPO_OWNER}.github.io/${REPO_NAME}/" >> "$GITHUB_ENV"
+      - name: Use the value
+        id: step_two
+        run: |
           echo "${{ env.GITHUB_PAGES_URL }}"
       - name: Display docs URL on PR
         uses: actions/github-script@v5
