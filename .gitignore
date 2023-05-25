@@ -3,6 +3,12 @@ logs/
 stores/
 mlruns/
 
+# Anyscale configs
+train.yaml
+tune.yaml
+evalaute.yaml
+service.yaml
+
 # VSCode
 .vscode/
 .idea

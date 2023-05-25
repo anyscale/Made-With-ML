@@ -1,4 +1,4 @@
-name: service-mlops
+name: madewithml-service
 project_id: $PROJECT_ID
 compute_config: $CLUSTER_COMPUTE_NAME
 cluster_env: $CLUSTER_ENV_ID
