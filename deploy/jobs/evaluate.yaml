@@ -1,6 +1,5 @@
 name: evaluate-model
 project_id: $PROJECT_ID
-compute_config: $CLUSTER_COMPUTE_NAME
 build_id: $CLUSTER_ENV_ID
 runtime_env:
   working_dir: $WORKING_DIR
@@ -9,3 +8,21 @@ runtime_env:
     experiment_name: $EXPERIMENT_NAME
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
+compute_config:
+  cloud: anyscale-v2-cloud-fast-startup
+  region: us-west2
+  max_workers: 2
+  head_node_type:
+    name: head_node_type
+    instance_type: m7g.large
+  worker_node_types:
+  - name: cpu_worker
+    instance_type: m7g.large
+    min_workers: 1
+    max_workers: 2
+  aws:
+    BlockDeviceMappings:
+    - DeviceName: "/dev/sda1"
+      Ebs:
+        VolumeSize: 500
+        DeleteOnTermination: true
