@@ -51,12 +51,13 @@ def save_to_s3(file: str = "", bucket: str = "", path: str = "") -> None:
     """Save file to S3 bucket.
 
     Args:
+        file (str): file path.
         bucket (str): S3 bucket name.
         path (str): S3 path.
-        file (str): file path.
     """
     s3 = boto3.client("s3")
-    s3.upload_file(file, bucket, path)
+    bucket_name = bucket.replace("s3://", "")
+    s3.upload_file(file, bucket_name, path)
 
 
 if __name__ == "__main__":
