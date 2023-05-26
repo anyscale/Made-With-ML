@@ -48,7 +48,7 @@ jobs:
       - name: Create cluster env
         run: |
           export CLUSTER_ENV_NAME="madewithml-cluster-env"
-          echo CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster_env_name $CLUSTER_ENV_NAME) >> $GITHUB_ENV
+          echo CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME) >> $GITHUB_ENV
 
       # Train our model (could also tune)
       - name: Train model
