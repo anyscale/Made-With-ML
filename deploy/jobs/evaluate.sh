@@ -16,4 +16,4 @@ python src/madewithml/evaluate.py \
 python src/deploy/utils/utils.py save-to-s3 \
     --file ./evaluation_results.json \
     --bucket $s3_bucket \
-    --path evaluation_results-$job_name.json
+    --path results/$uuid/evaluation_results.json

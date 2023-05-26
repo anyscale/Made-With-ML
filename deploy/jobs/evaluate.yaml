@@ -7,7 +7,7 @@ runtime_env:
   env_vars:
     experiment_name: "" # if provided, this will be replaced
     run_id: ""  # if provided, this will be replaced
-    job_name: $JOB_NAME
+    uuid: $UUID
     s3_bucket: $S3_BUCKET
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0

@@ -41,6 +41,7 @@ jobs:
           export PROJECT_NAME="mlops-course
           echo PROJECT_ID=$(anyscale project list --name=$PROJECT_NAME --created-by-me | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*' | tail -n 1) >> $GITHUB_ENV
           echo S3_BUCKET=s3://goku-mlops >> $GITHUB_ENV
+          echo UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])') >> $GITHUB_ENV
 
       # Create our cluster environment
       - name: Create cluster env
@@ -55,11 +56,25 @@ jobs:
       # Evaluate our model
       - name: Evaluate model
         run: |
-          EVAL_JOB_NAME="evaluate-$(openssl rand -hex 4)"
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
+            uuid=${{ env.UUID }} \
             project_id=${{ env.PROJECT_ID }} \
-            job_name=$EVAL_JOB_NAME \
             build_id=${{ env.CLUSTER_ENV_ID }} \
             upload_path=${{ env.S3_BUCKET }}/workingdir/job \
             s3_bucket=${{ env.S3_BUCKET }} \
             experiment_name=llm
+      - name: Read evaluation results from S3
+        run: |
+          aws s3 cp ${{ env.S3_BUCKET }}/results/${{ env.UUID }}/evaluation_results.json evaluation.json
+      - name: Comment evaluation results to PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: ""
+            })
+

@@ -210,9 +210,8 @@ anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 Either `experiment_name` or `run_id` must be provided. If both are provided, `run_id` will be used. And if only `experiment_id` is provided, the best run from the experiment will be used.
 
 ```bash
-EVAL_JOB_NAME="evaluate-${UUID}"
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
-  job_name=$EVAL_JOB_NAME \
+  uuid=$UUID \
   project_id=$PROJECT_ID \
   build_id=$CLUSTER_ENV_ID \
   upload_path=$S3_BUCKET/workingdir/job \
