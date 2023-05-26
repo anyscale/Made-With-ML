@@ -26,7 +26,7 @@ def execute_job(file_path: str, env_vars: Dict) -> None:
     with tempfile.NamedTemporaryFile(suffix=".yaml", delete=True, mode="w+b") as temp_file:
         temp_file_path = temp_file.name
         yaml.dump(data, temp_file, encoding="utf-8")
-        subprocess.run(["anyscale", "job", "submit", temp_file_path])
+        subprocess.run(["anyscale", "job", "submit", "--wait", temp_file_path, "--name", env_vars["job_name"]])
 
 
 if __name__ == "__main__":
