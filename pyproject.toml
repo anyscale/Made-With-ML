@@ -59,6 +59,7 @@ test = [
 ]
 deploy = [
     "anyscale==0.5.110",
+    "typer==0.7.0",
 ]
 dev = [
     "madewithml[default]",

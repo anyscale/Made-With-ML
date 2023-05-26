@@ -199,7 +199,7 @@ export PROJECT_NAME="mlops-course"  # project name should match with repository 
 anyscale project create -n $PROJECT_NAME
 export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME)
+export CLUSTER_ENV_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id $CLUSTER_ENV_NAME)
 export S3_BUCKET="s3://goku-mlops"
 export UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])')
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
