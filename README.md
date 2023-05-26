@@ -210,8 +210,9 @@ anyscale compute-config create deploy/compute_config.yaml --name madewithml-comp
 # Either experiment_name or run_id must be provided
 # If both are provided, run_id will be used
 # If only experiment_id is provided, best run from experiment will be used
+EVAL_JOB_NAME="evaluate-$(openssl rand -hex 4)"  # random job name
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
-  job_name="evaluate-$(openssl rand -hex 4)" \  # unique job name
+  job_name=$EVAL_JOB_NAME \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   build_id=$CLUSTER_ENV_ID \
   upload_path=$S3_BUCKET/workingdir/job \

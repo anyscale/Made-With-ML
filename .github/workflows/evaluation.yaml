@@ -35,8 +35,10 @@ jobs:
           echo CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME) >> $GITHUB_ENV
       - name: Evaluate model
         run: |
+          EVAL_JOB_NAME="evaluate-$(openssl rand -hex 4)"
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
             project_id=prj_8tqvub3w9wherks256xlra9ch4 \
+            job_name=$EVAL_JOB_NAME \
             build_id=${{ env.CLUSTER_ENV_ID }} \
             upload_path=${{ env.S3_BUCKET }}/workingdir/job \
             experiment_name=llm
