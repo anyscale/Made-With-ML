@@ -48,7 +48,7 @@ jobs:
       - name: Create cluster env
         run: |
           export CLUSTER_ENV_NAME="madewithml-cluster-env"
-          echo CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME) >> $GITHUB_ENV
+          echo CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id $CLUSTER_ENV_NAME) >> $GITHUB_ENV
 
       # Train our model (could also tune)
       - name: Train model
@@ -60,7 +60,7 @@ jobs:
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
             uuid=${{ env.UUID }} \
             project_id=${{ env.PROJECT_ID }} \
-            build_id=${{ env.CLUSTER_ENV_ID }} \
+            build_id=${{ env.CLUSTER_ENV_BUILD_ID }} \
             upload_path=${{ env.S3_BUCKET }}/workingdir/job \
             s3_bucket=${{ env.S3_BUCKET }} \
             experiment_name=llm
