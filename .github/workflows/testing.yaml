@@ -33,5 +33,5 @@ jobs:
       # - name: Test model
       #   run: |
       #     EXPERIMENT_NAME="llm"
-      #     RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
+      #     RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
       #     pytest --run-id=$RUN_ID tests/model --disable-warnings > ./test_model_results.json

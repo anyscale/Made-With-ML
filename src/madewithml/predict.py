@@ -73,32 +73,34 @@ def predict_with_probs(
     return results
 
 
-def get_best_run_id(experiment_name: str, metric: str, direction: str) -> str:  # pragma: no cover, mlflow logic
+@app.command()
+def get_best_run_id(experiment_name: str = "", metric: str = "", mode: str = "") -> str:  # pragma: no cover, mlflow logic
     """Get the best run_id from an MLflow experiment.
 
     Args:
         experiment_name (str): name of the experiment.
         metric (str): metric to filter by.
-        direction (str): direction of metric (ASC/DESC).
+        mode (str): direction of metric (ASC/DESC).
 
     Returns:
         str: best run id from experiment.
     """
     sorted_runs = mlflow.search_runs(
         experiment_names=[experiment_name],
-        order_by=[f"metrics.{metric} {direction}"],
+        order_by=[f"metrics.{metric} {mode}"],
     )
     run_id = sorted_runs.iloc[0].run_id
+    print (run_id)
     return run_id
 
 
-def get_best_checkpoint(run_id: str, metric: str, direction: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
+def get_best_checkpoint(run_id: str, metric: str, mode: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
     """Get the best checkpoint (by performance) from a specific run.
 
     Args:
         run_id (str): ID of the run to get the best checkpoint from.
         metric (str): name of metric to search by.
-        direction (str): direction of metric (min/max).
+        mode (str): mode of metric (min/max).
 
     Returns:
         TorchCheckpoint: Best checkpoint from the run.
@@ -106,7 +108,7 @@ def get_best_checkpoint(run_id: str, metric: str, direction: str) -> TorchCheckp
     artifact_uri = mlflow.get_run(run_id).to_dictionary()["info"]["artifact_uri"]
     artifact_dir = urlparse(artifact_uri).path
     progress_df = pd.read_csv(Path(artifact_dir, "progress.csv"))
-    best_epoch = progress_df[metric].argmin() if direction == "min" else progress_df[metric].argmax()
+    best_epoch = progress_df[metric].argmin() if mode == "min" else progress_df[metric].argmax()
     best_checkpoint = Checkpoint.from_directory(path=Path(artifact_dir, f"checkpoint_{str(best_epoch).zfill(6)}"))
     return best_checkpoint
 
@@ -128,7 +130,7 @@ def predict(
         Dict: prediction results for the input data.
     """
     # Load components
-    best_checkpoint = get_best_checkpoint(run_id=run_id, metric="val_loss", direction="min")
+    best_checkpoint = get_best_checkpoint(run_id=run_id, metric="val_loss", mode="min")
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
     label_encoder = predictor.get_preprocessor().preprocessors[1]
     index_to_class = {v: k for k, v in label_encoder.stats_["unique_values(tag)"].items()}

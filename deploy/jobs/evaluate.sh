@@ -3,7 +3,7 @@
 # Evaluate model
 set -xe
 if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
-    run_id=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('${experiment_name}', 'val_loss', 'ASC'))")
+    run_id=$(python src/madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
 fi
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 python src/madewithml/evaluate.py \
@@ -12,8 +12,8 @@ python src/madewithml/evaluate.py \
     --num-cpu-workers 2 \
     --results-fp ./evaluation_results.json
 
-# Print evaluation results
-set +x
-echo "####EVAL_OUT####"
-cat ./evaluation_results.json
-echo "####EVAL_END####"
+# Save to S3
+python src/deploy/utils/utils.py save-to-s3 \
+    --file ./evaluation_results.json \
+    --bucket $s3_bucket \
+    --path evaluation_results-$job_name.json

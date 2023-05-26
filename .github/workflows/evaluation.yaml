@@ -2,11 +2,14 @@ name: evaluation
 on:
   pull_request:
     branches:
-    - main
+    - main  # this workflow is triggered on PRs to the main branch
+
 jobs:
   evaluate-model:
     runs-on: ubuntu-latest
     steps:
+
+      # Set up AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -14,31 +17,49 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-west-2
+
+      # Checkout our repository
       - name: Checkout repo
         uses: actions/checkout@v3
+
+      # Set up the appropriate Python version
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
+
+      # Install our Python dependencies
       - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-      - name: Set global vars  # can be used across steps (except this step) and jobs
+        run: python -m pip install -e ".[deploy]" --no-cache-dir
+
+      # Set all the global variables that we'll use across steps and jobs
+      - name: Set global vars
         run: |
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
           echo "::add-mask::$ANYSCALE_CLI_TOKEN"
+          export PROJECT_NAME="mlops-course
+          echo PROJECT_ID=$(anyscale project list --name=$PROJECT_NAME --created-by-me | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*' | tail -n 1) >> $GITHUB_ENV
           echo S3_BUCKET=s3://goku-mlops >> $GITHUB_ENV
+
+      # Create our cluster environment
       - name: Create cluster env
         run: |
           export CLUSTER_ENV_NAME="madewithml-cluster-env"
           echo CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME) >> $GITHUB_ENV
+
+      # Train our model (could also tune)
+      - name: Train model
+        run: echo "Training model"
+
+      # Evaluate our model
       - name: Evaluate model
         run: |
           EVAL_JOB_NAME="evaluate-$(openssl rand -hex 4)"
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
-            project_id=prj_8tqvub3w9wherks256xlra9ch4 \
+            project_id=${{ env.PROJECT_ID }} \
             job_name=$EVAL_JOB_NAME \
             build_id=${{ env.CLUSTER_ENV_ID }} \
             upload_path=${{ env.S3_BUCKET }}/workingdir/job \
+            s3_bucket=${{ env.S3_BUCKET }} \
             experiment_name=llm

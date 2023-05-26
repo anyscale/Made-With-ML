@@ -134,7 +134,7 @@ def evaluate(
     """
     # Load
     ds = ray.data.read_csv(dataset_loc).repartition(num_cpu_workers)
-    best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", direction="min")
+    best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", mode="min")
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
 
     # y_true
