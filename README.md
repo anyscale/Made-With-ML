@@ -198,7 +198,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 export PROJECT_NAME="mlops-course"  # project name should match with repository name
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
 export CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME)
-export S3_BUCKET="s3://goku-mlops/workingdir/job"
+export S3_BUCKET="s3://goku-mlops"
 anyscale project create -n $PROJECT_NAME  # paste project_id in job commands below
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
@@ -213,7 +213,7 @@ anyscale compute-config create deploy/compute_config.yaml --name madewithml-comp
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   build_id=$CLUSTER_ENV_ID \
-  upload_path=$S3_BUCKET \
+  upload_path=$S3_BUCKET/workingdir/job \
   experiment_name=llm
 ```
 

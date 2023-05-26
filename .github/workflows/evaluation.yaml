@@ -28,7 +28,7 @@ jobs:
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
           echo "::add-mask::$ANYSCALE_CLI_TOKEN"
-          echo BRANCH=${GITHUB_REF#refs/heads/} >> $GITHUB_ENV
+          echo S3_BUCKET=s3://goku-mlops >> $GITHUB_ENV
       - name: Create cluster env
         run: |
           echo ${{ env.ANYSCALE_HOST }}
@@ -40,6 +40,5 @@ jobs:
           python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
             project_id=prj_8tqvub3w9wherks256xlra9ch4 \
             build_id=${{ env.CLUSTER_ENV_ID }} \
-            repo=$GITHUB_REPOSITORY \
-            branch=${{ env.BRANCH }} \
+            upload_path=${{ env.S3_BUCKET }}/workingdir/job \
             experiment_name=llm
