@@ -22,9 +22,6 @@ def execute_job(file_path: str, env_vars: Dict) -> None:
         data = yaml.safe_load(file)
     data = substitute_env_vars(data, env_vars)
 
-    # Update working directory
-    data["runtime_env"]["working_dir"] = f"https://github.com/{env_vars['repo']}/archive/refs/heads/{env_vars['branch']}.zip"
-
     # Execute Anyscale job
     with tempfile.NamedTemporaryFile(suffix=".yaml", delete=True, mode="w+b") as temp_file:
         temp_file_path = temp_file.name
