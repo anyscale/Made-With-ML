@@ -37,9 +37,8 @@ jobs:
         run: |
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
-          echo "::add-mask::$ANYSCALE_CLI_TOKEN"
-          export PROJECT_NAME="mlops-course
-          echo PROJECT_ID=$(anyscale project list --name=$PROJECT_NAME --created-by-me | grep "$PROJECT_NAME" | grep -m 1 -o 'prj_[a-zA-Z0-9]*' | tail -n 1) >> $GITHUB_ENV
+          export PROJECT_NAME="mlops-course"
+          export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
           echo S3_BUCKET=s3://goku-mlops >> $GITHUB_ENV
           echo UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])') >> $GITHUB_ENV
 
