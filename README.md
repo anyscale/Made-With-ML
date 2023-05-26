@@ -187,8 +187,8 @@ pytest --run-id=$RUN_ID tests/model --disable-warnings
 ### Authentication
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
-export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retreved from AWS IAM
+export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
@@ -198,6 +198,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 export PROJECT_NAME="mlops-course"  # project name should match with repository name
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
 export CLUSTER_ENV_ID=$(python deploy/utils/get_latest_cluster_env_build_id.py $CLUSTER_ENV_NAME)
+export S3_BUCKET="s3://goku-mlops/workingdir/job"
 anyscale project create -n $PROJECT_NAME  # paste project_id in job commands below
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
 anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
@@ -212,8 +213,7 @@ anyscale compute-config create deploy/compute_config.yaml --name madewithml-comp
 python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
   project_id=prj_8tqvub3w9wherks256xlra9ch4 \
   build_id=$CLUSTER_ENV_ID \
-  repo=anyscale/mlops-course \
-  branch=dev \
+  upload_path=$S3_BUCKET \
   experiment_name=llm
 ```
 
