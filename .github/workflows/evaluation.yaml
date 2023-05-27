@@ -27,6 +27,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
+          cache: 'pip'
 
       # Install our Python dependencies
       - name: Install dependencies
@@ -42,7 +43,7 @@ jobs:
           echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-          echo COMMIT_ID=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+          echo COMMIT_ID=$(echo ${{ github.sha }} | cut -c 1-7) >> $GITHUB_ENV
 
       # Create cluster environment (if needed)
       - name: Create cluster env (if needed)
@@ -72,10 +73,8 @@ jobs:
             --cluster-env-name ${{ env.CLUSTER_ENV_NAME }} \
             --run-id "" \
             --commit-id ${{ env.COMMIT_ID }}
-      - name: Read evaluation results from S3
-        run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
-      - name: Comment evaluation results to PR
-        uses: actions/github-script@v6
+      - run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
+      - uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
