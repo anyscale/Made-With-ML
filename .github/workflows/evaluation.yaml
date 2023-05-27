@@ -66,8 +66,8 @@ jobs:
           python deploy/app.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ env.CLUSTER_ENV_NAME }}
-            --run_id "" \
-            --commit_id ${{ env.COMMIT_ID }}
+            --run-id "" \
+            --commit-id ${{ env.COMMIT_ID }}
       - name: Read evaluation results from S3
         run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
       - name: Comment evaluation results to PR
