@@ -65,7 +65,7 @@ jobs:
         run: |
           python deploy/app.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
-            --cluster-env-name ${{ env.CLUSTER_ENV_NAME }}
+            --cluster-env-name ${{ env.CLUSTER_ENV_NAME }} \
             --run-id "" \
             --commit-id ${{ env.COMMIT_ID }}
       - name: Read evaluation results from S3
