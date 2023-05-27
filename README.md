@@ -193,6 +193,56 @@ export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
+### Workloads
+
+1. Set env vars
+```bash
+export PROJECT_NAME="madewithml"
+export CLUSTER_ENV_NAME="madewithml-cluster-env"
+export S3_BUCKET="s3://madewithml"
+```
+
+2. Create the project
+```bash
+anyscale project create -n $PROJECT_NAME
+```
+
+3. Replace vars in configs
+```bash
+# Replace vars in configs (jobs/*.yaml and services/*.yaml)
+python deploy/app.py get-project-id --project-name $PROJECT_NAME
+python deploy/app.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+4. Test code + data
+```bash
+```
+
+5. Train model
+```bash
+```
+
+6. Evaluate model
+```bash
+# Manual
+anyscale job submit deploy/jobs/evaluate.yaml
+
+# Dynamic
+python deploy/app.py submit-job \
+  --yaml-config-fp deploy/jobs/evaluate.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+7. Test model
+```bash
+```
+
+8. Deploy model
+```bash
+```
+
+------------------------------------------------------------------------------------------------------------------------
+
 ### Setup
 ```bash
 export PROJECT_NAME="mlops-course"  # project name should match with repository name
@@ -242,6 +292,12 @@ anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
 # Terminate
 anyscale service terminate --name $SERVICE_NAME
 ```
+
+
+
+
+
+
 
 ## CI/CD
 

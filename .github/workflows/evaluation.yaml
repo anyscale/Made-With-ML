@@ -2,7 +2,7 @@ name: evaluation
 on:
   pull_request:
     branches:
-    - main  # this workflow is triggered on PRs to the main branch
+    - main  # triggered on PRs to the main branch
 
 jobs:
   evaluate-model:
@@ -39,38 +39,39 @@ jobs:
         run: |
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
-          export PROJECT_NAME="mlops-course"
-          export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
-          echo S3_BUCKET=s3://goku-mlops >> $GITHUB_ENV
-          echo UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])') >> $GITHUB_ENV
+          echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
+          echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
+          echo COMMIT_ID=$(git rev-parse --short HEAD) >> $GITHUB_OUTPUT
 
-      # Create our cluster environment
-      - name: Create cluster env
-        run: |
-          export CLUSTER_ENV_NAME="madewithml-cluster-env"
-          echo CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME) >> $GITHUB_ENV
+      # Create cluster environment (if needed)
+      - name: Create cluster env (if needed)
+        run: echo "Creating cluster env"
 
       # Train our model (could also tune)
       - name: Train model
         run: echo "Training model"
 
+      # Get run ID
+      - name: Get run ID
+        run: echo "Run ID:"
+
       # Evaluate our model
       - name: Evaluate model
         run: |
-          python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
-            uuid=${{ env.UUID }} \
-            project_id=${{ env.PROJECT_ID }} \
-            build_id=${{ env.CLUSTER_ENV_BUILD_ID }} \
-            upload_path=${{ env.S3_BUCKET }}/workingdir/job \
-            s3_bucket=${{ env.S3_BUCKET }} \
-            experiment_name=llm
+          python deploy/app.py submit-job \
+            --yaml-config-fp deploy/jobs/evaluate.yaml \
+            --cluster-env-name ${{ env.CLUSTER_ENV_NAME }}
+            --run_id "" \
+            --commit_id ${{ env.COMMIT_ID }}
+
       - name: Read evaluation results from S3
         run: |
-          aws s3 cp ${{ env.S3_BUCKET }}/results/${{ env.UUID }}/evaluation_results.json evaluation_results.json
+          aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
+
       - name: Comment evaluation results to PR
         uses: actions/github-script@v6
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs')
             github.rest.issues.createComment({
@@ -79,4 +80,3 @@ jobs:
               issue_number: context.issue.number,
               body: fs.readFileSync('evaluation_results.json', 'utf8')
             })
-

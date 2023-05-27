@@ -1,14 +1,15 @@
 name: evaluate-model
-project_id: $PROJECT_ID
-build_id: $CLUSTER_ENV_ID
+project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
+build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
 runtime_env:
   working_dir: .
-  upload_path: $UPLOAD_PATH
+  upload_path: s3://madewithml/goku/workingdir/job
   env_vars:
-    experiment_name: "" # if provided, this will be replaced
-    run_id: ""  # if provided, this will be replaced
-    uuid: $UUID
-    s3_bucket: $S3_BUCKET
+    experiment_name: llm
+    run_id: ""  # if "", best run from experiment will be used
+    s3_bucket_name: madewithml
+    username: GokuMohandas  # use GitHub username
+    commit_id: default  # will be set when run w/ GitHub actions
 entrypoint: bash deploy/jobs/evaluate.sh
 max_retries: 0
 compute_config:
@@ -22,7 +23,7 @@ compute_config:
   - name: cpu_worker
     instance_type: m5.xlarge
     min_workers: 1
-    max_workers: 2
+    max_workers: 8
   aws:
     BlockDeviceMappings:
     - DeviceName: "/dev/sda1"
