@@ -43,12 +43,20 @@ jobs:
           echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-          echo COMMIT_ID=$(echo {{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
+          echo COMMIT_ID=$(echo {{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_OUTPUT
 
       # Create cluster environment (if needed)
       - name: Create cluster env (if needed)
         run: |
           echo "Creating cluster env"
+          echo ${{ env.GITHUB_USERNAME }}
+          echo ${{ env.COMMIT_ID }}
+          echo $(pip freeze)
+          echo $(anyscale project list --created-by-me)
+
+      outputs:
+        COMMIT_ID: ${{ steps.set-up.outputs.COMMIT_ID }}
+
 
   evaluate-model:
     runs-on: ubuntu-latest
@@ -62,6 +70,8 @@ jobs:
           echo ${{ env.GITHUB_USERNAME }}
           echo ${{ env.COMMIT_ID }}
           echo $(pip freeze)
+          echo $(anyscale project list --created-by-me)
+          echo ${{ needs.set-up.outputs.COMMIT_ID }}
 
   test-model:
     runs-on: ubuntu-latest
