@@ -8,6 +8,15 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-22.04
+
+    outputs:  # outputs (that we'll reuse in other jobs)
+      ANYSCALE_HOST: ${{ steps.vars.outputs.ANYSCALE_HOST }}
+      CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
+      S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
+      GITHUB_USERNAME: ${{ steps.vars.outputs.GITHUB_USERNAME }}
+      COMMIT_ID: ${{ steps.vars.outputs.COMMIT_ID }}
+      PR_NUM: ${{ steps.vars.outputs.PR_NUM }}
+
     steps:
 
       # Set up AWS credentials
@@ -38,13 +47,14 @@ jobs:
 
       # Set all the global variables that we'll use across steps and jobs
       - name: Set global vars
+        id: vars
         run: |
-          echo "::set-output name=ANYSCALE_HOST::https://console.anyscale-staging.com"
-          echo "::set-output name=CLUSTER_ENV_NAME::madewithml-cluster-env"
-          echo "::set-output name=S3_BUCKET::s3://madewithml"
-          echo "::set-output name=GITHUB_USERNAME::${{ github.actor }}"
-          echo "::set-output name=COMMIT_ID::$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7)"
-          echo "::set-output name=PR_NUMBER::${{ github.event.pull_request.number }}"
+          echo "ANYSCALE_HOST=https://console.anyscale-staging.com" >> "$GITHUB_OUTPUT"
+          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> "$GITHUB_OUTPUT"
+          echo "S3_BUCKET=s3://madewithml" >> "$GITHUB_OUTPUT"
+          echo "GITHUB_USERNAME=${{ github.actor }}" >> "$GITHUB_OUTPUT"
+          echo "COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7)" >> "$GITHUB_OUTPUT"
+          echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
 
       # Create cluster environment (if needed)
       - name: Create cluster env (if needed)
@@ -90,6 +100,7 @@ jobs:
           echo ${{ needs.setup.outputs.S3_BUCKET }}
           echo ${{ needs.setup.outputs.CLUSTER_ENV_NAME }}
           echo ${{ needs.setup.outputs.COMMIT_ID }}
+          echo ${{ needs.setup.outputs.PR_NUM }}
 
       # Evaluate our model
       - name: Evaluate model
