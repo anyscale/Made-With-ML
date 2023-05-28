@@ -1,12 +1,18 @@
-name: workloads
+name: evaluate-model
 on:
+  workflow_dispatch:  # for ability to manually trigger workflow
   pull_request:
     branches:
     - main  # triggered on PRs to the main branch
+  workflow_run:
+    workflows: [setup]
+    types:
+      - completed
 
 jobs:
-  setup:
+  evaluate-model:
     runs-on: ubuntu-22.04
+    needs: setup
     steps:
 
       # Set up AWS credentials
@@ -36,8 +42,7 @@ jobs:
           npm install fs
 
       # Set all the global variables that we'll use across steps and jobs
-      - id: set-global-vars
-        name: Set global vars
+      - name: Set global vars
         run: |
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
@@ -45,25 +50,6 @@ jobs:
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
           echo COMMIT_ID=$(echo {{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
-
-      # Create cluster environment (if needed)
-      - name: Create cluster env (if needed)
-        run: |
-          echo "Creating cluster env"
-
-  evaluate-model:
-    runs-on: ubuntu-22.04
-    needs: setup
-    steps:
-
-      - name: setups
-        uses: setup#Set up AWS credentials
-      - name: setups
-        uses: setup#Checkout repo
-      - name: setups
-        uses: setup#Install dependencies
-      - name: setups
-        uses: setup#Set global vars
 
       # Test code + data
       - name: Train code + data
