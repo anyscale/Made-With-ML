@@ -7,6 +7,9 @@ on:
 
 jobs:
   set-up:
+    permissions:
+      id-token: write
+      contents: read
     uses: ./.github/workflows/setup.yaml
 
   evaluate-model:
@@ -16,7 +19,6 @@ jobs:
       # Test code + data
       - name: Train code + data
         run: |
-          source venv/bin/activate
           echo "Testing code + data"
           echo ${{ env.GITHUB_USERNAME }}
           echo ${{ env.COMMIT_ID }}
