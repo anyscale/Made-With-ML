@@ -45,11 +45,13 @@ jobs:
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
           echo COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
+          echo PR_NUMBER=${{ github.event.pull_request.number }} >> $GITHUB_ENV
 
       # Create cluster environment (if needed)
       - name: Create cluster env (if needed)
         run: |
           echo "Creating cluster env"
+          echo ${{ env.PR_NUMBER }}
 
   evaluate-model:
     runs-on: ubuntu-22.04
