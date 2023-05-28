@@ -7,6 +7,8 @@ on:
 jobs:
   set-up:
     runs-on: ubuntu-latest
+    outputs:
+        COMMIT_ID: ${{ steps.set-global-vars.outputs.COMMIT_ID }}
     steps:
 
       # Set up AWS credentials
@@ -36,7 +38,8 @@ jobs:
           npm install fs
 
       # Set all the global variables that we'll use across steps and jobs
-      - name: Set global vars
+      - id: set-global-vars
+        name: Set global vars
         run: |
           echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
           echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
@@ -53,9 +56,6 @@ jobs:
           echo ${{ env.COMMIT_ID }}
           echo $(pip freeze)
           echo $(anyscale project list --created-by-me)
-
-      outputs:
-        COMMIT_ID: ${{ steps.set-up.outputs.COMMIT_ID }}
 
 
   evaluate-model:
