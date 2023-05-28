@@ -5,7 +5,7 @@ on:
     - main  # triggered on PRs to the main branch
 
 jobs:
-  ml-workloads:
+  set-up:
     runs-on: ubuntu-latest
     steps:
 
@@ -43,28 +43,43 @@ jobs:
           echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-          echo COMMIT_ID=$(echo ${{ github.sha }} | cut -c 1-7) >> $GITHUB_ENV
+          echo COMMIT_ID=${{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
 
       # Create cluster environment (if needed)
       - name: Create cluster env (if needed)
         run: |
           echo "Creating cluster env"
-          echo ${{ env.ANYSCALE_CLI_TOKEN }}
-          echo ${{ env.GITHUB_USERNAME }}
-          echo ${{ env.COMMIT_ID }}
-          echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7
+
+  evaluate-model:
+    runs-on: ubuntu-latest
+    needs: set-up
+    steps:
 
       # Test code + data
       - name: Train code + data
-        run: echo "Testing code + data"
+        run: |
+          echo "Testing code + data"
+          echo ${{ env.GITHUB_USERNAME }}
+          echo ${{ env.COMMIT_ID }}
+          echo $(pip freeze)
+
+  test-model:
+    runs-on: ubuntu-latest
+    needs: evaluate-model
+    steps:
 
       # Train our model (could also tune)
       - name: Train model
-        run: echo "Training model"
+        run: |
+          echo "Training model"
+          echo ${{ env.GITHUB_USERNAME }}
+          echo ${{ env.COMMIT_ID }}
+          echo $(pip freeze)
 
       # Get run ID
       - name: Get run ID
-        run: echo "Run ID:"
+        run: |
+          echo "Run ID:"
 
       # Evaluate our model
       - name: Evaluate model
@@ -74,8 +89,10 @@ jobs:
             --cluster-env-name ${{ env.CLUSTER_ENV_NAME }} \
             --run-id "" \
             --commit-id ${{ env.COMMIT_ID }}
-      - run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
-      - uses: actions/github-script@v6
+      - name: Read results from S3
+        run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
+      - name: Comment results on PR
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
