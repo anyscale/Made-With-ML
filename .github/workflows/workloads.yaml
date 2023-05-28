@@ -6,8 +6,11 @@ on:
     - main  # triggered on PRs to the main branch
 
 jobs:
-  evaluate-model:
+  set-up:
     uses: ./.github/workflows/setup.yaml
+
+  evaluate-model:
+    runs-on: ubuntu-22.04
     steps:
 
       # Test code + data
@@ -17,8 +20,6 @@ jobs:
           echo "Testing code + data"
           echo ${{ env.GITHUB_USERNAME }}
           echo ${{ env.COMMIT_ID }}
-          echo $(pip freeze)
-          echo ${{ needs.set-up.outputs.COMMIT_ID }}
           echo $(anyscale project list --created-by-me)
 
       # Train our model (could also tune)
