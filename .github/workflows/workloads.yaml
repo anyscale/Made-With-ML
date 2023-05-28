@@ -53,6 +53,7 @@ jobs:
 
   evaluate-model:
     runs-on: ubuntu-22.04
+    needs: setup
     steps:
 
       # Set up AWS credentials
