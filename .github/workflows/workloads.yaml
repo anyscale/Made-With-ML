@@ -90,23 +90,17 @@ jobs:
           echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
           echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
           echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-          echo COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
+          echo COMMIT_ID=$(echo {{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
 
       # Test code + data
       - name: Test code + data
         run: |
           echo "Testing code + data"
-          echo ${{ env.GITHUB_USERNAME }}
-          echo ${{ env.COMMIT_ID }}
-          echo $(anyscale project list --created-by-me)
 
       # Train our model (could also tune)
       - name: Train model
         run: |
           echo "Training model"
-          echo ${{ env.GITHUB_USERNAME }}
-          echo ${{ env.COMMIT_ID }}
-          echo $(pip freeze)
 
       # Get run ID
       - name: Get run ID
@@ -139,4 +133,3 @@ jobs:
       # Test model
       - name: Test model
         run: echo "Test model"
-

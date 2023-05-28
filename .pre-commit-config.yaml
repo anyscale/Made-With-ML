@@ -14,6 +14,13 @@ repos:
         exclude: "mkdocs.yml"
 - repo: local
   hooks:
+    - id: github-actions-setup
+      name: add setup steps to our jobs (where needed)
+      entry: python deploy/utils.py add-setup-to-jobs --input-file-path .github/utils/workload.tpl.yaml \
+        --setup-steps-path .github/utils/setup.yaml \
+        --output-file-path .github/workflows/workloads.yaml
+      language: system
+      pass_filenames: false
     -   id: clean  # clean before test so we don't run expensive test runs again
         name: clean before test
         entry: make

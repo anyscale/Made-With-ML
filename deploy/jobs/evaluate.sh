@@ -18,7 +18,7 @@ python src/madewithml/evaluate.py \
     --results-fp ./evaluation_results.json
 
 # Save to S3
-python deploy/app.py save-to-s3 \
-    --file ./evaluation_results.json \
+python deploy/utils.py save-to-s3 \
+    --file-path ./evaluation_results.json \
     --bucket-name $s3_bucket_name \
-    --path $username/results/$commit_id/evaluation_results.json
+    --bucket-path $username/results/$commit_id/evaluation_results.json

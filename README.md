@@ -210,8 +210,8 @@ anyscale project create -n $PROJECT_NAME
 3. Replace vars in configs
 ```bash
 # Replace vars in configs (jobs/*.yaml and services/*.yaml)
-python deploy/app.py get-project-id --project-name $PROJECT_NAME
-python deploy/app.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
+python deploy/utils.py get-project-id --project-name $PROJECT_NAME
+python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
 4. Test code + data
@@ -228,7 +228,7 @@ python deploy/app.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER
 anyscale job submit deploy/jobs/evaluate.yaml
 
 # Dynamic
-python deploy/app.py submit-job \
+python deploy/utils.py submit-job \
   --yaml-config-fp deploy/jobs/evaluate.yaml \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
