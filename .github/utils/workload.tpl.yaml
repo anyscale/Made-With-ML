@@ -38,7 +38,7 @@ jobs:
       # Evaluate our model
       - name: Evaluate model
         run: |
-          python deploy/app.py submit-job \
+          python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ env.CLUSTER_ENV_NAME }} \
             --run-id "" \
