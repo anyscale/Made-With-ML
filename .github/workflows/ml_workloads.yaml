@@ -1,4 +1,4 @@
-name: evaluation
+name: ml-workloads
 on:
   pull_request:
     branches:
@@ -52,6 +52,7 @@ jobs:
           echo ${{ env.ANYSCALE_CLI_TOKEN }}
           echo ${{ env.GITHUB_USERNAME }}
           echo ${{ env.COMMIT_ID }}
+          echo echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7
 
       # Test code + data
       - name: Train code + data
