@@ -1,0 +1,30 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Your workflow steps here
+
+    # Retrieve PR information using GitHub REST API
+    - name: Get PR information
+      id: pr-info
+      run: |
+        pr_number=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+        "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+        | jq -r '.[0].number')
+
+        echo "::set-output name=pr-number::$pr_number"
+
+    # Use the retrieved PR number
+    - name: Use PR number
+      run: |
+        pr_number=${{ steps.pr-info.outputs.pr-number }}
+        echo "PR Number: $pr_number"
+        # You can perform additional actions with the PR number
