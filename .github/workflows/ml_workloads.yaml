@@ -34,6 +34,8 @@ jobs:
       # Install our Python dependencies
       - name: Install dependencies
         run: |
+          python -m venv venv
+          source venv/bin/activate
           python -m pip install -e ".[deploy]" --no-cache-dir
           npm install fs
 
@@ -66,12 +68,13 @@ jobs:
       # Test code + data
       - name: Train code + data
         run: |
+          source venv/bin/activate
           echo "Testing code + data"
           echo ${{ env.GITHUB_USERNAME }}
           echo ${{ env.COMMIT_ID }}
           echo $(pip freeze)
-          echo $(anyscale project list --created-by-me)
           echo ${{ needs.set-up.outputs.COMMIT_ID }}
+          echo $(anyscale project list --created-by-me)
 
   test-model:
     runs-on: ubuntu-latest
