@@ -40,7 +40,6 @@ jobs:
       - name: Set global vars
         run: |
           echo "::set-output name=ANYSCALE_HOST::https://console.anyscale-staging.com"
-          echo "::set-output name=ANYSCALE_CLI_TOKEN::${{ secrets.ANYSCALE_CLI_TOKEN }}"
           echo "::set-output name=CLUSTER_ENV_NAME::madewithml-cluster-env"
           echo "::set-output name=S3_BUCKET::s3://madewithml"
           echo "::set-output name=GITHUB_USERNAME::${{ github.actor }}"
@@ -88,10 +87,15 @@ jobs:
       - name: Get run ID
         run: |
           echo "Run ID:"
+          echo ${{ needs.setup.outputs.S3_BUCKET }}
+          echo ${{ needs.setup.outputs.CLUSTER_ENV_NAME }}
+          echo ${{ needs.setup.outputs.COMMIT_ID }}
 
       # Evaluate our model
       - name: Evaluate model
         run: |
+          echo ANYSCALE_HOST=${{ needs.setup.outputs.ANYSCALE_HOST }}
+          echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
