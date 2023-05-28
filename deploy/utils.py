@@ -73,30 +73,5 @@ def save_to_s3(
     s3.upload_file(file_path, bucket_name, bucket_path)
 
 
-@app.command()
-def add_setup_to_jobs(
-    input_file_path: str = typer.Option(..., "--input-file-path", "-fp", help="template file"),
-    setup_steps_path: str = typer.Option(..., "--setup-steps-path", "-fp", help="steps to add"),
-    output_file_path: str = typer.Option(..., "--output-file-path", "-fp", help="workflow file"),
-):
-    """Insert content from YAML file B into YAML file A as the first N steps of every job in file A.
-    If the first N steps of each job in file A are already the steps from file B, then no changes are made.
-    This is a workaround so that we don't have to copy/paste setup code for each GitHub Action job."""
-    with open(input_file_path, "r") as input_file, open(setup_steps_path, "r") as setup_steps_file, open(
-        output_file_path, "w"
-    ) as output_file:
-        indentation = " " * 6
-        additional_text = setup_steps_file.read()
-        for line in input_file:
-            line = line.rstrip("\n")  # Remove trailing newline character
-            output_file.write(line + "\n")  # Write the line as-is
-
-            if "steps:" in line:
-                # Write the additional text with the appropriate indentation
-                output_file.write("\n")
-                for additional_line in additional_text.split("\n"):
-                    output_file.write(indentation + additional_line + "\n")
-
-
 if __name__ == "__main__":
     app()

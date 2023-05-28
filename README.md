@@ -344,13 +344,6 @@ git checkout $BRANCH_NAME
 git merge main  # ready to develop again
 ```
 
-> CI/CD with GitHub Actions is overall fantastic but we need to run this command:
-```bash
-python deploy/utils.py add-setup-to-jobs \
-  --input-file-path .github/utils/workload.tpl.yaml \
-  --setup-steps-path .github/utils/setup.yaml \
-  --output-file-path .github/workflows/workloads.yaml
-```
 
 ## FAQ
 
