@@ -56,6 +56,15 @@ jobs:
     needs: setup
     steps:
 
+      - name: setups
+        uses: setup#Set up AWS credentials
+      - name: setups
+        uses: setup#Checkout repo
+      - name: setups
+        uses: setup#Install dependencies
+      - name: setups
+        uses: setup#Set global vars
+
       # Test code + data
       - name: Train code + data
         run: |
