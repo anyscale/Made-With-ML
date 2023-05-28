@@ -94,7 +94,7 @@ mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 ### Evaluation
 ```bash
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
+RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 python src/madewithml/evaluate.py \
     --run-id $RUN_ID \
@@ -113,8 +113,8 @@ python src/madewithml/evaluate.py \
 ```bash
 # Get run ID
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
-python src/madewithml/predict.py \
+RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+python src/madewithml/predict.py predict \
     --run-id $RUN_ID \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks."
@@ -138,7 +138,7 @@ python src/madewithml/predict.py \
 # Set up
 ray start --head  # already running if using Anyscale
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
+RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 python src/madewithml/serve.py --run_id $RUN_ID
 ```
 
@@ -178,7 +178,7 @@ pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings
 
 # Model
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python -c "from madewithml.predict import get_best_run_id as g; print(g('$EXPERIMENT_NAME', 'val_loss', 'ASC'))")
+RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
@@ -187,25 +187,88 @@ pytest --run-id=$RUN_ID tests/model --disable-warnings
 ### Authentication
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
-export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retreved from AWS IAM
+export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
+
+### Workloads
+
+1. Set env vars
+```bash
+export PROJECT_NAME="madewithml"
+export CLUSTER_ENV_NAME="madewithml-cluster-env"
+export S3_BUCKET="s3://madewithml"
+```
+
+2. Create the project
+```bash
+anyscale project create -n $PROJECT_NAME
+```
+
+3. Replace vars in configs
+```bash
+# Replace vars in configs (jobs/*.yaml and services/*.yaml)
+python deploy/utils.py get-project-id --project-name $PROJECT_NAME
+python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+4. Test code + data
+```bash
+```
+
+5. Train model
+```bash
+```
+
+6. Evaluate model
+```bash
+# Manual
+anyscale job submit deploy/jobs/evaluate.yaml
+
+# Dynamic
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/evaluate.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+7. Test model
+```bash
+```
+
+8. Deploy model
+```bash
+```
+
+------------------------------------------------------------------------------------------------------------------------
 
 ### Setup
 ```bash
 export PROJECT_NAME="mlops-course"  # project name should match with repository name
 anyscale project create -n $PROJECT_NAME
+export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
+export CLUSTER_ENV_NAME="madewithml-cluster-env"
+export CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME)
+export S3_BUCKET="s3://goku-mlops"
+export UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])')
 anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
-anyscale compute-config create deploy/compute_config.yaml --name madewithml-compute-config
 ```
 
-### Jobs
+
+### Evaluation job
+Either `experiment_name` or `run_id` must be provided. If both are provided, `run_id` will be used. And if only `experiment_id` is provided, the best run from the experiment will be used.
+
 ```bash
-anyscale job submit deploy/jobs/train.yaml
-anyscale job submit deploy/jobs/evaluate.yaml
+python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
+  uuid=$UUID \
+  project_id=$PROJECT_ID \
+  build_id=$CLUSTER_ENV_BUILD_ID \
+  upload_path=$S3_BUCKET/workingdir/job \
+  s3_bucket=$S3_BUCKET \
+  experiment_name=llm
 ```
+
 
 ### Services
 
@@ -229,6 +292,12 @@ anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
 # Terminate
 anyscale service terminate --name $SERVICE_NAME
 ```
+
+
+
+
+
+
 
 ## CI/CD
 
@@ -274,6 +343,7 @@ git pull origin main
 git checkout $BRANCH_NAME
 git merge main  # ready to develop again
 ```
+
 
 ## FAQ
 

@@ -12,8 +12,8 @@ repos:
         exclude: "notebooks"
     -   id: check-yaml
         exclude: "mkdocs.yml"
-- repo: local
-  hooks:
+-   repo: local
+    hooks:
     -   id: clean  # clean before test so we don't run expensive test runs again
         name: clean before test
         entry: make

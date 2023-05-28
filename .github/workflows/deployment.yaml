@@ -1,33 +1,30 @@
-name: deployment
+name: deploy
+
 on:
-  pull_request:
+  push:
     branches:
-    - main
+      - main
+
 jobs:
-  deploy-service:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    # steps:
-    #   - name: Set up AWS credentials
-    #     uses: aws-actions/configure-aws-credentials@v1
-    #     with:
-    #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #       aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-    #       aws-region: us-west-2
-    #   - name: Checkout repo
-    #     uses: actions/checkout@v3
-    #   - name: Set up Python
-    #     uses: actions/setup-python@v4
-    #     with:
-    #       python-version: '3.10.11'
-    #       cache: 'pip'
-    #   - name: Install dependencies
-    #     run: |
-    #       python -m pip install -e ".[deploy]" --no-cache-dir
-    #   - name:
-    #     run: |
-    #       export SERVICE_CONFIG="deploy/services/service.yaml"
-    #       export SERVICE_NAME="madewithml-service"
-    #       anyscale service rollout -f $SERVICE_CONFIG --name $SERVICE_NAME
+
+    steps:
+      # Your workflow steps here
+
+    # Retrieve PR information using GitHub REST API
+    - name: Get PR information
+      id: pr-info
+      run: |
+        pr_number=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+        "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+        | jq -r '.[0].number')
+
+        echo "::set-output name=pr-number::$pr_number"
+
+    # Use the retrieved PR number
+    - name: Use PR number
+      run: |
+        pr_number=${{ steps.pr-info.outputs.pr-number }}
+        echo "PR Number: $pr_number"
+        # You can perform additional actions with the PR number
