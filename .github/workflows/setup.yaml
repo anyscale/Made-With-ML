@@ -2,7 +2,15 @@ name: set-up
 
 on:
   workflow_call:
-    # place any inputs and secrets here
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_SESSION_TOKEN:
+        required: true
+      ANYSCALE_CLI_TOKEN:
+        required: true
 
 jobs:
   set-up:
