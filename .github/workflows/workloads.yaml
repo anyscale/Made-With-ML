@@ -19,6 +19,7 @@ jobs:
 
   evaluate-model:
     runs-on: ubuntu-22.04
+    needs: set-up
     steps:
 
       # Test code + data
