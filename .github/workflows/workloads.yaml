@@ -4,9 +4,7 @@ on:
   pull_request:
     branches:
     - main  # triggered on PRs to the main branch
-permissions:
-  id-token: write
-  contents: read
+permissions: write-all
 
 jobs:
   setup:
@@ -14,36 +12,8 @@ jobs:
     outputs:  # outputs (that we'll reuse in other jobs)
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
-      GITHUB_USERNAME: ${{ steps.vars.outputs.GITHUB_USERNAME }}
-      COMMIT_ID: ${{ steps.vars.outputs.COMMIT_ID }}
-      PR_NUM: ${{ steps.vars.outputs.PR_NUM }}
 
     steps:
-
-      # Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
-          role-session-name: s3access
-          aws-region: us-west-2
-
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.11'
-          cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
 
       # Set all the global variables that we'll use across steps and jobs
       - name: Set global vars
@@ -51,14 +21,6 @@ jobs:
         run: |
           echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> "$GITHUB_OUTPUT"
           echo "S3_BUCKET=s3://madewithml" >> "$GITHUB_OUTPUT"
-          echo "GITHUB_USERNAME=${{ github.actor }}" >> "$GITHUB_OUTPUT"
-          echo "COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7)" >> "$GITHUB_OUTPUT"
-          echo "PR_NUM=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-
-      # Create cluster environment (if needed)
-      - name: Create cluster env (if needed)
-        run: |
-          echo "Creating cluster env"
 
   test-code:
     runs-on: ubuntu-22.04
@@ -69,9 +31,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
@@ -104,9 +66,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
@@ -139,9 +101,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
@@ -179,9 +141,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
@@ -209,12 +171,12 @@ jobs:
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id "" \
-            --commit-id ${{ needs.setup.outputs.COMMIT_ID }}
+            --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read results from S3
       - name: Read results from S3
         run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ needs.setup.outputs.GITHUB_USERNAME }}/results/${{ needs.setup.outputs.COMMIT_ID }}
+          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
           aws s3 cp $results_path/evaluation_results.json evaluation_results.json
 
       # Comment results on PR
@@ -240,9 +202,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
@@ -274,9 +236,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
-          aws-region: us-west-2
+          aws-region: ${{ secrets.AWS_REGION }}
 
       # Checkout our repository
       - name: Checkout repo
