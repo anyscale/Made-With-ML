@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     outputs:  # outputs (that we'll reuse in other jobs)
-      ANYSCALE_HOST: ${{ steps.vars.outputs.ANYSCALE_HOST }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       GITHUB_USERNAME: ${{ steps.vars.outputs.GITHUB_USERNAME }}
@@ -19,13 +18,12 @@ jobs:
 
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -49,7 +47,6 @@ jobs:
       - name: Set global vars
         id: vars
         run: |
-          echo "ANYSCALE_HOST=https://console.anyscale-staging.com" >> "$GITHUB_OUTPUT"
           echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> "$GITHUB_OUTPUT"
           echo "S3_BUCKET=s3://madewithml" >> "$GITHUB_OUTPUT"
           echo "GITHUB_USERNAME=${{ github.actor }}" >> "$GITHUB_OUTPUT"
@@ -66,13 +63,12 @@ jobs:
     needs: setup
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -102,13 +98,12 @@ jobs:
     needs: setup
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -138,13 +133,12 @@ jobs:
     needs: [setup, test-code, test-data]
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -179,13 +173,12 @@ jobs:
     needs: [setup, train-model]
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -208,7 +201,7 @@ jobs:
       # Evaluate our model
       - name: Evaluate model
         run: |
-          export ANYSCALE_HOST=${{ needs.setup.outputs.ANYSCALE_HOST }}
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
@@ -241,13 +234,12 @@ jobs:
     needs: [setup, train-model]
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository
@@ -271,18 +263,17 @@ jobs:
       - name: Test model
         run: echo "Test model"
 
-  compare-model:
+  compare-to-prod:
     runs-on: ubuntu-22.04
-    needs: [setup, train-model]
+    needs: [setup, evaluate-model, test-model]
     steps:
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
+      # Configure AWS credentials
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
           aws-region: us-west-2
 
       # Checkout our repository

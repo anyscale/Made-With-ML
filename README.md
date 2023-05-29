@@ -182,6 +182,14 @@ RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXP
 pytest --run-id=$RUN_ID tests/model --disable-warnings
 ```
 
+## Workspaces
+```bash
+# Instructions inside Workspaces
+git clone https://github.com/anyscale/mlops-course.git .
+pip install -e ".[dev]"
+pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"
+```
+
 ## Deploy
 
 ### Authentication
