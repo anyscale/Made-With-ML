@@ -137,14 +137,13 @@ jobs:
       # Read and comment results on PR
       - name: Read results from S3
         run: |
-          export EVAL_RESULTS_FILE_NAME=evaluation_results
           results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/${EVAL_RESULTS_FILE_NAME}.json ${EVAL_RESULTS_FILE_NAME}.json
-          python deploy/utils.py json-to-markdown --json-fp ${EVAL_RESULTS_FILE_NAME}.json --markdown-fp ${EVAL_RESULTS_FILE_NAME}.md
+          aws s3 cp $results_path/evaluation_results.json evaluation_results.json
+          python deploy/utils.py json-to-markdown --json-fp evaluation_results.json --markdown-fp evaluation_results.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: ${EVAL_RESULTS_FILE_NAME}.md
+          filePath: evaluation_results.md
 
   test-model:
     runs-on: ubuntu-22.04
