@@ -4,14 +4,13 @@ on:
   pull_request:
     branches:
     - main  # triggered on PRs to the main branch
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   setup:
     runs-on: ubuntu-22.04
-    permissions:
-      id-token: write
-      contents: read
-
     outputs:  # outputs (that we'll reuse in other jobs)
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
