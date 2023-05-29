@@ -12,10 +12,7 @@ jobs:
     outputs:  # outputs (that we'll reuse in other jobs)
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
-
     steps:
-
-      # Set all the global variables that we'll use across steps and jobs
       - name: Set global vars
         id: vars
         run: |
@@ -35,22 +32,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Test code
       - name: Test code
@@ -70,22 +63,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[develop]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Test data
       - name: Test data
@@ -105,22 +94,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Train our model (could also tune)
       - name: Train model
@@ -145,22 +130,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Evaluate our model
       - name: Evaluate model
@@ -206,22 +187,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Test model
       - name: Test model
@@ -240,22 +217,18 @@ jobs:
           role-session-name: s3access
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # Set up dependencies
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10.11'
           cache: 'pip'
-
-      # Install our Python dependencies
-      - name: Install dependencies
-        run: |
-          python -m pip install -e ".[deploy]" --no-cache-dir
-          npm install fs
+      - run: python -m pip install -e ".[deploy]" --no-cache-dir
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - run: npm install fs
 
       # Compare model to production
       - name: Compare model
