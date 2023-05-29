@@ -8,6 +8,9 @@ on:
 jobs:
   setup:
     runs-on: ubuntu-22.04
+    permissions:
+      id-token: write
+      contents: read
 
     outputs:  # outputs (that we'll reuse in other jobs)
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
