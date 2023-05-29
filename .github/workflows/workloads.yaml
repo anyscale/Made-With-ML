@@ -135,7 +135,7 @@ jobs:
 
   train-model:
     runs-on: ubuntu-22.04
-    needs: [test-code, test-data]
+    needs: [setup, test-code, test-data]
     steps:
 
       # Set up AWS credentials
@@ -173,10 +173,11 @@ jobs:
       - name: Get run ID
         run: |
           echo "Run ID:"
+          madewithml dojo a100 run tune.py --dryrun
 
   evaluate-model:
     runs-on: ubuntu-22.04
-    needs: train-model
+    needs: [setup, train-model]
     steps:
 
       # Set up AWS credentials
@@ -238,7 +239,7 @@ jobs:
 
   test-model:
     runs-on: ubuntu-22.04
-    needs: train-model
+    needs: [setup, train-model]
     steps:
 
       # Set up AWS credentials
