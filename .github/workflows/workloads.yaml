@@ -39,11 +39,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Test code
       - name: Test code
@@ -70,11 +65,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Test data
       - name: Test data
@@ -101,11 +91,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Train our model (could also tune)
       - name: Train model
@@ -137,11 +122,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Evaluate our model
       - name: Evaluate model
@@ -154,25 +134,15 @@ jobs:
             --run-id "" \
             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # Read results from S3
+      # Read and comment results on PR
       - name: Read results from S3
         run: |
           results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
           aws s3 cp $results_path/evaluation_results.json evaluation_results.json
-
-      # Comment results on PR
       - name: Comment results on PR
-        uses: actions/github-script@v6
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs')
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: fs.readFileSync('evaluation_results.json', 'utf8')
-            })
+          filePath: evaluation_results.json
 
   test-model:
     runs-on: ubuntu-22.04
@@ -194,11 +164,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Test model
       - name: Test model
@@ -224,11 +189,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 16
-          cache: 'npm'
-      - run: npm install fs
 
       # Compare model to production
       - name: Compare model
