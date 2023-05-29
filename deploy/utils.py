@@ -1,5 +1,6 @@
 import subprocess
 import tempfile
+import json
 
 import boto3
 import typer
@@ -71,6 +72,44 @@ def save_to_s3(
     """Save file to S3 bucket."""
     s3 = boto3.client("s3")
     s3.upload_file(file_path, bucket_name, bucket_path)
+
+
+@app.command()
+def json_to_markdown(
+    json_fp: str = typer.Option(..., "--json-fp", "-fp", help="path of json file to convert to markdown"),
+    markdown_fp: str = typer.Option(..., "--markdown-fp", help="path of markdown file to save to"),
+):
+    """Convert a json file to markdown."""
+    # Read JSON file
+    with open(json_fp, "r") as file:
+        data = json.load(file)
+
+    # Compose markdown
+    markdown = ""
+    for key, value in data.items():
+        markdown += f"**{key}:**\n\n"
+        if isinstance(value, dict):
+            markdown += "| Key | Value |\n"
+            markdown += "| --- | --- |\n"
+            for nested_key, nested_value in value.items():
+                markdown += f"| {nested_key} | {nested_value} |\n"
+        elif isinstance(value, list) and all(isinstance(item, dict) for item in value):
+            if value:
+                headers = sorted(set().union(*[item.keys() for item in value]))
+                markdown += "| " + " | ".join(headers) + " |\n"
+                markdown += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+                for item in value:
+                    markdown += "| " + " | ".join([str(item.get(header, "")) for header in headers]) + " |\n"
+            else:
+                markdown += "(empty list)\n"
+        else:
+            markdown += f"{value}\n"
+        markdown += "\n"
+
+    # Save to markdown file
+    with open(markdown_fp, "w") as file:
+        file.write(markdown)
+    return markdown
 
 
 if __name__ == "__main__":

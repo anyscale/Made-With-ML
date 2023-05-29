@@ -261,7 +261,7 @@ def train_model(
         "timestamp": int(datetime.datetime.now().timestamp()),
         "run_id": utils.get_run_id(experiment_name=experiment_name, trial_id=results.metrics["trial_id"]),
         "params": results.config["train_loop_config"],
-        "metrics": results.metrics_dataframe.to_dict(),
+        "metrics": utils.dict_to_list(results.metrics_dataframe.to_dict(), keys=["epoch", "train_loss", "val_loss"]),
     }
     logger.info(json.dumps(d, indent=2))
     if results_fp:  # pragma: no cover, saving results

@@ -186,7 +186,7 @@ def tune_models(
         "timestamp": int(datetime.datetime.now().timestamp()),
         "run_id": utils.get_run_id(experiment_name=experiment_name, trial_id=best_trial.metrics["trial_id"]),
         "params": best_trial.config["train_loop_config"],
-        "metrics": best_trial.metrics_dataframe.to_dict(),
+        "metrics": utils.dict_to_list(best_trial.metrics_dataframe.to_dict(), keys=["epoch", "train_loss", "val_loss"]),
     }
     logger.info(json.dumps(d, indent=2))
     if results_fp:  # pragma: no cover, saving results
