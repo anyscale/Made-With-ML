@@ -140,7 +140,7 @@ jobs:
           export EVAL_RESULTS_FILE_NAME=evaluation_results
           results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
           aws s3 cp $results_path/${EVAL_RESULTS_FILE_NAME}.json ${EVAL_RESULTS_FILE_NAME}.json
-      - run: python deploy/utils.py json-to-markdown --json-fp ${EVAL_RESULTS_FILE_NAME}.json --markdown-fp ${EVAL_RESULTS_FILE_NAME}.md
+          python deploy/utils.py json-to-markdown --json-fp ${EVAL_RESULTS_FILE_NAME}.json --markdown-fp ${EVAL_RESULTS_FILE_NAME}.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
