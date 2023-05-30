@@ -1,4 +1,4 @@
-name: evaluate-model
+name: train-model
 project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
 build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
 runtime_env:

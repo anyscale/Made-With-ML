@@ -64,8 +64,7 @@ python src/madewithml/train.py \
     --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256 \
-    --results-fp results/training_results.json
+    --batch-size 256
 ```
 
 ### Tuning experiment
@@ -83,8 +82,7 @@ python src/madewithml/tune.py \
     --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256 \
-    --results-fp results/tuning_results.json
+    --batch-size 256
 ```
 
 ### Experiment tracking
@@ -101,8 +99,7 @@ HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/da
 python src/madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2 \
-    --results-fp results/evaluation_results.json
+    --num-cpu-workers 2
 ```
 ```json
 {
@@ -172,16 +169,16 @@ ray stop
 ### Testing
 ```bash
 # Code
-python3 -m pytest tests/code --verbose --disable-warnings > results/test_code_results.txt
+python3 -m pytest tests/code --verbose --disable-warnings
 
 # Data
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings > results/test_data_results.txt
+pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings
 
 # Model
 EXPERIMENT_NAME="llm"
 RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings > results/test_model_results.txt
+pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
 
 ## Workspaces

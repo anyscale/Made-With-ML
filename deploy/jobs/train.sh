@@ -21,10 +21,10 @@ python src/madewithml/train.py \
     --num-gpu-workers 2 \
     --num-epochs 10 \
     --batch-size 256 \
-    --results-fp results/training_results.json
+    --results-fp training_results.json
 
 # Save to S3
 python deploy/utils.py save-to-s3 \
-    --file-path results/training_results.json \
+    --file-path training_results.json \
     --bucket-name $s3_bucket_name \
     --bucket-path $username/results/$commit_id/training_results.json

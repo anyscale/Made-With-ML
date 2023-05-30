@@ -10,10 +10,10 @@ if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
 fi
 
 # Test model
-pytest --run-id=$run_id tests/model --verbose --disable-warnings > results/test_model_results.txt
+pytest --run-id=$run_id tests/model --verbose --disable-warnings > test_model_results.txt
 
 # Save to S3
 python deploy/utils.py save-to-s3 \
-    --file-path results/test_model_results.txt \
+    --file-path test_model_results.txt \
     --bucket-name $s3_bucket_name \
     --bucket-path $username/results/$commit_id/test_model_results.txt

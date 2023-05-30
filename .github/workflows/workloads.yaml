@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:  # outputs (that we'll reuse in other jobs)
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
-      S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
+      RESULTS_PATH: ${{ steps.vars.outputs.RESULTS_PATH }}
     steps:
       - name: Set global vars
         id: vars
         run: |
           echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> "$GITHUB_OUTPUT"
-          echo "S3_BUCKET=s3://madewithml" >> "$GITHUB_OUTPUT"
+          echo "RESULTS_PATH=s3://madewithml/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
 
   test-code:
     runs-on: ubuntu-22.04
@@ -53,13 +53,11 @@ jobs:
 
       # Read from S3
       - name: Read results from S3
-        run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/test_code_results.txt test_code_results.txt
+        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_code_results.txt test_code_results.txt
       - name: Check test results
         run: |
           if grep -q "failed" test_code_results.txt; then
-            echo $(tail -n 1 results/test_model_results.txt)
+            echo $(tail -n 1 test_model_results.txt)
             exit 1
           fi
 
@@ -98,13 +96,11 @@ jobs:
 
       # Read and process results
       - name: Read results from S3
-        run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/test_data_results.txt test_data_results.txt
+        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_data_results.txt test_data_results.txt
       - name: Check test results
         run: |
           if grep -q "failed" test_code_results.txt; then
-            echo $(tail -n 1 results/test_model_results.txt)
+            echo $(tail -n 1 test_model_results.txt)
             exit 1
           fi
 
@@ -147,8 +143,7 @@ jobs:
       # Read and process results
       - name: Read results from S3
         run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/training_results.json training_results.json
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/training_results.txt training_results.txt
           python deploy/utils.py json-to-markdown --json-fp training_results.json --markdown-fp training_results.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
@@ -196,8 +191,7 @@ jobs:
       # Read and process results
       - name: Read results from S3
         run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/evaluation_results.json evaluation_results.json
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/evaluation_results.txt evaluation_results.txt
           python deploy/utils.py json-to-markdown --json-fp evaluation_results.json --markdown-fp evaluation_results.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
@@ -239,13 +233,11 @@ jobs:
 
       # Read and process results
       - name: Read results from S3
-        run: |
-          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
-          aws s3 cp $results_path/test_model_results.txt test_model_results.txt
+        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_model_results.txt test_model_results.txt
       - name: Check test results
         run: |
           if grep -q "failed" test_model_results.txt; then
-            echo $(tail -n 1 results/test_model_results.txt)
+            echo $(tail -n 1 test_model_results.txt)
             exit 1
           fi
 

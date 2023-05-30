@@ -15,10 +15,10 @@ python src/madewithml/evaluate.py \
     --run-id $run_id \
     --dataset-loc $HOLDOUT_LOC \
     --num-cpu-workers 2 \
-    --results-fp results/evaluation_results.json
+    --results-fp evaluation_results.json
 
 # Save to S3
 python deploy/utils.py save-to-s3 \
-    --file-path results/evaluation_results.json \
+    --file-path evaluation_results.json \
     --bucket-name $s3_bucket_name \
     --bucket-path $username/results/$commit_id/evaluation_results.json
