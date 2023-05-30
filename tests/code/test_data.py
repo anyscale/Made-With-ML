@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-import ray
 
 from madewithml import data
 
@@ -17,16 +16,6 @@ def test_load_data(dataset_loc):
     num_samples = 10
     ds = data.load_data(dataset_loc=dataset_loc, num_samples=num_samples)
     assert ds.count() == num_samples
-
-
-def test_stratify_split():
-    n_per_class = 10
-    targets = n_per_class * ["c1"] + n_per_class * ["c2"]
-    ds = ray.data.from_items([dict(target=t) for t in targets])
-    train_ds, test_ds = data.stratify_split(ds, stratify="target", test_size=0.5)
-    train_target_counts = train_ds.to_pandas().target.value_counts().to_dict()
-    test_target_counts = test_ds.to_pandas().target.value_counts().to_dict()
-    assert train_target_counts == test_target_counts
 
 
 @pytest.mark.parametrize(

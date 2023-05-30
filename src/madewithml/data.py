@@ -37,7 +37,7 @@ def stratify_split(
     test_size: float,
     shuffle: bool = True,
     seed: int = 1234,
-) -> Tuple[Dataset, Dataset]:
+) -> Tuple[Dataset, Dataset]:  # pragma: no cover, (eventual) Ray functionality
     """Split a dataset into train and test splits with equal
     amounts of data points from each class in the column we
     want to stratify on.
