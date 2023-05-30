@@ -51,16 +51,15 @@ jobs:
             --username ${{ github.actor }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # Read from S3
-      - name: Read results from S3
-        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_code_results.txt test_code_results.txt
-      - name: Check test results
+      # Read and process results
+      - name: Read and process results from S3
         run: |
-          if grep -q "failed" test_code_results.txt; then
-            echo $(tail -n 1 test_model_results.txt)
+          export RESULTS_FILE=test_code_results.txt
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS_FILE $RESULTS_FILE
+          if grep -q "failed" $RESULTS_FILE; then
+            echo $(tail -n 1 $RESULTS_FILE)
             exit 1
           fi
-
 
   test-data:
     runs-on: ubuntu-22.04
@@ -95,12 +94,12 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
-      - name: Read results from S3
-        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_data_results.txt test_data_results.txt
-      - name: Check test results
+      - name: Read and process results from S3
         run: |
-          if grep -q "failed" test_code_results.txt; then
-            echo $(tail -n 1 test_model_results.txt)
+          export RESULTS_FILE=test_data_results.txt
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS_FILE $RESULTS_FILE
+          if grep -q "failed" $RESULTS_FILE; then
+            echo $(tail -n 1 $RESULTS_FILE)
             exit 1
           fi
 
@@ -110,7 +109,6 @@ jobs:
     outputs:
       RUN_ID: ${{ steps.get-run-id.outputs.RUN_ID }}
     steps:
-
 
       # Configure AWS credentials
       - name: Configure AWS credentials
@@ -141,14 +139,16 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
-      - name: Read results from S3
+      - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/training_results.txt training_results.txt
-          python deploy/utils.py json-to-markdown --json-fp training_results.json --markdown-fp training_results.md
+          export JSON_RESULTS_FILE=training_results.json
+          export MD_RESULTS_FILE=training_results.md
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
+          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: training_results.md
+          filePath: $MD_RESULTS_FILE
 
       # Get run ID
       - name: Get run ID
@@ -189,14 +189,16 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
-      - name: Read results from S3
+      - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/evaluation_results.txt evaluation_results.txt
-          python deploy/utils.py json-to-markdown --json-fp evaluation_results.json --markdown-fp evaluation_results.md
+          export JSON_RESULTS_FILE=evaluation_results.json
+          export MD_RESULTS_FILE=evaluation_results.md
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
+          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: evaluation_results.md
+          filePath: $MD_RESULTS_FILE
 
   test-model:
     runs-on: ubuntu-22.04
@@ -232,12 +234,12 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
-      - name: Read results from S3
-        run: aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/test_model_results.txt test_model_results.txt
-      - name: Check test results
+      - name: Read and process results from S3
         run: |
-          if grep -q "failed" test_model_results.txt; then
-            echo $(tail -n 1 test_model_results.txt)
+          export RESULTS_FILE=test_model_results.txt
+          aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS_FILE $RESULTS_FILE
+          if grep -q "failed" $RESULTS_FILE; then
+            echo $(tail -n 1 $RESULTS_FILE)
             exit 1
           fi
 
