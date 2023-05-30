@@ -61,10 +61,11 @@ python src/madewithml/train.py \
     "$DATASET_LOC" \
     "$TRAIN_LOOP_CONFIG" \
     --use-gpu \
-    --num-cpu-workers 40 \
+    --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/training_results.json
 ```
 
 ### Tuning experiment
@@ -79,10 +80,11 @@ python src/madewithml/tune.py \
     "$INITIAL_PARAMS" \
     --num-runs 2 \
     --use-gpu \
-    --num-cpu-workers 40 \
+    --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/tuning_results.json
 ```
 
 ### Experiment tracking
@@ -99,7 +101,8 @@ HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/da
 python src/madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2
+    --num-cpu-workers 2 \
+    --results-fp results/evaluation_results.json
 ```
 ```json
 {
@@ -169,17 +172,16 @@ ray stop
 ### Testing
 ```bash
 # Code
-python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-open htmlcov/index.html
+python3 -m pytest tests/code --verbose --disable-warnings > results/test_code_results.txt
 
 # Data
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings
+pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings > results/test_data_results.txt
 
 # Model
 EXPERIMENT_NAME="llm"
 RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-pytest --run-id=$RUN_ID tests/model --disable-warnings
+pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings > results/test_model_results.txt
 ```
 
 ## Workspaces
@@ -222,15 +224,40 @@ python deploy/utils.py get-project-id --project-name $PROJECT_NAME
 python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-4. Test code + data
+4. Test code
 ```bash
+# Manual
+anyscale job submit deploy/jobs/test_code.yaml
+
+# Dynamic
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/test_code.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-5. Train model
+5. Test data
 ```bash
+# Manual
+anyscale job submit deploy/jobs/test_data.yaml
+
+# Dynamic
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/test_data.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-6. Evaluate model
+6. Train model
+```bash
+# Manual
+anyscale job submit deploy/jobs/train.yaml
+
+# Dynamic
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/train.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+7. Evaluate model
 ```bash
 # Manual
 anyscale job submit deploy/jobs/evaluate.yaml
@@ -241,14 +268,17 @@ python deploy/utils.py submit-job \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-7. Test model
+8. Test model
 ```bash
 ```
 
-8. Deploy model
+9. Compare to prod
 ```bash
 ```
 
+10. Deploy service
+```bash
+```
 ------------------------------------------------------------------------------------------------------------------------
 
 ### Setup

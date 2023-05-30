@@ -92,5 +92,4 @@ def test_directional(input, label, get_label_fixture):
 def test_mft(input, label, get_label_fixture):
     """Minimum Functionality Tests (simple input/output pairs)."""
     prediction = get_label_fixture(text=input)
-    print(input, label, prediction)
     assert label == prediction

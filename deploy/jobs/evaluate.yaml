@@ -3,7 +3,7 @@ project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
 build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
 runtime_env:
   working_dir: .
-  upload_path: s3://madewithml/goku/workingdir/job
+  upload_path: s3://madewithml/GokuMohandas/workingdir/job
   env_vars:
     experiment_name: llm  # if "", run_id must be provided
     run_id: ""  # if "", best run from experiment will be used

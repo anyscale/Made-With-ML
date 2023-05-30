@@ -43,7 +43,26 @@ jobs:
       # Test code
       - name: Test code
         run: |
-          echo "Testing code"
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+          python deploy/utils.py submit-job \
+            --yaml-config-fp deploy/jobs/test_code.yaml \
+            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+            --username ${{ github.actor }} \
+            --commit-id ${{ github.event.pull_request.head.sha }}
+
+      # Read from S3
+      - name: Read results from S3
+        run: |
+          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
+          aws s3 cp $results_path/test_code_results.txt test_code_results.txt
+      - name: Check test results
+        run: |
+          if grep -q "failed" test_code_results.txt; then
+            echo $(tail -n 1 results/test_model_results.txt)
+            exit 1
+          fi
+
 
   test-data:
     runs-on: ubuntu-22.04
@@ -69,12 +88,33 @@ jobs:
       # Test data
       - name: Test data
         run: |
-          echo "Testing data"
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+          python deploy/utils.py submit-job \
+            --yaml-config-fp deploy/jobs/test_data.yaml \
+            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+            --username ${{ github.actor }} \
+            --commit-id ${{ github.event.pull_request.head.sha }}
+
+      # Read and process results
+      - name: Read results from S3
+        run: |
+          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
+          aws s3 cp $results_path/test_data_results.txt test_data_results.txt
+      - name: Check test results
+        run: |
+          if grep -q "failed" test_code_results.txt; then
+            echo $(tail -n 1 results/test_model_results.txt)
+            exit 1
+          fi
 
   train-model:
     runs-on: ubuntu-22.04
     needs: [setup, test-code, test-data]
+    outputs:
+      RUN_ID: ${{ steps.get-run-id.outputs.RUN_ID }}
     steps:
+
 
       # Configure AWS credentials
       - name: Configure AWS credentials
@@ -92,15 +132,33 @@ jobs:
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
 
-      # Train our model (could also tune)
+      # Train model (or tune)
       - name: Train model
         run: |
-          echo "Training model"
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+          python deploy/utils.py submit-job \
+            --yaml-config-fp deploy/jobs/train.yaml \
+            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+            --run-id "" \
+            --username ${{ github.actor }} \
+            --commit-id ${{ github.event.pull_request.head.sha }}
+
+      # Read and process results
+      - name: Read results from S3
+        run: |
+          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
+          aws s3 cp $results_path/training_results.json training_results.json
+          python deploy/utils.py json-to-markdown --json-fp training_results.json --markdown-fp training_results.md
+      - name: Comment results on PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: training_results.md
 
       # Get run ID
       - name: Get run ID
-        run: |
-          echo "Run ID:"
+        id: get-run-id
+        run: echo "RUN_ID=$(jq -r '.run_id' training_results.json)" >> "$GITHUB_OUTPUT"
 
   evaluate-model:
     runs-on: ubuntu-22.04
@@ -123,7 +181,7 @@ jobs:
           cache: 'pip'
       - run: python -m pip install -e ".[deploy]" --no-cache-dir
 
-      # Evaluate our model
+      # Evaluate model
       - name: Evaluate model
         run: |
           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
@@ -131,10 +189,11 @@ jobs:
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
-            --run-id "" \
+            --run-id ${{ needs.train-model.outputs.RUN_ID }} \ \
+            --username ${{ github.actor }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # Read and comment results on PR
+      # Read and process results
       - name: Read results from S3
         run: |
           results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
@@ -168,7 +227,27 @@ jobs:
 
       # Test model
       - name: Test model
-        run: echo "Test model"
+        run: |
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+          python deploy/utils.py submit-job \
+            --yaml-config-fp deploy/jobs/test_model.yaml \
+            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+            --run-id ${{ needs.train-model.outputs.RUN_ID }} \
+            --username ${{ github.actor }} \
+            --commit-id ${{ github.event.pull_request.head.sha }}
+
+      # Read and process results
+      - name: Read results from S3
+        run: |
+          results_path=${{ needs.setup.outputs.S3_BUCKET }}/${{ github.actor }}/results/${{ github.event.pull_request.head.sha }}
+          aws s3 cp $results_path/test_model_results.txt test_model_results.txt
+      - name: Check test results
+        run: |
+          if grep -q "failed" test_model_results.txt; then
+            echo $(tail -n 1 results/test_model_results.txt)
+            exit 1
+          fi
 
   compare-to-prod:
     runs-on: ubuntu-22.04

@@ -5,12 +5,10 @@ runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/workingdir/job
   env_vars:
-    experiment_name: llm  # if "", run_id must be provided
-    run_id: ""  # if "", best run from experiment will be used
     s3_bucket_name: madewithml
     username: GokuMohandas  # use GitHub username
     commit_id: default  # will be set when run w/ GitHub actions
-entrypoint: bash deploy/jobs/train.sh
+entrypoint: bash deploy/jobs/test_model.sh
 max_retries: 0
 compute_config:
   cloud_id: cld_9b2d7fppgayt6t7ivudst2gwet
@@ -20,10 +18,10 @@ compute_config:
     name: head_node_type
     instance_type: m5.xlarge
   worker_node_types:
-  - name: gpu_worker
-    instance_type: g4dn.4xlarge
-    min_workers: 0
-    max_workers: 2
+  - name: cpu_worker
+    instance_type: m5.xlarge
+    min_workers: 1
+    max_workers: 8
   aws:
     BlockDeviceMappings:
     - DeviceName: "/dev/sda1"

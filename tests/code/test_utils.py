@@ -1,8 +1,8 @@
 import tempfile
 from pathlib import Path
-import pytest
 
 import numpy as np
+import pytest
 import ray
 import torch
 
@@ -50,11 +50,11 @@ def test_collate_fn():
 
 
 @pytest.mark.parametrize(
-    "d, keys, l",
+    "d, keys, list",
     [
         ({"a": [1, 2], "b": [1, 2]}, ["a", "b"], [{"a": 1, "b": 1}, {"a": 2, "b": 2}]),
-         ({"a": [1, 2], "b": [1, 2]}, ["a"], [{"a": 1}, {"a": 2}]),
+        ({"a": [1, 2], "b": [1, 2]}, ["a"], [{"a": 1}, {"a": 2}]),
     ],
 )
-def test_dict_to_list(d, keys, l):
-    assert utils.dict_to_list(d, keys=keys) == l
+def test_dict_to_list(d, keys, list):
+    assert utils.dict_to_list(d, keys=keys) == list
