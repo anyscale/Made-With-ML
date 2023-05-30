@@ -2,7 +2,7 @@
 
 Learn how to combine machine learning with software engineering best practices to develop, deploy and maintain ML applications in production.
 
-> MLOps concepts are interweaved and cannot be run in isolation, so be sure to complement the code in this repository with the detailed [MLOps lessons](https://madewithml.com/#mlops).
+> MLOps concepts are interweaved and so should not be run in isolation, so be sure to complement the code in this repository with the detailed [MLOps lessons](https://madewithml.com/#mlops).
 
 <div align="left">
     <a target="_blank" href="https://madewithml.com/"><img src="https://img.shields.io/badge/Subscribe-30K-brightgreen"></a>&nbsp;
@@ -64,7 +64,8 @@ python src/madewithml/train.py \
     --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/training_results.json
 ```
 
 ### Tuning experiment
@@ -82,7 +83,8 @@ python src/madewithml/tune.py \
     --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/tuning_results.json
 ```
 
 ### Experiment tracking
@@ -99,7 +101,8 @@ HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/da
 python src/madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2
+    --num-cpu-workers 2 \
+    --results-fp results/evaluation_results.json
 ```
 ```json
 {
@@ -181,13 +184,6 @@ RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXP
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
 
-## Workspaces
-```bash
-# Instructions inside Workspaces
-git clone https://github.com/anyscale/mlops-course.git .
-pip install -e ".[dev]"
-pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"
-```
 
 ## Deploy
 
@@ -206,7 +202,6 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```bash
 export PROJECT_NAME="madewithml"
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export S3_BUCKET="s3://madewithml"
 ```
 
 2. Create the project
@@ -280,14 +275,14 @@ python deploy/utils.py submit-job \
 
 ### Setup
 ```bash
-export PROJECT_NAME="mlops-course"  # project name should match with repository name
+export PROJECT_NAME="mlops-course"  # project name should match with dir we made in cluster_env
 anyscale project create -n $PROJECT_NAME
 export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
 export CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME)
 export S3_BUCKET="s3://goku-mlops"
 export UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])')
-anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
+anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 ```
 
 

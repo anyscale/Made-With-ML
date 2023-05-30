@@ -48,9 +48,9 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
         cls (optional): encoder to use on dict data. Defaults to None.
         sortkeys (bool, optional): whether to sort keys alphabetically. Defaults to False.
     """
-    dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        os.makedirs(dir)  # pragma: no cover, os logic to make dir
+    directory = os.path.dirname(path)
+    if directory and not os.path.exists(directory):  # pragma: no cover
+        os.makedirs(directory)
     with open(path, "w") as fp:
         json.dump(d, indent=2, fp=fp, cls=cls, sort_keys=sortkeys)
         fp.write("\n")

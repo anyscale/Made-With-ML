@@ -22,7 +22,8 @@ def get_project_id(
     lines = output.split("\n")
     matching_lines = [line for line in lines if project_name in line]
     last_line = matching_lines[-1] if matching_lines else None
-    project_id = last_line.split()[0]
+    project_id = last_line.split()[1]
+    print(project_id)
     return project_id
 
 
@@ -36,6 +37,7 @@ def get_latest_cluster_env_build_id(
     apt_id = res.results[0].id
     res = sdk.list_cluster_environment_builds(apt_id)
     bld_id = res.results[-1].id
+    print(bld_id)
     return bld_id
 
 

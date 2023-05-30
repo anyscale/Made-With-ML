@@ -2,8 +2,7 @@
 logs/
 stores/
 mlruns/
-*_results.json
-*_results.txt
+results/
 
 # VSCode
 .vscode/
