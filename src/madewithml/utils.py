@@ -50,7 +50,7 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
     """
     dir = os.path.dirname(path)
     if not os.path.exists(dir):
-        os.makedirs(dir)
+        os.makedirs(dir)  # pragma: no cover, os logic to make dir
     with open(path, "w") as fp:
         json.dump(d, indent=2, fp=fp, cls=cls, sort_keys=sortkeys)
         fp.write("\n")
