@@ -1,4 +1,7 @@
 #!/bin/bash
+python3 -m pip install --upgrade pip setuptools wheel
+python3 -m pip install ".[dev]"
+python3 -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"
 
 # Get run ID
 if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
