@@ -142,13 +142,12 @@ jobs:
       - name: Read and process results from S3
         run: |
           export JSON_RESULTS_FILE=training_results.json
-          export MD_RESULTS_FILE=training_results.md
           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
-          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
+          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp training_results.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: $MD_RESULTS_FILE
+          filePath: training_results.md
 
       # Get run ID
       - name: Get run ID
@@ -192,13 +191,12 @@ jobs:
       - name: Read and process results from S3
         run: |
           export JSON_RESULTS_FILE=evaluation_results.json
-          export MD_RESULTS_FILE=evaluation_results.md
           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
-          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
+          python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp evaluation_results.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: $MD_RESULTS_FILE
+          filePath: evaluation_results.md
 
   test-model:
     runs-on: ubuntu-22.04
