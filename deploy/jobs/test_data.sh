@@ -1,6 +1,4 @@
 #!/bin/bash
-python3 -m pip install ".[dev]"  # workaround to update madewithml package (but only for head node)
-
 # Test code
 RESULTS_FILE=test_data_results.txt
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"

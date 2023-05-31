@@ -1,6 +1,4 @@
 #!/bin/bash
-python3 -m pip install ".[dev]"  # workaround to update madewithml package (but only for head node)
-
 # Test code
 RESULTS_FILE=test_code_results.txt
 python -m pytest tests/code --verbose --disable-warnings > $RESULTS_FILE

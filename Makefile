@@ -10,7 +10,7 @@ help:
 
 # Testing
 test:
-	python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
+	python3 -m pytest tests/code --cov madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
 	open htmlcov/index.html
 	rm -rf .coverage*
 

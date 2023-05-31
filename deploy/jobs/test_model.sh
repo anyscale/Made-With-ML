@@ -1,9 +1,7 @@
 #!/bin/bash
-python3 -m pip install ".[dev]"  # workaround to update madewithml package (but only for head node)
-
 # Get run ID
 if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
-    run_id=$(python src/madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
+    run_id=$(python madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
 fi
 
 # Test model

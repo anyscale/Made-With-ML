@@ -1,16 +1,14 @@
 #!/bin/bash
-python3 -m pip install ".[dev]"  # workaround to update madewithml package (but only for head node)
-
 # Get run ID
 if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
-    run_id=$(python src/madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
+    run_id=$(python madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
 fi
 
 # Train
 RESULTS_FILE=training_results.json
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
-python src/madewithml/train.py \
+python madewithml/train.py \
     "$experiment_name" \
     "$DATASET_LOC" \
     "$TRAIN_LOOP_CONFIG" \

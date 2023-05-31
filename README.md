@@ -56,7 +56,7 @@ jupyter lab notebooks/madewithml.ipynb
 EXPERIMENT_NAME="llm"
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
-python src/madewithml/train.py \
+python madewithml/train.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
     "$TRAIN_LOOP_CONFIG" \
@@ -74,7 +74,7 @@ EXPERIMENT_NAME="llm"
 DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
-python src/madewithml/tune.py \
+python madewithml/tune.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
     "$INITIAL_PARAMS" \
@@ -96,9 +96,9 @@ mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 ### Evaluation
 ```bash
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
-python src/madewithml/evaluate.py \
+python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
     --num-cpu-workers 2 \
@@ -116,8 +116,8 @@ python src/madewithml/evaluate.py \
 ```bash
 # Get run ID
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-python src/madewithml/predict.py predict \
+RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+python madewithml/predict.py predict \
     --run-id $RUN_ID \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks."
@@ -141,8 +141,8 @@ python src/madewithml/predict.py predict \
 # Set up
 ray start --head  # already running if using Anyscale
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-python src/madewithml/serve.py --run_id $RUN_ID
+RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+python madewithml/serve.py --run_id $RUN_ID
 ```
 
 While the application is running, we can use it via cURL, Python, etc.
@@ -180,7 +180,7 @@ pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings
 
 # Model
 EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
 
