@@ -183,7 +183,7 @@ jobs:
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
-            --run-id ${{ needs.train-model.outputs.RUN_ID }} \ \
+            --run-id ${{ needs.train-model.outputs.RUN_ID }} \
             --username ${{ github.actor }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
 
