@@ -1,7 +1,5 @@
 #!/bin/bash
-python3 -m pip install --upgrade pip setuptools wheel
-python3 -m pip install ".[dev]"
-python3 -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"
+python3 -m pip install ".[dev]"  # workaround to update madewithml package (but only for head node)
 
 # Test code
 RESULTS_FILE=test_code_results.txt
