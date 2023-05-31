@@ -24,7 +24,7 @@ def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
         dataset_loc=dataset_loc,
         initial_params=json.dumps(initial_params),
         num_runs=num_runs,
-        num_samples=32,
+        num_samples=256,
         num_epochs=1,
         batch_size=32,
     )

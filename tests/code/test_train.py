@@ -13,10 +13,10 @@ def test_train_model(dataset_loc, generate_experiment_name, delete_experiment):
         experiment_name=experiment_name,
         dataset_loc=dataset_loc,
         train_loop_config=json.dumps(train_loop_config),
-        num_samples=32,
+        num_samples=256,
         num_epochs=2,
         batch_size=32,
     )
     delete_experiment(experiment_name=experiment_name)
-    train_loss_dict = result.metrics_dataframe.to_dict()["train_loss"]
-    assert train_loss_dict[0] > train_loss_dict[1]  # loss decreased
+    train_loss_list = result.metrics_dataframe.to_dict()["train_loss"]
+    assert train_loss_list[0] > train_loss_list[1]  # loss decreased
