@@ -1,11 +1,6 @@
 #!/bin/bash
 export PYTHONPATH=$PYTHONPATH:$PWD
 
-# Get run ID
-if [[ -z "${RUN_ID}" ]]; then  # if RUN_ID is set use it, else get the best run
-    RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-fi
-
 # Train
 export RESULTS_FILE=training_results.json
 export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
