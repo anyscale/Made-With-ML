@@ -31,7 +31,7 @@ jobs:
 
   test-code:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: setup
     steps:
 
@@ -75,7 +75,7 @@ jobs:
 
   test-data:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: setup
     steps:
 
@@ -119,7 +119,7 @@ jobs:
 
   train-model:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [setup, test-code, test-data]
     outputs:
       RUN_ID: ${{ steps.get-and-save-run-id.outputs.RUN_ID }}
@@ -180,7 +180,7 @@ jobs:
 
   evaluate-model:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [setup, train-model]
     steps:
 
@@ -226,7 +226,7 @@ jobs:
 
   test-model:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [setup, train-model]
     steps:
 
@@ -271,7 +271,7 @@ jobs:
 
   compare-to-prod:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [setup, evaluate-model, test-model]
     steps:
 
