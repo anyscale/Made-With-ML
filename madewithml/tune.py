@@ -183,7 +183,7 @@ def tune_models(
     results = tuner.fit()
     best_trial = results.get_best_result(metric="val_loss", mode="min")
     d = {
-        "timestamp": int(datetime.datetime.now().timestamp()),
+        "timestamp": datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S %p"),
         "run_id": utils.get_run_id(experiment_name=experiment_name, trial_id=best_trial.metrics["trial_id"]),
         "params": best_trial.config["train_loop_config"],
         "metrics": utils.dict_to_list(best_trial.metrics_dataframe.to_dict(), keys=["epoch", "train_loss", "val_loss"]),

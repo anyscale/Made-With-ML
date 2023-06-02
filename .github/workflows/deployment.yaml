@@ -1,30 +1,28 @@
 name: deploy
 
 on:
+  workflow_dispatch:  # for ability to manually trigger workflow
   push:
     branches:
       - main
+permissions: write-all
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  setup:
+    runs-on: ubuntu-22.04
+    outputs:  # outputs (that we'll reuse in other jobs)
+      PR_NUM: ${{ steps.vars.outputs.RUN_ID }}
     steps:
-      # Your workflow steps here
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          role-session-name: s3access
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    # Retrieve PR information using GitHub REST API
-    - name: Get PR information
-      id: pr-info
-      run: |
-        pr_number=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-        "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
-        | jq -r '.[0].number')
-
-        echo "::set-output name=pr-number::$pr_number"
-
-    # Use the retrieved PR number
-    - name: Use PR number
-      run: |
-        pr_number=${{ steps.pr-info.outputs.pr-number }}
-        echo "PR Number: $pr_number"
-        # You can perform additional actions with the PR number
+      - name: Get run ID
+        id: vars
+        run: |
+          echo "PULL REQUEST NUM"
+          echo ${{ github.event.pull_request.number }}

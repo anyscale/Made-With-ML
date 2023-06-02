@@ -35,8 +35,8 @@ def get_latest_cluster_env_build_id(
     sdk = AnyscaleSDK()
     res = sdk.search_cluster_environments({"name": {"equals": cluster_env_name}})
     apt_id = res.results[0].id
-    res = sdk.list_cluster_environment_builds(apt_id)
-    bld_id = res.results[-1].id
+    res = sdk.list_cluster_environment_builds(apt_id, desc=True, count=1)
+    bld_id = res.results[0].id
     print(bld_id)
     return bld_id
 
@@ -46,25 +46,49 @@ def submit_job(
     yaml_config_fp: str = typer.Option(..., "--yaml-config-fp", help="path of the job's yaml config file"),
     cluster_env_name: str = typer.Option(..., "--cluster-env-name", help="cluster environment's name"),
     run_id: str = typer.Option("", "--run-id", help="run ID to use to execute ML workflow"),
-    username: str = typer.Option("", "--username", help="GitHub username"),
+    github_username: str = typer.Option("", "--github-username", help="GitHub username"),
+    pr_num: str = typer.Option("", "--pr-num", help="PR number"),
     commit_id: str = typer.Option("default", "--commit-id", help="used as UUID to store results to S3"),
 ) -> None:
-    """Submit a job to Anyscale."""
+    """Submit an Anyscale Job."""
     # Load yaml config
     with open(yaml_config_fp, "r") as file:
         yaml_config = yaml.safe_load(file)
 
     # Edit yaml config
     yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
-    yaml_config["runtime_env"]["env_vars"]["run_id"] = run_id
-    yaml_config["runtime_env"]["env_vars"]["username"] = username
-    yaml_config["runtime_env"]["env_vars"]["commit_id"] = commit_id
+    yaml_config["runtime_env"]["env_vars"]["RUN_ID"] = run_id
+    yaml_config["runtime_env"]["env_vars"]["GITHUB_USERNAME"] = github_username
+    yaml_config["runtime_env"]["env_vars"]["PR_NUM"] = pr_num
+    yaml_config["runtime_env"]["env_vars"]["COMMIT_ID"] = commit_id
 
     # Execute Anyscale job
     with tempfile.NamedTemporaryFile(suffix=".yaml", delete=True, mode="w+b") as temp_file:
         temp_file_path = temp_file.name
         yaml.dump(yaml_config, temp_file, encoding="utf-8")
         subprocess.run(["anyscale", "job", "submit", "--wait", temp_file_path])
+
+
+@app.command()
+def rollout_service(
+    yaml_config_fp: str = typer.Option(..., "--yaml-config-fp", help="path of the job's yaml config file"),
+    cluster_env_name: str = typer.Option(..., "--cluster-env-name", help="cluster environment's name"),
+    run_id: str = typer.Option("", "--run-id", help="run ID to use to execute ML workflow"),
+) -> None:
+    """Rollout an Anyscale Service."""
+    # Load yaml config
+    with open(yaml_config_fp, "r") as file:
+        yaml_config = yaml.safe_load(file)
+
+    # Edit yaml config
+    yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
+    yaml_config["ray_serve_config"]["runtime_env"]["env_vars"]["RUN_ID"] = run_id
+
+    # Execute Anyscale job
+    with tempfile.NamedTemporaryFile(suffix=".yaml", delete=True, mode="w+b") as temp_file:
+        temp_file_path = temp_file.name
+        yaml.dump(yaml_config, temp_file, encoding="utf-8")
+        subprocess.run(["anyscale", "service", "rollout", "--service-config-file", temp_file_path])
 
 
 @app.command()
@@ -89,6 +113,11 @@ def to_markdown(data):
             markdown += "| Key | Value |\n"
             markdown += "| --- | --- |\n"
             for nested_key, nested_value in value.items():
+                if isinstance(nested_value, float):
+                    nested_value = round(nested_value, 3)
+                elif isinstance(nested_value, dict):
+                    nested_value = {key: round(value, 3) for key, value in nested_value.items()}
+                    nested_value = "```" + str(nested_value) + "```"
                 markdown += f"| {nested_key} | {nested_value} |\n"
 
         elif isinstance(value, list) and all(isinstance(item, dict) for item in value):
@@ -97,7 +126,17 @@ def to_markdown(data):
                 markdown += "| " + " | ".join(headers) + " |\n"
                 markdown += "| " + " | ".join(["---"] * len(headers)) + " |\n"
                 for item in value:
-                    markdown += "| " + " | ".join([str(item.get(header, "")) for header in headers]) + " |\n"
+                    value_list = []
+                    for header in headers:
+                        value = str(item.get(header, ""))
+                        try:
+                            if not value.isdigit():
+                                value = f"{float(value):.3e}"
+                        except Exception:
+                            pass
+                        value_list.append(value)
+                    value_string = " | ".join(value_list)
+                    markdown += "| " + value_string + " |\n"
             else:
                 markdown += "(empty list)\n"
 

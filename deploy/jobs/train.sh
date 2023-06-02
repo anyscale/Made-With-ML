@@ -1,15 +1,17 @@
 #!/bin/bash
+export PYTHONPATH=$PYTHONPATH:$PWD
+
 # Get run ID
-if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
-    run_id=$(python madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
+if [[ -z "${RUN_ID}" ]]; then  # if RUN_ID is set use it, else get the best run
+    RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 fi
 
 # Train
-RESULTS_FILE=training_results.json
-DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
+export RESULTS_FILE=training_results.json
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 python madewithml/train.py \
-    "$experiment_name" \
+    "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
     "$TRAIN_LOOP_CONFIG" \
     --use-gpu \
@@ -22,5 +24,5 @@ python madewithml/train.py \
 # Save to S3
 python deploy/utils.py save-to-s3 \
     --file-path $RESULTS_FILE \
-    --bucket-name $s3_bucket_name \
-    --bucket-path $username/results/$commit_id/$RESULTS_FILE
+    --bucket-name $S3_BUCKET_NAME \
+    --bucket-path $GITHUB_USERNAME/pull_requests/$PR_NUM/commits/$COMMIT_ID/$RESULTS_FILE

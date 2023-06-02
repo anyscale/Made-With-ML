@@ -1,14 +1,16 @@
 #!/bin/bash
+export PYTHONPATH=$PYTHONPATH:$PWD
+
 # Get run ID
-if [[ -z "${run_id}" ]]; then  # if RUN_ID is set use it, else get the best run
-    run_id=$(python madewithml/predict.py get-best-run-id --experiment-name $experiment_name --metric val_loss --mode ASC)
+if [[ -z "${RUN_ID}" ]]; then  # if RUN_ID is set use it, else get the best run
+    RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 fi
 
 # Evaluate
-RESULTS_FILE=evaluation_results.json
-HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+export RESULTS_FILE=evaluation_results.json
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
 python madewithml/evaluate.py \
-    --run-id $run_id \
+    --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
     --num-cpu-workers 2 \
     --results-fp $RESULTS_FILE
@@ -16,5 +18,5 @@ python madewithml/evaluate.py \
 # Save to S3
 python deploy/utils.py save-to-s3 \
     --file-path $RESULTS_FILE \
-    --bucket-name $s3_bucket_name \
-    --bucket-path $username/results/$commit_id/$RESULTS_FILE
+    --bucket-name $S3_BUCKET_NAME \
+    --bucket-path $GITHUB_USERNAME/pull_requests/$PR_NUM/commits/$COMMIT_ID/$RESULTS_FILE
