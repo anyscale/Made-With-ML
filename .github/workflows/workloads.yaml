@@ -22,7 +22,7 @@ jobs:
         id: vars
         run: |
           export S3_BUCKET_NAME=madewithml
-          echo $S3_BUCKET_NAME
+          echo ${S3_BUCKET_NAME}
           export PR_PATH=s3://$S3_BUCKET_NAME/${{ github.actor }}/pull_requests/${{ github.event.number }}
           export COMMIT_PATH=$PR_PATH/commits/${{ github.event.pull_request.head.sha }}
           echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> "$GITHUB_OUTPUT
