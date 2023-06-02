@@ -27,7 +27,7 @@ jobs:
           echo "S3_BUCKET_NAME=${{ env.S3_BUCKET_NAME }}" >> $GITHUB_OUTPUT
           echo "PR_PATH=${{ env.PR_PATH }}" >> $GITHUB_OUTPUT
           echo "COMMIT_PATH=${{ env.COMMIT_PATH }}" >> $GITHUB_OUTPUT
-          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT"
+          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT
 
   test-code:
     runs-on: ubuntu-22.04
