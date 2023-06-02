@@ -297,7 +297,7 @@ jobs:
 
   serve-model:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'push' }}
     outputs:  # outputs (that we'll reuse in other jobs)
       PR_NUM: ${{ steps.vars.outputs.RUN_ID }}
     steps:
