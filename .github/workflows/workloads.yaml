@@ -64,12 +64,12 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
+      - run: echo "RESULTS=test_code_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          export RESULTS=test_code_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS.txt $RESULTS.txt
-          if grep -q "failed" $RESULTS.txt; then
-            echo $(tail -n 1 $RESULTS.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
+          if grep -q "failed" ${{ env.RESULTS }.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }.txt)
             exit 1
           fi
 
@@ -108,12 +108,13 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
+      - run: echo "RESULTS=test_data_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
           export RESULTS=test_data_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS.txt $RESULTS.txt
-          if grep -q "failed" $RESULTS.txt; then
-            echo $(tail -n 1 $RESULTS.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
+          if grep -q "failed" ${{ env.RESULTS }.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }.txt)
             exit 1
           fi
 
@@ -155,28 +156,26 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
+      - run: echo "RESULTS=training_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          export RESULTS=training_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS.json $RESULTS.json
-          python deploy/utils.py json-to-markdown --json-fp $RESULTS.json --markdown-fp $RESULTS.md
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.json ${{ env.RESULTS }.json
+          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }.json --markdown-fp ${{ env.RESULTS }.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: $RESULTS.md
+          filePath: ${{ env.RESULTS }.md
 
       # Get and save run ID
+      - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get and save run ID
         id: get-and-save-run-id
         run: |
-          export RUN_ID=$(jq -r '.run_id' training_results.json)
-          echo "RUN_ID=$RUN_ID" >> "$GITHUB_OUTPUT"
-          export RUN_ID_FILE=run_id.txt
-          echo "$RUN_ID" > $RUN_ID_FILE
+          echo "$(jq -r '.run_id' training_results.json)" > ${{ env.RUN_ID_FILE }}
           python deploy/utils.py save-to-s3 \
-            --file-path $RUN_ID_FILE \
+            --file-path ${{ env.RUN_ID_FILE }} \
             --bucket-name ${{ needs.setup.outputs.S3_BUCKET_NAME }} \ \
-            --bucket-path ${{ needs.setup.outputs.PR_PATH }}/$RUN_ID_FILE
+            --bucket-path ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }}
 
   evaluate-model:
     runs-on: ubuntu-22.04
@@ -214,15 +213,15 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
+      - run: echo "RESULTS=evaluation_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          export RESULTS=evaluation_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS.json $RESULTS.json
-          python deploy/utils.py json-to-markdown --json-fp $RESULTS.json --markdown-fp $RESULTS.md
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.json ${{ env.RESULTS }.json
+          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }.json --markdown-fp ${{ env.RESULTS }.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: $RESULTS.md
+          filePath: ${{ env.RESULTS }.md
 
   test-model:
     runs-on: ubuntu-22.04
@@ -260,12 +259,12 @@ jobs:
             --commit-id ${{ github.event.pull_request.head.sha }}
 
       # Read and process results
+      - run: echo "RESULTS=test_model_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          export RESULTS=test_model_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS.txt $RESULTS.txt
-          if grep -q "failed" $RESULTS.txt; then
-            echo $(tail -n 1 $RESULTS.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
+          if grep -q "failed" ${{ env.RESULTS }.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }.txt)
             exit 1
           fi
 
@@ -319,11 +318,11 @@ jobs:
       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
       # Get and read run ID (from S3)
+      - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get run ID
         run: |
-          export RUN_ID_FILE=run_id.txt
-          aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/$RUN_ID_FILE $RUN_ID_FILE
-          echo "RUN_ID=$(cat $RUN_ID_FILE)" >> "$GITHUB_ENV"
+          aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }} ${{ env.RUN_ID_FILE }}
+          echo "RUN_ID=$(cat ${{ env.RUN_ID_FILE }})" >> "$GITHUB_ENV"
 
       # Serve model
       - name: Serve model
