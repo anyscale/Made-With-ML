@@ -1,7 +1,7 @@
 import json
 import os
 import random
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import numpy as np
 import torch
@@ -48,6 +48,9 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
         cls (optional): encoder to use on dict data. Defaults to None.
         sortkeys (bool, optional): whether to sort keys alphabetically. Defaults to False.
     """
+    directory = os.path.dirname(path)
+    if directory and not os.path.exists(directory):  # pragma: no cover
+        os.makedirs(directory)
     with open(path, "w") as fp:
         json.dump(d, indent=2, fp=fp, cls=cls, sort_keys=sortkeys)
         fp.write("\n")
@@ -115,3 +118,20 @@ def get_run_id(experiment_name: str, trial_id: str) -> str:  # pragma: no cover,
         experiment_names=[experiment_name], filter_string=f"tags.trial_name = '{trial_name}'"
     ).iloc[0]
     return run.run_id
+
+
+def dict_to_list(data: Dict, keys: List[str]) -> List[Dict[str, Any]]:
+    """Convert a dictionary to a list of dictionaries.
+
+    Args:
+        data (Dict): input dictionary.
+        keys (List[str]): keys to include in the output list of dictionaries.
+
+    Returns:
+        List[Dict[str, Any]]: output list of dictionaries.
+    """
+    list_of_dicts = []
+    for i in range(len(data[keys[0]])):
+        new_dict = {key: data[key][i] for key in keys}
+        list_of_dicts.append(new_dict)
+    return list_of_dicts

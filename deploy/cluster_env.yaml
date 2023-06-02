@@ -8,6 +8,6 @@ python:
   conda_packages: []
 
 post_build_cmds:
-  - git clone https://github.com/anyscale/mlops-course.git
-  - cd mlops-course && pip install -e ".[dev]"
-  - pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"
+  - python3 -m pip install --upgrade pip setuptools wheel
+  - python3 -m pip install -r https://raw.githubusercontent.com/anyscale/mlops-course/main/requirements.txt
+  - python3 -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-manylinux2014_x86_64.whl"

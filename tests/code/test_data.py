@@ -30,21 +30,15 @@ def test_stratify_split():
 
 
 @pytest.mark.parametrize(
-    "text, stopwords, cleaned_text",
+    "text, sw, clean_text",
     [
-        ("Hello world", [], "hello world"),
-        ("Hello world", ["world"], "hello"),
-        ("Hello worlds", ["world"], "hello worlds"),
+        ("hi", [], "hi"),
+        ("hi you", ["you"], "hi"),
+        ("hi yous", ["you"], "hi yous"),
     ],
 )
-def test_clean_text(text, stopwords, cleaned_text):
-    assert (
-        data.clean_text(
-            text=text,
-            stopwords=stopwords,
-        )
-        == cleaned_text
-    )
+def test_clean_text(text, sw, clean_text):
+    assert data.clean_text(text=text, stopwords=sw) == clean_text
 
 
 def test_preprocess(df):

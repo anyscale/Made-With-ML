@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 
 import numpy as np
+import pytest
 import ray
 import torch
 
@@ -46,3 +47,14 @@ def test_collate_fn():
     for k in batch:
         print(processed_batch[k], expected_batch[k])
         assert torch.allclose(processed_batch[k], expected_batch[k])
+
+
+@pytest.mark.parametrize(
+    "d, keys, list",
+    [
+        ({"a": [1, 2], "b": [1, 2]}, ["a", "b"], [{"a": 1, "b": 1}, {"a": 2, "b": 2}]),
+        ({"a": [1, 2], "b": [1, 2]}, ["a"], [{"a": 1}, {"a": 2}]),
+    ],
+)
+def test_dict_to_list(d, keys, list):
+    assert utils.dict_to_list(d, keys=keys) == list

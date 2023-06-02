@@ -1,135 +1,275 @@
-name: workloads
-on:
-  workflow_dispatch:  # for ability to manually trigger workflow
-  pull_request:
-    branches:
-    - main  # triggered on PRs to the main branch
+# name: workloads
+# on:
+#   workflow_dispatch:  # for ability to manually trigger workflow
+#   pull_request:
+#     branches:
+#     - main  # triggered on PRs to the main branch
+# permissions: write-all
 
-jobs:
-  setup:
-    runs-on: ubuntu-22.04
-    steps:
+# jobs:
+#   setup:
+#     runs-on: ubuntu-22.04
+#     outputs:  # outputs (that we'll reuse in other jobs)
+#       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
+#       RESULTS_PATH: ${{ steps.vars.outputs.RESULTS_PATH }}
+#     steps:
+#       - name: Set global vars
+#         id: vars
+#         run: |
+#           echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> "$GITHUB_OUTPUT"
+#           echo "RESULTS_PATH=s3://madewithml/${{ github.actor }}/pull_requests/${{ github.event.pull_request.number }}/commits/${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-west-2
+#   test-code:
+#     runs-on: ubuntu-22.04
+#     needs: setup
+#     steps:
 
-      # Checkout our repository
-      - name: Checkout repo
-        uses: actions/checkout@v3
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Set up the appropriate Python version
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.11'
-          cache: 'pip'
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
-      # # Install our Python dependencies
-      # - name: Install dependencies
-      #   run: |
-      #     python -m pip install -e ".[deploy]" --no-cache-dir
-      #     npm install fs
+#       # Test code
+#       - name: Test code
+#         run: |
+#           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+#           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+#           python deploy/utils.py submit-job \
+#             --yaml-config-fp deploy/jobs/test_code.yaml \
+#             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+#             --github-username ${{ github.actor }} \
+#             --pr-num ${{ github.event.pull_request.number }} \
+#             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # Set all the global variables that we'll use across steps and jobs
-      - name: Set global vars
-        run: |
-          echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
-          echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
-          echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
-          echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
-          echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-          echo COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
+#       # Read and process results
+#       - name: Read and process results from S3
+#         run: |
+#           export RESULTS=test_code_results
+#           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS.txt $RESULTS.txt
+#           if grep -q "failed" $RESULTS.txt; then
+#             echo $(tail -n 1 $RESULTS.txt)
+#             exit 1
+#           fi
 
-      # Create cluster environment (if needed)
-      - name: Create cluster env (if needed)
-        run: |
-          echo "Creating cluster env"
+#   test-data:
+#     runs-on: ubuntu-22.04
+#     needs: setup
+#     steps:
 
-  evaluate-model:
-    runs-on: ubuntu-22.04
-    needs: setup
-    steps:
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Set up AWS credentials
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-west-2
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
-      # # Checkout our repository
-      # - name: Checkout repo
-      #   uses: actions/checkout@v3
+#       # Test data
+#       - name: Test data
+#         run: |
+#           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+#           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+#           python deploy/utils.py submit-job \
+#             --yaml-config-fp deploy/jobs/test_data.yaml \
+#             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+#             --github-username ${{ github.actor }} \
+#             --pr-num ${{ github.event.pull_request.number }} \
+#             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # # Set up the appropriate Python version
-      # - name: Set up Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: '3.10.11'
-      #     cache: 'pip'
+#       # Read and process results
+#       - name: Read and process results from S3
+#         run: |
+#           export RESULTS=test_data_results
+#           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS.txt $RESULTS.txt
+#           if grep -q "failed" $RESULTS.txt; then
+#             echo $(tail -n 1 $RESULTS.txt)
+#             exit 1
+#           fi
 
-      # # Install our Python dependencies
-      # - name: Install dependencies
-      #   run: |
-      #     python -m pip install -e ".[deploy]" --no-cache-dir
-      #     npm install fs
+#   train-model:
+#     runs-on: ubuntu-22.04
+#     needs: [setup, test-code, test-data]
+#     outputs:
+#       RUN_ID: ${{ steps.get-and-save-run-id.outputs.RUN_ID }}
+#     steps:
 
-      # # Set all the global variables that we'll use across steps and jobs
-      # - name: Set global vars
-      #   run: |
-      #     echo ANYSCALE_HOST=https://console.anyscale-staging.com >> $GITHUB_ENV
-      #     echo ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }} >> $GITHUB_ENV
-      #     echo CLUSTER_ENV_NAME=madewithml-cluster-env >> $GITHUB_ENV
-      #     echo S3_BUCKET=s3://madewithml >> $GITHUB_ENV
-      #     echo GITHUB_USERNAME=${{ github.actor }} >> $GITHUB_ENV
-      #     echo COMMIT_ID=$(echo ${{ github.event.pull_request.head.sha }} | cut -c 1-7) >> $GITHUB_ENV
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
 
-      # # Test code + data
-      # - name: Test code + data
-      #   run: |
-      #     echo "Testing code + data"
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
-      # # Train our model (could also tune)
-      # - name: Train model
-      #   run: |
-      #     echo "Training model"
+#       # Train model (or tune)
+#       - name: Train model
+#         run: |
+#           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+#           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+#           python deploy/utils.py submit-job \
+#             --yaml-config-fp deploy/jobs/train.yaml \
+#             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+#             --run-id "" \
+#             --github-username ${{ github.actor }} \
+#             --pr-num ${{ github.event.pull_request.number }} \
+#             --commit-id ${{ github.event.pull_request.head.sha }}
 
-      # # Get run ID
-      # - name: Get run ID
-      #   run: |
-      #     echo "Run ID:"
+#       # Read and process results
+#       - name: Read and process results from S3
+#         run: |
+#           export RESULTS=training_results
+#           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS.json $RESULTS.json
+#           python deploy/utils.py json-to-markdown --json-fp $RESULTS.json --markdown-fp $RESULTS.md
+#       - name: Comment results on PR
+#         uses: thollander/actions-comment-pull-request@v2
+#         with:
+#           filePath: $RESULTS.md
 
-      # # Evaluate our model
-      # - name: Evaluate model
-      #   run: |
-      #     python deploy/utils.py submit-job \
-      #       --yaml-config-fp deploy/jobs/evaluate.yaml \
-      #       --cluster-env-name ${{ env.CLUSTER_ENV_NAME }} \
-      #       --run-id "" \
-      #       --commit-id ${{ env.COMMIT_ID }}
-      # - name: Read results from S3
-      #   run: aws s3 cp ${{ env.S3_BUCKET }}/${{ env.GITHUB_USERNAME }}/results/${{ env.COMMIT_ID }}/evaluation_results.json evaluation_results.json
-      # - name: Comment results on PR
-      #   uses: actions/github-script@v6
-      #   with:
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     script: |
-      #       const fs = require('fs')
-      #       github.rest.issues.createComment({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         issue_number: context.issue.number,
-      #         body: fs.readFileSync('evaluation_results.json', 'utf8')
-      #       })
+#       # Get run ID
+#       - name: Get and save run ID
+#         id: get-and-save-run-id
+#         run: |
+#           export RUN_ID=$(jq -r '.run_id' training_results.json)
+#           echo "RUN_ID=$RUN_ID" >> "$GITHUB_OUTPUT"
+#           # Save run_id
 
-      # # Test model
-      # - name: Test model
-      #   run: echo "Test model"
+#   evaluate-model:
+#     runs-on: ubuntu-22.04
+#     needs: [setup, train-model]
+#     steps:
+
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
+
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+
+#       # Evaluate model
+#       - name: Evaluate model
+#         run: |
+#           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+#           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+#           python deploy/utils.py submit-job \
+#             --yaml-config-fp deploy/jobs/evaluate.yaml \
+#             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+#             --run-id ${{ needs.train-model.outputs.RUN_ID }} \
+#             --github-username ${{ github.actor }} \
+#             --pr-num ${{ github.event.pull_request.number }} \
+#             --commit-id ${{ github.event.pull_request.head.sha }}
+
+#       # Read and process results
+#       - name: Read and process results from S3
+#         run: |
+#           export RESULTS=evaluation_results
+#           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS.json $RESULTS.json
+#           python deploy/utils.py json-to-markdown --json-fp $RESULTS.json --markdown-fp $RESULTS.md
+#       - name: Comment results on PR
+#         uses: thollander/actions-comment-pull-request@v2
+#         with:
+#           filePath: $RESULTS.md
+
+#   test-model:
+#     runs-on: ubuntu-22.04
+#     needs: [setup, train-model]
+#     steps:
+
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
+
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+
+#       # Test model
+#       - name: Test model
+#         run: |
+#           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+#           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+#           python deploy/utils.py submit-job \
+#             --yaml-config-fp deploy/jobs/test_model.yaml \
+#             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
+#             --run-id ${{ needs.train-model.outputs.RUN_ID }} \
+#             --github-username ${{ github.actor }} \
+#             --pr-num ${{ github.event.pull_request.number }} \
+#             --commit-id ${{ github.event.pull_request.head.sha }}
+
+#       # Read and process results
+#       - name: Read and process results from S3
+#         run: |
+#           export RESULTS=test_model_results
+#           aws s3 cp ${{ needs.setup.outputs.RESULTS_PATH }}/$RESULTS.txt $RESULTS.txt
+#           if grep -q "failed" $RESULTS.txt; then
+#             echo $(tail -n 1 $RESULTS.txt)
+#             exit 1
+#           fi
+
+#   compare-to-prod:
+#     runs-on: ubuntu-22.04
+#     needs: [setup, evaluate-model, test-model]
+#     steps:
+
+#       # Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: ${{ secrets.IAM_ROLE }}
+#           role-session-name: s3access
+#           aws-region: ${{ secrets.AWS_REGION }}
+
+#       # Set up dependencies
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: '3.10.11'
+#           cache: 'pip'
+#       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+
+#       # Compare model to production
+#       - name: Compare model
+#         run: echo "Compare model"

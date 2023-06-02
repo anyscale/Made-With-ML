@@ -1,4 +1,4 @@
-name: evaluate-model
+name: test-code
 project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
 build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
 runtime_env:
@@ -6,12 +6,10 @@ runtime_env:
   upload_path: s3://madewithml/GokuMohandas/jobs
   env_vars:
     S3_BUCKET_NAME: madewithml
-    EXPERIMENT_NAME: llm  # if "", run_id must be provided
-    RUN_ID: ""  # if "", best run from experiment will be used
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
-entrypoint: bash deploy/jobs/evaluate.sh
+entrypoint: bash deploy/jobs/test_code.sh
 max_retries: 0
 compute_config:
   cloud_id: cld_9b2d7fppgayt6t7ivudst2gwet

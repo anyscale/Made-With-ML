@@ -2,7 +2,7 @@
 
 Learn how to combine machine learning with software engineering best practices to develop, deploy and maintain ML applications in production.
 
-> MLOps concepts are interweaved and cannot be run in isolation, so be sure to complement the code in this repository with the detailed [MLOps lessons](https://madewithml.com/#mlops).
+> MLOps concepts are interweaved and so should not be run in isolation, so be sure to complement the code in this repository with the detailed [MLOps lessons](https://madewithml.com/#mlops).
 
 <div align="left">
     <a target="_blank" href="https://madewithml.com/"><img src="https://img.shields.io/badge/Subscribe-30K-brightgreen"></a>&nbsp;
@@ -27,9 +27,10 @@ cd mlops-course
 > Highly recommend using Python `3.10` and using [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows).
 ```bash
 python3 -m venv venv  # recommend using Python 3.10
-source venv/bin/activate
+source venv/bin/activate  # on Windows: venv\Scripts\activate
 python3 -m pip install --upgrade pip setuptools wheel
-python3 -m pip install -e ".[dev]"
+python3 -m pip install -r requirements.txt
+export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
 pre-commit install
 pre-commit autoupdate
 ```
@@ -53,53 +54,56 @@ jupyter lab notebooks/madewithml.ipynb
 
 ### Train a single model
 ```bash
-EXPERIMENT_NAME="llm"
-DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
-python src/madewithml/train.py \
+export EXPERIMENT_NAME="llm"
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
+python madewithml/train.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
     "$TRAIN_LOOP_CONFIG" \
     --use-gpu \
-    --num-cpu-workers 40 \
+    --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/training_results.json
 ```
 
 ### Tuning experiment
 ```bash
-EXPERIMENT_NAME="llm"
-DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
-INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
-python src/madewithml/tune.py \
+export EXPERIMENT_NAME="llm"
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
+export INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
+python madewithml/tune.py \
     "$EXPERIMENT_NAME" \
     "$DATASET_LOC" \
     "$INITIAL_PARAMS" \
     --num-runs 2 \
     --use-gpu \
-    --num-cpu-workers 40 \
+    --num-cpu-workers 10 \
     --num-gpu-workers 2 \
     --num-epochs 10 \
-    --batch-size 256
+    --batch-size 256 \
+    --results-fp results/tuning_results.json
 ```
 
 ### Experiment tracking
 ```bash
-MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
+export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
 mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
 ```
 
 ### Evaluation
 ```bash
-EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
-python src/madewithml/evaluate.py \
+export EXPERIMENT_NAME="llm"
+export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2
+    --num-cpu-workers 2 \
+    --results-fp results/evaluation_results.json
 ```
 ```json
 {
@@ -112,9 +116,9 @@ python src/madewithml/evaluate.py \
 ### Inference
 ```bash
 # Get run ID
-EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-python src/madewithml/predict.py predict \
+export EXPERIMENT_NAME="llm"
+export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+python madewithml/predict.py predict \
     --run-id $RUN_ID \
     --title "Transfer learning with transformers" \
     --description "Using transformers for transfer learning on text classification tasks."
@@ -137,9 +141,9 @@ python src/madewithml/predict.py predict \
 ```bash
 # Set up
 ray start --head  # already running if using Anyscale
-EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-python src/madewithml/serve.py --run_id $RUN_ID
+export EXPERIMENT_NAME="llm"
+export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+python madewithml/serve.py --run_id $RUN_ID
 ```
 
 While the application is running, we can use it via cURL, Python, etc.
@@ -169,18 +173,18 @@ ray stop
 ### Testing
 ```bash
 # Code
-python3 -m pytest tests/code --cov src/madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-open htmlcov/index.html
+python3 -m pytest tests/code --verbose --disable-warnings
 
 # Data
-DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
-pytest --dataset-loc=$DATASET_LOC tests/data --disable-warnings
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings
 
 # Model
-EXPERIMENT_NAME="llm"
-RUN_ID=$(python src/madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-pytest --run-id=$RUN_ID tests/model --disable-warnings
+export EXPERIMENT_NAME="llm"
+export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
+
 
 ## Deploy
 
@@ -199,7 +203,6 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```bash
 export PROJECT_NAME="madewithml"
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export S3_BUCKET="s3://madewithml"
 ```
 
 2. Create the project
@@ -214,45 +217,99 @@ python deploy/utils.py get-project-id --project-name $PROJECT_NAME
 python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-4. Test code + data
+4. Test code
 ```bash
+# Manual
+anyscale job submit deploy/jobs/test_code.yaml
+
+# Dynamic (uses latest cluster env build)
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/test_code.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-5. Train model
+5. Test data
 ```bash
+# Manual
+anyscale job submit deploy/jobs/test_data.yaml
+
+# Dynamic (uses latest cluster env build)
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/test_data.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-6. Evaluate model
+6. Train model
+```bash
+# Manual
+anyscale job submit deploy/jobs/train.yaml
+
+# Dynamic (uses latest cluster env build)
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/train.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+7. Evaluate model
 ```bash
 # Manual
 anyscale job submit deploy/jobs/evaluate.yaml
 
-# Dynamic
+# Dynamic (uses latest cluster env build)
 python deploy/utils.py submit-job \
   --yaml-config-fp deploy/jobs/evaluate.yaml \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-7. Test model
+8. Test model
+```bash
+# Manual
+anyscale job submit deploy/jobs/test_data.yaml
+
+# Dynamic (uses latest cluster env build)
+python deploy/utils.py submit-job \
+  --yaml-config-fp deploy/jobs/test_model.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+```
+
+9. Compare to prod
 ```bash
 ```
 
-8. Deploy model
+10. Serve model
 ```bash
-```
+# Manual rollout
+anyscale service rollout -f deploy/services/serve.yaml
 
+# Dynamic rollout (uses latest cluster env build)
+python deploy/utils.py rollout-service \
+  --yaml-config-fp deploy/services/serve.yaml \
+  --cluster-env-name $CLUSTER_ENV_NAME
+
+# Query (retrieved from Service endpoint generated from command above)
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{
+  "title": "Transfer learning with transformers",
+  "description": "Using transformers for transfer learning on text classification tasks."
+}' $SERVICE_ENDPOINT
+
+# Rollback (to previous version of the Service)
+anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
+
+# Terminate
+anyscale service terminate --name $SERVICE_NAME
+```
 ------------------------------------------------------------------------------------------------------------------------
 
 ### Setup
 ```bash
-export PROJECT_NAME="mlops-course"  # project name should match with repository name
+export PROJECT_NAME="mlops-course"  # project name should match with dir we made in cluster_env
 anyscale project create -n $PROJECT_NAME
-export PROJECT_ID=$(python deploy/utils/utils.py get-project-id --project-name $PROJECT_NAME)
+export PROJECT_ID=$(python deploy/utils.py get-project-id --project-name $PROJECT_NAME)
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export CLUSTER_ENV_BUILD_ID=$(python deploy/utils/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME)
+export CLUSTER_ENV_BUILD_ID=$(python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME)
 export S3_BUCKET="s3://goku-mlops"
 export UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])')
-anyscale cluster-env build deploy/cluster_env.yaml --name madewithml-cluster-env
+anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 ```
 
 
@@ -274,11 +331,11 @@ python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
 
 ```bash
 # Set up
-export SERVICE_CONFIG="deploy/services/service.yaml"
+export SERVICE_CONFIG="deploy/services/serve.yaml"
 export SERVICE_NAME="madewithml-service"
 
 # Rollout
-anyscale service rollout -f $SERVICE_CONFIG --name $SERVICE_NAME
+anyscale service rollout -f deploy/services/service.yaml
 
 # Query (retrieved from Service endpoint generated from command above)
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{

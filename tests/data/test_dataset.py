@@ -9,5 +9,5 @@ def test_dataset(df):
 
     # Expectation suite
     expectation_suite = df.get_expectation_suite(discard_failed_expectations=False)
-    results = df.validate(expectation_suite=expectation_suite, only_return_failures=True)
+    results = df.validate(expectation_suite=expectation_suite, only_return_failures=True).to_json_dict()
     assert results["success"]
