@@ -15,7 +15,7 @@ jobs:
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
-      - run:
+      - run: |
           export x1=export-works
           x2=no-export-works
           echo $x1
