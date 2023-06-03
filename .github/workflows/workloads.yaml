@@ -67,9 +67,9 @@ jobs:
       - run: echo "RESULTS=test_code_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
-          if grep -q "failed" ${{ env.RESULTS }.txt; then
-            echo $(tail -n 1 ${{ env.RESULTS }.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }}.txt ${{ env.RESULTS }}.txt
+          if grep -q "failed" ${{ env.RESULTS }}.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }}.txt)
             exit 1
           fi
 
@@ -112,9 +112,9 @@ jobs:
       - name: Read and process results from S3
         run: |
           export RESULTS=test_data_results
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
-          if grep -q "failed" ${{ env.RESULTS }.txt; then
-            echo $(tail -n 1 ${{ env.RESULTS }.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }}.txt ${{ env.RESULTS }}.txt
+          if grep -q "failed" ${{ env.RESULTS }}.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }}.txt)
             exit 1
           fi
 
@@ -159,12 +159,12 @@ jobs:
       - run: echo "RESULTS=training_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.json ${{ env.RESULTS }.json
-          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }.json --markdown-fp ${{ env.RESULTS }.md
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }}.json ${{ env.RESULTS }}.json
+          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }}.json --markdown-fp ${{ env.RESULTS }}.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: ${{ env.RESULTS }.md
+          filePath: ${{ env.RESULTS }}.md
 
       # Get and save run ID
       - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
@@ -216,12 +216,12 @@ jobs:
       - run: echo "RESULTS=evaluation_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.json ${{ env.RESULTS }.json
-          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }.json --markdown-fp ${{ env.RESULTS }.md
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }}.json ${{ env.RESULTS }}.json
+          python deploy/utils.py json-to-markdown --json-fp ${{ env.RESULTS }}.json --markdown-fp ${{ env.RESULTS }}.md
       - name: Comment results on PR
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: ${{ env.RESULTS }.md
+          filePath: ${{ env.RESULTS }}.md
 
   test-model:
     runs-on: ubuntu-22.04
@@ -262,9 +262,9 @@ jobs:
       - run: echo "RESULTS=test_model_results" >> $GITHUB_ENV
       - name: Read and process results from S3
         run: |
-          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }.txt ${{ env.RESULTS }.txt
-          if grep -q "failed" ${{ env.RESULTS }.txt; then
-            echo $(tail -n 1 ${{ env.RESULTS }.txt)
+          aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/${{ env.RESULTS }}.txt ${{ env.RESULTS }}.txt
+          if grep -q "failed" ${{ env.RESULTS }}.txt; then
+            echo $(tail -n 1 ${{ env.RESULTS }}.txt)
             exit 1
           fi
 
