@@ -50,7 +50,16 @@ jobs:
           cache: 'pip'
       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
-      # Get and read run ID (from S3)
+      - name: Get pull request number
+        if: github.event_name == 'push'
+        run: |
+          repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
+          pr_number=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/$repo/commits/$GITHUB_SHA/pulls" \
+            | jq -r '.[0].number')
+          echo "Pull request number: $pr_number"
+
+      # Get run ID
       - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get run ID
         run: |
