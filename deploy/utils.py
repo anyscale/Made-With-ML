@@ -1,6 +1,7 @@
 import json
 import subprocess
 import tempfile
+from urllib.parse import urlparse
 
 import boto3
 import typer
@@ -94,11 +95,13 @@ def rollout_service(
 @app.command()
 def save_to_s3(
     file_path: str = typer.Option(..., "--file-path", "-fp", help="path of file to save to S3"),
-    bucket_name: str = typer.Option(..., "--bucket-name", help="name of S3 bucket (without s3:// prefix)"),
-    bucket_path: str = typer.Option(..., "--bucket-path", help="path in S3 bucket to save to"),
+    s3_path: str = typer.Option(..., "--s3-path", "-sp", help="full S3 bucket path"),
 ) -> None:
     """Save file to S3 bucket."""
     s3 = boto3.client("s3")
+    parsed_url = urlparse(s3_path)
+    bucket_name = parsed_url.netloc
+    bucket_path = parsed_url.path.lstrip("/")
     s3.upload_file(file_path, bucket_name, bucket_path)
 
 
