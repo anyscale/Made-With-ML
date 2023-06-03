@@ -5,7 +5,7 @@ runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
   env_vars:
-    S3_BUCKET_NAME: madewithml
+    S3_BUCKET: s3://madewithml
     EXPERIMENT_NAME: llm  # if "", run_id must be provided
     RUN_ID: ""  # if "", best run from experiment will be used
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username

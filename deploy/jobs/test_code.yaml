@@ -5,7 +5,7 @@ runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
   env_vars:
-    S3_BUCKET_NAME: madewithml
+    S3_BUCKET: s3://madewithml
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
