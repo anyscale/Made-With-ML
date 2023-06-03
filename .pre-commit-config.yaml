@@ -14,20 +14,8 @@ repos:
         exclude: "mkdocs.yml"
 -   repo: local
     hooks:
-    -   id: clean  # clean before test so we don't run expensive test runs again
+    -   id: clean
         name: clean before test
-        entry: make
-        args: ["clean"]
-        language: system
-        pass_filenames: false
-    -   id: test
-        name: test
-        entry: make
-        args: ["test"]
-        language: system
-        pass_filenames: false
-    -   id: clean  # clean after test to remove any unwanted artifacts from testing
-        name: clean after test
         entry: make
         args: ["clean"]
         language: system
