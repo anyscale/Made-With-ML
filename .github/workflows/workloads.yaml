@@ -174,7 +174,7 @@ jobs:
           echo "$(jq -r '.run_id' training_results.json)" > ${{ env.RUN_ID_FILE }}
           python deploy/utils.py save-to-s3 \
             --file-path ${{ env.RUN_ID_FILE }} \
-            --bucket-name ${{ needs.setup.outputs.S3_BUCKET_NAME }} \ \
+            --bucket-name ${{ needs.setup.outputs.S3_BUCKET_NAME }} \
             --bucket-path ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }}
 
   evaluate-model:
