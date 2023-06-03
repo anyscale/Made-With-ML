@@ -55,7 +55,7 @@ jobs:
       - name: Get run ID
         run: |
           echo ${{ needs.setup.outputs.PR_PATH }}
-          echo ${{ github.event.pull_request.merged }}
+          echo ${{ github.event.pull_request.number }}
           aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }} ${{ env.RUN_ID_FILE }}
           echo "RUN_ID=$(cat ${{ env.RUN_ID_FILE }})" >> "$GITHUB_ENV"
 
