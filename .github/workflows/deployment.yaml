@@ -15,8 +15,20 @@ jobs:
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
+      - run:
+          export x1=export-works
+          x2=no-export-works
+          echo $x1
+          echo $x2
+      - if: github.event_name == 'push'
+        run: |
+          REPO=$GITHUB_REPOSITORY | awk '{print tolower($0)}'
+          PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
+            | jq -r '.[0].number')
+          echo "PR_NUM=$PR_NUM" >> $GITHUB_ENV
       - run: echo "S3_BUCKET_NAME=madewithml" >> $GITHUB_ENV
-      - run: echo "PR_PATH=s3://${{ env.S3_BUCKET_NAME }}/${{ github.actor }}/pull_requests/${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+      - run: echo "PR_PATH=s3://${{ env.S3_BUCKET_NAME }}/${{ github.actor }}/pull_requests/${{ env.PR_NUM }}" >> $GITHUB_ENV
       - run: echo "COMMIT_PATH=${{ env.PR_PATH }}/commits/${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       - name: Set global vars
         id: vars
@@ -49,15 +61,6 @@ jobs:
           python-version: '3.10.11'
           cache: 'pip'
       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
-
-      - name: Get pull request number
-        if: github.event_name == 'push'
-        run: |
-          repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
-          pr_number=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/$repo/commits/$GITHUB_SHA/pulls" \
-            | jq -r '.[0].number')
-          echo "Pull request number: $pr_number"
 
       # Get run ID
       - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
