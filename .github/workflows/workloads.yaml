@@ -4,9 +4,6 @@ on:
   pull_request:
     branches:
     - main
-  push:
-    branches:
-    - main
 permissions: write-all
 
 jobs:
@@ -298,44 +295,3 @@ jobs:
       # Compare model to production
       - name: Compare model
         run: echo "Compare model"
-
-  serve-model:
-    runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
-    needs: setup
-    outputs:  # outputs (that we'll reuse in other jobs)
-      PR_NUM: ${{ steps.vars.outputs.RUN_ID }}
-    steps:
-
-      # Configure AWS credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.IAM_ROLE }}
-          role-session-name: s3access
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      # Set up dependencies
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.11'
-          cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
-
-      # Get and read run ID (from S3)
-      - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
-      - name: Get run ID
-        run: |
-          aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }} ${{ env.RUN_ID_FILE }}
-          echo "RUN_ID=$(cat ${{ env.RUN_ID_FILE }})" >> "$GITHUB_ENV"
-
-      # Serve model
-      - name: Serve model
-        run: |
-          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
-          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
-          python deploy/utils.py rollout-service \
-            --yaml-config-fp deploy/services/serve.yaml \
-            --cluster-env-name $CLUSTER_ENV_NAME \
-            --run-id ${{ env.RUN_ID }}
