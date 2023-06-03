@@ -16,7 +16,7 @@ jobs:
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - run: echo "S3_BUCKET_NAME=madewithml" >> $GITHUB_ENV
-      - run: echo "PR_PATH=s3://${{ env.S3_BUCKET_NAME }}/${{ github.actor }}/pull_requests/${{ github.event.number }}" >> $GITHUB_ENV
+      - run: echo "PR_PATH=s3://${{ env.S3_BUCKET_NAME }}/${{ github.actor }}/pull_requests/${{ github.event.pull_request.number }}" >> $GITHUB_ENV
       - run: echo "COMMIT_PATH=${{ env.PR_PATH }}/commits/${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       - name: Set global vars
         id: vars
@@ -54,6 +54,8 @@ jobs:
       - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get run ID
         run: |
+          echo ${{ needs.setup.outputs.PR_PATH }}
+          echo ${{ github.event.pull_request.merged }}
           aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }} ${{ env.RUN_ID_FILE }}
           echo "RUN_ID=$(cat ${{ env.RUN_ID_FILE }})" >> "$GITHUB_ENV"
 
