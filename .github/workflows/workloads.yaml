@@ -167,11 +167,13 @@ jobs:
           filePath: ${{ env.RESULTS }}.md
 
       # Get and save run ID
+      - run: echo "RUN_ID=$(jq -r '.run_id' training_results.json)" >> $GITHUB_ENV
       - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get and save run ID
         id: get-and-save-run-id
         run: |
-          echo "$(jq -r '.run_id' training_results.json)" > ${{ env.RUN_ID_FILE }}
+          echo ${{ env.RUN_ID }} > ${{ env.RUN_ID_FILE }}
+          echo "RUN_ID=${{ env.RUN_ID }}" >> $GITHUB_OUTPUT
           python deploy/utils.py save-to-s3 \
             --file-path ${{ env.RUN_ID_FILE }} \
             --bucket-name ${{ needs.setup.outputs.S3_BUCKET_NAME }} \
