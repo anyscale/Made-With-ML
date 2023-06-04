@@ -9,39 +9,20 @@ permissions: write-all
 jobs:
   setup:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' }}
     outputs:  # outputs (that we'll reuse in other jobs)
-      S3_BUCKET_NAME: ${{ steps.vars.outputs.S3_BUCKET_NAME }}
+      S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
-      CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
-      - run: |
-          export S3_BUCKET_NAME=madewithml
-          export PR_PATH2=s3://$S3_BUCKET_NAME
-          echo "S3_BUCKET_NAME2=$S3_BUCKET_NAME" >> $GITHUB_ENV
-          echo "PR_PATH2=$PR_PATH2" >> $GITHUB_ENV
-          echo $PR_PATH2
-          echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
-          echo "PR_PATH=s3://$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
-      - run: |
-          echo ${{ env.S3_BUCKET_NAME2 }}
-          echo ${{ env.PR_PATH2 }}
-          repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
-          PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
-            | jq -r '.[0].number')
-          echo "PR_NUM=$PR_NUM" >> $GITHUB_ENV
-      - run: echo "S3_BUCKET_NAME=madewithml" >> $GITHUB_ENV
-      - run: echo "PR_PATH=s3://${{ env.S3_BUCKET_NAME }}/${{ github.actor }}/pull_requests/${{ env.PR_NUM }}" >> $GITHUB_ENV
-      - run: echo "COMMIT_PATH=${{ env.PR_PATH }}/commits/${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
       - name: Set global vars
         id: vars
         run: |
-          echo "S3_BUCKET_NAME=${{ env.S3_BUCKET_NAME }}" >> $GITHUB_OUTPUT
-          echo "PR_PATH=${{ env.PR_PATH }}" >> $GITHUB_OUTPUT
-          echo "COMMIT_PATH=${{ env.COMMIT_PATH }}" >> $GITHUB_OUTPUT
-          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT
+          export S3_BUCKET=s3://madewithml
+          export PR_PATH=$S3_BUCKET/${{ github.actor }}/pull_requests/${{ github.event.number }}
+          export COMMIT_PATH=$PR_PATH/commits/${{ github.event.pull_request.head.sha }}
+          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_OUTPUT
+          echo "PR_PATH=$PR_PATH" >> $GITHUB_OUTPUT
+          echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_OUTPUT
 
   serve-model:
     runs-on: ubuntu-22.04
@@ -68,13 +49,11 @@ jobs:
       - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
 
       # Get run ID
-      - run: echo "RUN_ID_FILE=run_id.txt" >> $GITHUB_ENV
       - name: Get run ID
         run: |
-          echo ${{ needs.setup.outputs.PR_PATH }}
-          echo ${{ github.event.pull_request.number }}
-          aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/${{ env.RUN_ID_FILE }} ${{ env.RUN_ID_FILE }}
-          echo "RUN_ID=$(cat ${{ env.RUN_ID_FILE }})" >> "$GITHUB_ENV"
+          export RUN_ID_FILE=run_id.txt
+          aws s3 cp ${{ needs.setup.outputs.PR_PATH }}/$RUN_ID_FILE $RUN_ID_FILE
+          echo "RUN_ID=$(cat $RUN_ID_FILE)" >> "$GITHUB_ENV"
 
       # Serve model
       - name: Serve model

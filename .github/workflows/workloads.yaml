@@ -10,7 +10,7 @@ jobs:
   setup:
     runs-on: ubuntu-22.04
     outputs:  # outputs (that we'll reuse in other jobs)
-      S3_BUCKET_NAME: ${{ steps.vars.outputs.S3_BUCKET_NAME }}
+      S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
@@ -18,12 +18,12 @@ jobs:
       - name: Set global vars
         id: vars
         run: |
-          export S3_BUCKET_NAME=madewithml
-          export PR_PATH=s3://$S3_BUCKET_NAME/${{ github.actor }}/pull_requests/${{ github.event.number }}
+          export S3_BUCKET=s3://madewithml
+          export PR_PATH=$S3_BUCKET/${{ github.actor }}/pull_requests/${{ github.event.number }}
           export COMMIT_PATH=$PR_PATH/commits/${{ github.event.pull_request.head.sha }}
-          echo "S3_BUCKET_NAME=${{ env.S3_BUCKET_NAME }}" >> $GITHUB_OUTPUT
-          echo "PR_PATH=${{ env.PR_PATH }}" >> $GITHUB_OUTPUT
-          echo "COMMIT_PATH=${{ env.COMMIT_PATH }}" >> $GITHUB_OUTPUT
+          echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_OUTPUT
+          echo "PR_PATH=$PR_PATH" >> $GITHUB_OUTPUT
+          echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_OUTPUT
           echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT
 
   test-code:
@@ -156,6 +156,7 @@ jobs:
         run: |
           export JSON_RESULTS_FILE=training_results.json
           export MD_RESULTS_FILE=training_results.md
+          echo "JSON_RESULTS_FILE=$JSON_RESULTS_FILE" >> $GITHUB_ENV
           echo "MD_RESULTS_FILE=$MD_RESULTS_FILE" >> $GITHUB_ENV
           aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
           python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
