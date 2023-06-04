@@ -16,11 +16,13 @@ jobs:
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - run: |
-          export x1=s3://export-works
-          x2=s3://no-export-works
+          echo test > test.txt
+          echo test2 > test2.txt
+          export x1=s3://madewithml
+          export x2=test2.txt
           echo $x1
           echo $x2
-          aws s3 cp s3://export-works s3://no-export-works
+          aws s3 cp s3://madewithml test.txt
           aws s3 cp $x1 $x2
       - if: github.event_name == 'push'
         run: |
