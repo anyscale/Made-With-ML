@@ -25,9 +25,11 @@ jobs:
           echo "PR_PATH=s3://$x2"
           echo "COMMIT_PATH=s3://${x2}"
           echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_ENV
+          echo "COMMIT_PATH2=test" >> $GITHUB_ENV
       - if: github.event_name == 'push'
         run: |
-          echo ${{ env.COMMIT_PATH}}
+          echo ${{ env.COMMIT_PATH }}
+          echo ${{ env.COMMIT_PATH2 }}
           repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
           PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
