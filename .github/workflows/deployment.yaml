@@ -23,10 +23,12 @@ jobs:
           echo "PR_PATH=s3://$x1"
           echo "PR_PATH=s3://${x1}"
           echo "PR_PATH=s3://$x2"
-          echo "PR_PATH=s3://${x2}"
+          echo "COMMIT_PATH=s3://${x2}"
+          echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_OUTPUT
+          aws s3 cp $x1 $x2
       - if: github.event_name == 'push'
         run: |
-          REPO=$GITHUB_REPOSITORY | awk '{print tolower($0)}'
+          repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
           PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
             | jq -r '.[0].number')
