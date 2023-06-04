@@ -18,8 +18,9 @@ jobs:
     steps:
       - run: |
           export S3_BUCKET_NAME=madewithml
+          export PR_PATH2=s3://$S3_BUCKET_NAME
           echo "S3_BUCKET_NAME2=$S3_BUCKET_NAME" >> $GITHUB_ENV
-          echo "PR_PATH2=s3://$S3_BUCKET_NAME" >> $GITHUB_ENV
+          echo "PR_PATH2=$PR_PATH2" >> $GITHUB_ENV
           echo $PR_PATH2
           echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
           echo "PR_PATH=s3://$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
