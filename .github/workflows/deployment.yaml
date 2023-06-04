@@ -28,8 +28,8 @@ jobs:
           export x2=test2.txt
           echo $x1
           echo $x2
-          aws s3 cp test.txt s3://madewithml
-          aws s3 cp $x2 $x1
+          cat test2.txt
+          cat $x2
       - if: github.event_name == 'push'
         run: |
           echo ${{ env.COMMIT_PATH }}
