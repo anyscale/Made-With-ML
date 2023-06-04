@@ -20,6 +20,7 @@ jobs:
           x2=s3://no-export-works
           echo $x1
           echo $x2
+          aws s3 cp s3://export-works s3://no-export-works
           aws s3 cp $x1 $x2
       - if: github.event_name == 'push'
         run: |
