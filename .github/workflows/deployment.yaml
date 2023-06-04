@@ -15,6 +15,12 @@ jobs:
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.IAM_ROLE }}
+          role-session-name: s3access
+          aws-region: ${{ secrets.AWS_REGION }}
       - run: |
           echo test > test.txt
           echo test2 > test2.txt
