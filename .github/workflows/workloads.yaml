@@ -64,6 +64,9 @@ jobs:
       - name: Read and process results from S3
         run: |
           export RESULTS_FILE=test_code_results.txt
+          echo ${{ needs.setup.outputs.COMMIT_PATH }}
+          echo $RESULTS_FILE
+          echo ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS_FILE
           aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS_FILE $RESULTS_FILE
           if grep -q "failed" $RESULTS_FILE; then
             echo $(tail -n 1 $RESULTS_FILE)
