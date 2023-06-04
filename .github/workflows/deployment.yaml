@@ -9,31 +9,22 @@ permissions: write-all
 jobs:
   setup:
     runs-on: ubuntu-22.04
+    if: ${{ github.event_name == 'push' }}
     outputs:  # outputs (that we'll reuse in other jobs)
       S3_BUCKET_NAME: ${{ steps.vars.outputs.S3_BUCKET_NAME }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.IAM_ROLE }}
-          role-session-name: s3access
-          aws-region: ${{ secrets.AWS_REGION }}
       - run: |
-          echo test > test.txt
-          echo test2 > test2.txt
-          export x1=s3://madewithml
-          export x2=test2.txt
-          echo $x1
-          echo $x2
-          cat test2.txt
-          cat $x2
-      - if: github.event_name == 'push'
-        run: |
-          echo ${{ env.COMMIT_PATH }}
-          echo ${{ env.COMMIT_PATH2 }}
+          export S3_BUCKET_NAME=madewithml
+          echo "S3_BUCKET_NAME2=$S3_BUCKET_NAME" >> $GITHUB_ENV
+          echo "PR_PATH2=s3://$S3_BUCKET_NAME" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "PR_PATH=s3://$S3_BUCKET_NAME" >> $GITHUB_OUTPUT
+      - run: |
+          echo ${{ env.S3_BUCKET_NAME2 }}
+          echo ${{ env.PR_PATH2 }}
           repo=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
           PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
