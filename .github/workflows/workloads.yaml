@@ -64,9 +64,6 @@ jobs:
       - name: Read and process results from S3
         run: |
           export RESULTS_FILE=test_code_results.txt
-          echo ${{ needs.setup.outputs.COMMIT_PATH }}
-          echo $RESULTS_FILE
-          echo ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS_FILE
           aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$RESULTS_FILE $RESULTS_FILE
           if grep -q "failed" $RESULTS_FILE; then
             echo $(tail -n 1 $RESULTS_FILE)
@@ -159,6 +156,7 @@ jobs:
         run: |
           export JSON_RESULTS_FILE=training_results.json
           export MD_RESULTS_FILE=training_results.md
+          echo "JSON_RESULTS_FILE=$JSON_RESULTS_FILE" >> $GITHUB_ENV
           echo "MD_RESULTS_FILE=$MD_RESULTS_FILE" >> $GITHUB_ENV
           aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
           python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
