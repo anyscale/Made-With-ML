@@ -16,16 +16,11 @@ jobs:
       CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - run: |
-          export x1=export-works
-          x2=no-export-works
+          export x1=s3://export-works
+          x2=s3://no-export-works
           echo $x1
           echo $x2
-          echo "PR_PATH=s3://$x1"
-          echo "PR_PATH=s3://${x1}"
-          echo "PR_PATH=s3://$x2"
-          echo "COMMIT_PATH=s3://${x2}"
-          echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_ENV
-          echo "COMMIT_PATH2=test" >> $GITHUB_ENV
+          aws s3 cp $x1 $x2
       - if: github.event_name == 'push'
         run: |
           echo ${{ env.COMMIT_PATH }}
