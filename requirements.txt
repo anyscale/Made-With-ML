@@ -45,4 +45,4 @@ pre-commit==3.2.2
 typer==0.7.0
 
 # Deployment
-anyscale==0.5.110
+anyscale==0.5.116
