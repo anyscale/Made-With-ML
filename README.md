@@ -152,7 +152,7 @@ While the application is running, we can use it via cURL, Python, etc.
 curl -X POST -H "Content-Type: application/json" -d '{
   "title": "Transfer learning with transformers",
   "description": "Using transformers for transfer learning on text classification tasks."
-}' http://127.0.0.1:8000/
+}' http://127.0.0.1:8000/predict
 ```
 ```python
 # via Python
@@ -161,7 +161,7 @@ import requests
 title = "Transfer learning with transformers"
 description = "Using transformers for transfer learning on text classification tasks."
 json_data = json.dumps({"title": title, "description": description})
-requests.post("http://127.0.0.1:8000/", data=json_data).json()
+requests.post("http://127.0.0.1:8000/predict", data=json_data).json()
 ```
 
 Once we're done, we can shut down the application:
@@ -205,9 +205,10 @@ export PROJECT_NAME="madewithml"
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
 ```
 
-2. Create the project
+2. Create the project and cluster env
 ```bash
 anyscale project create -n $PROJECT_NAME
+anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 ```
 
 3. Replace vars in configs

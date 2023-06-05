@@ -4,6 +4,7 @@ import tempfile
 from urllib.parse import urlparse
 
 import boto3
+import requests
 import typer
 import yaml
 from anyscale import AnyscaleSDK
@@ -40,6 +41,20 @@ def get_latest_cluster_env_build_id(
     bld_id = res.results[0].id
     print(bld_id)
     return bld_id
+
+
+@app.command()
+def get_run_id(
+    service_name: str = typer.Option(..., "--service-name", "-n", help="name of the Anyscale service")
+) -> str:
+    """Get the run id of the production run."""
+    sdk = AnyscaleSDK()
+    results = sdk.list_services(name="madewithml", state_filter=["RUNNING"]).results[0]
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {results.token}"}
+    response = requests.get(f"{results.url}/run_id", headers=headers)
+    run_id = response.json()["run_id"]
+    print(run_id)
+    return run_id
 
 
 @app.command()

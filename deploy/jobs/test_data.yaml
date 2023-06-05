@@ -1,6 +1,6 @@
 name: test-data
-project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
-build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
+project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
+build_id: bld_za2kxzz6t4xpq3n4p8ck2m2efq
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
@@ -12,7 +12,7 @@ runtime_env:
 entrypoint: bash deploy/jobs/test_data.sh
 max_retries: 0
 compute_config:
-  cloud_id: cld_9b2d7fppgayt6t7ivudst2gwet
+  cloud_id: cld_htln18yuv82lz5he81urmkhgvs
   region: us-west2
   max_workers: 2
   head_node_type:

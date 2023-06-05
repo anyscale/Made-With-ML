@@ -9,6 +9,7 @@ fi
 # Test model
 RESULTS_FILE=test_model_results.txt
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings > $RESULTS_FILE
+cat $RESULTS_FILE
 
 # Save to S3
 python deploy/utils.py save-to-s3 \
