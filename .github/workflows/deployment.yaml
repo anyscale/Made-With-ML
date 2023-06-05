@@ -17,8 +17,12 @@ jobs:
       - name: Set global vars
         id: vars
         run: |
+          export REPO=$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')
+          PR_NUM=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/$REPO/commits/$GITHUB_SHA/pulls" \
+            | jq -r '.[0].number')
           export S3_BUCKET=s3://madewithml
-          export PR_PATH=$S3_BUCKET/${{ github.actor }}/pull_requests/${{ github.event.number }}
+          export PR_PATH=$S3_BUCKET/${{ github.actor }}/pull_requests/$PR_NUM
           export COMMIT_PATH=$PR_PATH/commits/${{ github.event.pull_request.head.sha }}
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_OUTPUT
           echo "PR_PATH=$PR_PATH" >> $GITHUB_OUTPUT

@@ -1,6 +1,6 @@
 name: train-model
 project_id: prj_fhm9eg8b7hlc32uw9c8q7gkwkz
-build_id: bld_kmwzgei5bursn3jmcfcjvmlkuy
+build_id: bld_rutdrqj9l65mdzvfalx8t3ckjs
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs

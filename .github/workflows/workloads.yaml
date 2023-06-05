@@ -175,7 +175,7 @@ jobs:
           echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
           python deploy/utils.py save-to-s3 \
             --file-path $RUN_ID_FILE \
-            --s3-path ${{ needs.setup.outputs.PR_PATH }}//$RUN_ID_FILE
+            --s3-path ${{ needs.setup.outputs.PR_PATH }}/$RUN_ID_FILE
 
   evaluate-model:
     runs-on: ubuntu-22.04
