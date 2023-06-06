@@ -46,7 +46,7 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Test code
       - name: Test code
@@ -90,7 +90,7 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Test data
       - name: Test data
@@ -136,7 +136,7 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Train model (or tune)
       - name: Train model
@@ -197,7 +197,7 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Evaluate model
       - name: Evaluate model
@@ -245,7 +245,7 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Test model
       - name: Test model
@@ -290,11 +290,13 @@ jobs:
         with:
           python-version: '3.10.11'
           cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.110 typer==0.7.0
+      - run: python3 -m pip install anyscale==0.5.116 typer==0.7.0
 
       # Compare model to production
       - name: Get production service run ID
         run: |
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           export SERVICE_NAME="madewithml"
           export RUN_ID=$(python deploy/utils.py get-run-id --service-name $SERVICE_NAME)
           export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
@@ -305,6 +307,8 @@ jobs:
       - name: Read and process results from S3
         if: ${{ env.RUN_ID != '' }}
         run: |
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/prod_eval.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
