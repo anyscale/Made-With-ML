@@ -9,7 +9,7 @@ permissions: write-all
 jobs:
   setup:
     runs-on: ubuntu-22.04
-    outputs:  # outputs (that we'll reuse in other jobs)
+    outputs:  # outputs (that we'll reuse in other jobs below)
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
