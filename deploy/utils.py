@@ -49,10 +49,14 @@ def get_run_id(
 ) -> str:
     """Get the run id of the production run."""
     sdk = AnyscaleSDK()
-    results = sdk.list_services(name="madewithml", state_filter=["RUNNING"]).results[0]
-    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {results.token}"}
-    response = requests.get(f"{results.url}/run_id", headers=headers)
-    run_id = response.json()["run_id"]
+    results = sdk.list_services(name="madewithml", state_filter=["RUNNING"]).results
+    if len(results):
+        result = results[0]
+        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {result.token}"}
+        response = requests.get(f"{result.url}/run_id", headers=headers)
+        run_id = response.json()["run_id"]
+    else:
+        run_id = ""
     print(run_id)
     return run_id
 
@@ -62,8 +66,8 @@ def submit_job(
     yaml_config_fp: str = typer.Option(..., "--yaml-config-fp", help="path of the job's yaml config file"),
     cluster_env_name: str = typer.Option(..., "--cluster-env-name", help="cluster environment's name"),
     run_id: str = typer.Option("", "--run-id", help="run ID to use to execute ML workflow"),
-    github_username: str = typer.Option("", "--github-username", help="GitHub username"),
-    pr_num: str = typer.Option("", "--pr-num", help="PR number"),
+    github_username: str = typer.Option("default", "--github-username", help="GitHub username"),
+    pr_num: str = typer.Option("default", "--pr-num", help="PR number"),
     commit_id: str = typer.Option("default", "--commit-id", help="used as UUID to store results to S3"),
 ) -> None:
     """Submit an Anyscale Job."""
@@ -75,7 +79,6 @@ def submit_job(
     yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
     yaml_config["runtime_env"]["env_vars"]["RUN_ID"] = run_id
     yaml_config["runtime_env"]["env_vars"]["GITHUB_USERNAME"] = github_username
-    yaml_config["runtime_env"]["env_vars"]["PR_NUM"] = pr_num
     yaml_config["runtime_env"]["env_vars"]["COMMIT_ID"] = commit_id
 
     # Execute Anyscale job

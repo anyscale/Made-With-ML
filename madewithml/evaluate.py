@@ -1,3 +1,4 @@
+import datetime
 import json
 from collections import OrderedDict
 from typing import Dict
@@ -115,10 +116,12 @@ def get_slice_metrics(
 
 @app.command()
 def evaluate(
-    run_id: str = "",
-    dataset_loc: str = "",
-    num_cpu_workers: int = 1,
-    results_fp: str = None,
+    run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
+    dataset_loc: str = typer.Option(..., "--dataset-loc", help="dataset (with labels) to evaluate on"),
+    num_cpu_workers: int = typer.Option(
+        1, "--num-cpu-workers", help="number of cpu workers to use for distributed data processing"
+    ),
+    results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
 ) -> Dict:  # pragma: no cover, eval workload
     """_summary_
 
@@ -127,7 +130,7 @@ def evaluate(
         dataset_loc (str): dataset (with labels) to evaluate on.
         num_cpu_workers (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
-        results_fp (str, optional): Location to save evaluation results to. Defaults to None.
+        results_fp (str, optional): location to save evaluation results to. Defaults to None.
 
     Returns:
         Dict: model's performance metrics on the dataset.
@@ -152,6 +155,8 @@ def evaluate(
 
     # Metrics
     metrics = {
+        "timestamp": datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S %p"),
+        "run_id": run_id,
         "overall": get_overall_metrics(y_true=y_true, y_pred=y_pred),
         "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=class_to_index),
         "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds, preprocessor=preprocessor),

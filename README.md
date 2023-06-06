@@ -273,11 +273,7 @@ python deploy/utils.py submit-job \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-9. Compare to prod
-```bash
-```
-
-10. Serve model
+9. Serve model
 ```bash
 # Manual rollout
 anyscale service rollout -f deploy/services/serve.yaml
