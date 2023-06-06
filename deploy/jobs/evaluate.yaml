@@ -23,7 +23,7 @@ compute_config:
   worker_node_types:
   - name: gpu_worker
     instance_type: g4dn.4xlarge
-    min_workers: 2
+    min_workers: 0
     max_workers: 2
   aws:
     BlockDeviceMappings:
