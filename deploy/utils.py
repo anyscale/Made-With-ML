@@ -79,6 +79,7 @@ def submit_job(
     yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
     yaml_config["runtime_env"]["env_vars"]["RUN_ID"] = run_id
     yaml_config["runtime_env"]["env_vars"]["GITHUB_USERNAME"] = github_username
+    yaml_config["runtime_env"]["env_vars"]["PR_NUM"] = pr_num
     yaml_config["runtime_env"]["env_vars"]["COMMIT_ID"] = commit_id
 
     # Execute Anyscale job
