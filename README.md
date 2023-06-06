@@ -1,4 +1,4 @@
-# MLOps Course
+# Made With ML
 
 Learn how to combine machine learning with software engineering best practices to develop, deploy and maintain ML applications in production.
 
@@ -273,11 +273,7 @@ python deploy/utils.py submit-job \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
-9. Compare to prod
-```bash
-```
-
-10. Serve model
+9. Serve model
 ```bash
 # Manual rollout
 anyscale service rollout -f deploy/services/serve.yaml
@@ -299,63 +295,6 @@ anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
 # Terminate
 anyscale service terminate --name $SERVICE_NAME
 ```
-------------------------------------------------------------------------------------------------------------------------
-
-### Setup
-```bash
-export PROJECT_NAME="mlops-course"  # project name should match with dir we made in cluster_env
-anyscale project create -n $PROJECT_NAME
-export PROJECT_ID=$(python deploy/utils.py get-project-id --project-name $PROJECT_NAME)
-export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export CLUSTER_ENV_BUILD_ID=$(python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME)
-export S3_BUCKET="s3://goku-mlops"
-export UUID=$(python -c 'import uuid; print(str(uuid.uuid4())[:8])')
-anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
-```
-
-
-### Evaluation job
-Either `experiment_name` or `run_id` must be provided. If both are provided, `run_id` will be used. And if only `experiment_id` is provided, the best run from the experiment will be used.
-
-```bash
-python deploy/utils/job_submit.py deploy/jobs/evaluate.yaml \
-  uuid=$UUID \
-  project_id=$PROJECT_ID \
-  build_id=$CLUSTER_ENV_BUILD_ID \
-  upload_path=$S3_BUCKET/workingdir/job \
-  s3_bucket=$S3_BUCKET \
-  experiment_name=llm
-```
-
-
-### Services
-
-```bash
-# Set up
-export SERVICE_CONFIG="deploy/services/serve.yaml"
-export SERVICE_NAME="madewithml-service"
-
-# Rollout
-anyscale service rollout -f deploy/services/service.yaml
-
-# Query (retrieved from Service endpoint generated from command above)
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{
-  "title": "Transfer learning with transformers",
-  "description": "Using transformers for transfer learning on text classification tasks."
-}' $SERVICE_ENDPOINT
-
-# Rollback (to previous version of the Service)
-anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
-
-# Terminate
-anyscale service terminate --name $SERVICE_NAME
-```
-
-
-
-
-
-
 
 ## CI/CD
 
@@ -366,46 +305,18 @@ We're not going to manually deploy our application every time we make a change. 
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale-staging.com/o/anyscale-internal/credentials
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
-export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+export AWS_REGION=us-west-2
+export IAM_ROLE=arn:aws:iam::959243851260:role/github-action-madewithml
 ```
 
-2. Next, we'll create the different GitHub action workflows:
-- Test code, data, model: [`/.github/workflows/testing.yaml`](/.github/workflows/testing.yaml)
-- Train model: [`/.github/workflows/training.yaml`](/.github/workflows/training.yaml)
-- Evaluate model: [`/.github/workflows/evaluation.yaml`](/.github/workflows/evaluation.yaml)
-- Deploy service: [`/.github/workflows/serving.yaml`](/.github/workflows/serving.yaml)
+2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. When we start a PR from this branch to our `main` branch, this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow goes well, this will produce comments with the training, evaluation and current prod evaluation (if applicable) directly on the PR.
 
-3. Our different workflows will be triggered when we make a change to our repository and push to a branch and trigger a PR to our main branch. Inside that PR, we'll see the different workflows' results, which we can use to decide if we should deploy our new model or not. Merging a PR to main will update the current deployed model with our new model.
-> We can also manually trigger them from the [`/actions`](https://github.com/GokuMohandas/mlops-course/actions) tab of our GitHub repository
-
-Our Git workflow looks like this:
-```bash
-# Checkout new branch
-git checkout -b $BRANCH_NAME  # ex. dev
-
-# Develop on branch then push to remote
-git add .
-git commit -m "message"
-git push origin $BRANCH_NAME
-
-# Create and merge PR to main branch (on github.com)
-https://github.com/$USERNAME/$REPO/pull/new/$BRANCH_NAME
-
-# Merge PR to main branch (on local)
-git checkout main
-git pull origin main
-
-# Update branch
-git checkout $BRANCH_NAME
-git merge main  # ready to develop again
-```
-
+3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [deployment workflow](/.github/workflows/deployment.yaml) which will rollout our new service to production!
 
 ## FAQ
 
 ### Jupyter notebook kernels
+
 Issues with configuring the notebooks with jupyter? By default, jupyter will use the kernel with our virtual environment but we can also manually add it to jupyter:
 ```bash
 python3 -m ipykernel install --user --name=venv

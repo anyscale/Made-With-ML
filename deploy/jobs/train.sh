@@ -20,3 +20,7 @@ python madewithml/train.py \
 python deploy/utils.py save-to-s3 \
     --file-path $RESULTS_FILE \
     --s3-path $S3_BUCKET/$GITHUB_USERNAME/pull_requests/$PR_NUM/commits/$COMMIT_ID/$RESULTS_FILE
+
+# Workaround for /mnt/user_storage: Upload mlflow to S3
+MODEL_REGISTRY=$(python -c "from madewithml.config import MODEL_REGISTRY; print(str(MODEL_REGISTRY))")
+aws s3 sync "$MODEL_REGISTRY" $S3_BUCKET/$GITHUB_USERNAME/mlflow
