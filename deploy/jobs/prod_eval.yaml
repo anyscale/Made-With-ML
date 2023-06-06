@@ -11,7 +11,7 @@ runtime_env:
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
-entrypoint: bash deploy/jobs/compare.sh
+entrypoint: bash deploy/jobs/prod_eval.sh
 max_retries: 0
 compute_config:
   cloud_id: cld_htln18yuv82lz5he81urmkhgvs
