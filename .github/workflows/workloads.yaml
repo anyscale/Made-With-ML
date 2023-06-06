@@ -316,18 +316,18 @@ jobs:
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
-          export JSON_RESULTS_FILE=evaluation_results.json
-          export MD_RESULTS_FILE=evaluation_results.md
+          export JSON_RESULTS_FILE=prod_evaluation_results.json
+          export MD_RESULTS_FILE=prod_evaluation_results.md
           echo "MD_RESULTS_FILE=$MD_RESULTS_FILE" >> $GITHUB_ENV
           aws s3 cp ${{ needs.setup.outputs.COMMIT_PATH }}/$JSON_RESULTS_FILE $JSON_RESULTS_FILE
           python deploy/utils.py json-to-markdown --json-fp $JSON_RESULTS_FILE --markdown-fp $MD_RESULTS_FILE
-          echo '**Evaluation of (current) Production Service**\n' | cat - $MD_RESULTS_FILE > temp && mv temp $MD_RESULTS_FILE
+          echo '**Evaluation of (current) Production Service**' | cat - $MD_RESULTS_FILE > temp && mv temp $MD_RESULTS_FILE
 
       # Read and process results (no production run)
       - name: Read and process results from S3 (no production run)
         if: ${{ env.RUN_ID == '' }}
         run: |
-          export MD_RESULTS_FILE=evaluation_results.md
+          export MD_RESULTS_FILE=prod_evaluation_results.md
           echo "MD_RESULTS_FILE=$MD_RESULTS_FILE" >> $GITHUB_ENV
           echo '**No service running in Production**' > $MD_RESULTS_FILE
 
