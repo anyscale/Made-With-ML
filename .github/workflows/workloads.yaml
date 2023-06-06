@@ -299,8 +299,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           export SERVICE_NAME="madewithml"
           export RUN_ID=$(python deploy/utils.py get-run-id --service-name $SERVICE_NAME)
-          export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
-          export RESULTS_FILE=evaluation_results.json
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
       # Read and process results
