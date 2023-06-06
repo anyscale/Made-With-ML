@@ -13,6 +13,7 @@ jobs:
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
+      CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - name: Set global vars
         id: vars
