@@ -140,7 +140,6 @@ python madewithml/predict.py predict \
 ### Serve
 ```bash
 # Set up
-ray start --head  # already running if using Anyscale
 export EXPERIMENT_NAME="llm"
 export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 python madewithml/serve.py --run_id $RUN_ID
@@ -164,10 +163,11 @@ json_data = json.dumps({"title": title, "description": description})
 requests.post("http://127.0.0.1:8000/predict", data=json_data).json()
 ```
 
-Once we're done, we can shut down the application:
+> If you're running in a cluster environment where ray is not already running, we'll need to start it up and shut it down:
 ```bash
-# Shutdown
-ray stop
+ray start --head  # already running if using Anyscale
+# Serve operations above
+ray stop  # showtdown
 ```
 
 ### Testing
@@ -189,6 +189,7 @@ pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ## Deploy
 
 ### Authentication
+> We **do not** need to set these credentials if we're using Anyscale Workspaces :)
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
