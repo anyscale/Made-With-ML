@@ -17,7 +17,7 @@ python madewithml/tune.py \
     --gpu-per-worker 1 \
     --num-epochs 10 \
     --batch-size 256 \
-    --results-fp results/tuning_results.json
+    --results-fp $RESULTS_FILE
 
 # Save to S3
 python deploy/utils.py save-to-s3 \
