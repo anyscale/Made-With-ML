@@ -43,7 +43,7 @@ jupyter lab notebooks/madewithml.ipynb
 ```
 2. Then execute the same workloads using the clean Python scripts following software engineering best practices (testing, documentation, logging, serving, versioning, etc.)
 
-**Note**: Change the `--num-workers`, `--cpu-per-worker`, and `--gpu-per-worker` arguments below based on your system's resources.
+**Note**: Change the `--num-workers`, `--cpu-per-worker`, and `--gpu-per-worker` input argument values below based on your system's resources. For example, if you're on a local laptop, a reasonable configuration would be `--num-workers 6 --cpu-per-worker 1 --gpu-per-worker 0`.
 
 ### Train a single model
 ```bash
