@@ -16,7 +16,7 @@ export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/
 python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2 \
+    --num-repartitions 3 \
     --results-fp $RESULTS_FILE
 
 # Save to S3

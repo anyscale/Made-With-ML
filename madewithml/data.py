@@ -69,9 +69,7 @@ def stratify_split(
         return df[df["_split"] == split].drop("_split", axis=1)
 
     # Train, test split with stratify
-    grouped = ds.groupby(stratify).map_groups(
-        _add_split, batch_format="pandas"
-    )  # group by each unique value in the column we want to stratify on
+    grouped = ds.groupby(stratify).map_groups(_add_split, batch_format="pandas")  # group by each unique value in the column we want to stratify on
     train_ds = grouped.map_batches(
         _filter_split, fn_kwargs={"split": "train"}, batch_format="pandas"
     )  # Combine data points from all groups for train split

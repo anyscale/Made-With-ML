@@ -114,9 +114,7 @@ def get_run_id(experiment_name: str, trial_id: str) -> str:  # pragma: no cover,
         str: run id of the trial.
     """
     trial_name = f"TorchTrainer_{trial_id}"
-    run = mlflow.search_runs(
-        experiment_names=[experiment_name], filter_string=f"tags.trial_name = '{trial_name}'"
-    ).iloc[0]
+    run = mlflow.search_runs(experiment_names=[experiment_name], filter_string=f"tags.trial_name = '{trial_name}'").iloc[0]
     return run.run_id
 
 

@@ -144,7 +144,7 @@ jobs:
           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
-            --yaml-config-fp deploy/jobs/train.yaml \
+            --yaml-config-fp deploy/jobs/train_model.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id "" \
             --github-username ${{ github.actor }} \
@@ -205,7 +205,7 @@ jobs:
           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
-            --yaml-config-fp deploy/jobs/evaluate.yaml \
+            --yaml-config-fp deploy/jobs/evaluate_model.yaml \
             --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id ${{ needs.train-model.outputs.RUN_ID }} \
             --github-username ${{ github.actor }} \

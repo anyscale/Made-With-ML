@@ -1,4 +1,4 @@
-name: test-data
+name: train-model
 project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
 build_id: bld_y2cqd1dzjw5cjsl7gcm8ihz7em
 runtime_env:
@@ -6,10 +6,12 @@ runtime_env:
   upload_path: s3://madewithml/GokuMohandas/jobs
   env_vars:
     S3_BUCKET: s3://madewithml
+    EXPERIMENT_NAME: llm  # if "", run_id must be provided
+    RUN_ID: ""  # if "", best run from experiment will be used
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
-entrypoint: bash deploy/jobs/test_data.sh
+entrypoint: bash deploy/jobs/train_model.sh
 max_retries: 0
 compute_config:
   cloud_id: cld_htln18yuv82lz5he81urmkhgvs

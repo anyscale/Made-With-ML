@@ -132,9 +132,7 @@ def train_loop_per_worker(
     # Training components
     loss_fn = nn.BCEWithLogitsLoss(weight=class_weights_tensor)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=lr_factor, patience=lr_patience
-    )
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=lr_factor, patience=lr_patience)
 
     # Train
     batch_size_per_worker = batch_size // session.get_world_size()
@@ -156,15 +154,16 @@ def train_loop_per_worker(
 
 @app.command()
 def train_model(
-    experiment_name: str,
-    dataset_loc: str,
-    train_loop_config: str,
-    use_gpu: bool = False,
-    num_cpu_workers: int = 1,
-    num_gpu_workers: int = 1,
+    experiment_name: str = "",
+    dataset_loc: str = "",
+    num_repartitions: int = 1,
+    train_loop_config: str = "",
+    num_workers: int = 1,
+    cpu_per_worker: int = 1,
+    gpu_per_worker: int = 0,
     num_samples: int = None,
-    num_epochs: int = None,
-    batch_size: int = None,
+    num_epochs: int = 1,
+    batch_size: int = 256,
     results_fp: str = None,
 ) -> ray.air.result.Result:
     """Main train function to train our model as a distributed workload.
@@ -172,12 +171,11 @@ def train_model(
     Args:
         experiment_name (str): name of the experiment for this training workload.
         dataset_loc (str): location of the dataset.
+        num_repartitions (int): number of repartitions to use for the dataset.
         train_loop_config (str): arguments to use for training.
-        use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
-        num_cpu_workers (int, optional): number of cpu workers to use for
-            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
-        num_gpu_workers (int, optional): number of gpu workers to use for
-                training (if `use_gpu` is false). Defaults to 1.
+        num_workers (int, optional): number of workers to use for training. Defaults to 1.
+        cpu_per_worker (int, optional): number of CPUs to use per worker. Defaults to 1.
+        gpu_per_worker (int, optional): number of GPUs to use per worker. Defaults to 0.
         num_samples (int, optional): number of samples to use from dataset.
             If this is passed in, it will override the config. Defaults to None.
         num_epochs (int, optional): number of epochs to train for.
@@ -191,15 +189,15 @@ def train_model(
     """
     # Set up
     train_loop_config = json.loads(train_loop_config)
-    train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
     train_loop_config["num_samples"] = num_samples
     train_loop_config["num_epochs"] = num_epochs
     train_loop_config["batch_size"] = batch_size
 
     # Scaling config
     scaling_config = ScalingConfig(
-        num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
-        use_gpu=use_gpu,
+        num_workers=num_workers,
+        use_gpu=bool(gpu_per_worker),
+        resources_per_worker={"CPU": cpu_per_worker, "GPU": gpu_per_worker},
         _max_cpu_fraction_per_node=0.8,
     )
 
@@ -227,7 +225,7 @@ def train_model(
     ds = data.load_data(
         dataset_loc=dataset_loc,
         num_samples=train_loop_config["num_samples"],
-        num_partitions=num_cpu_workers,
+        num_partitions=num_repartitions,
     )
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
 

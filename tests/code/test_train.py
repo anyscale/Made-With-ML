@@ -12,10 +12,15 @@ def test_train_model(dataset_loc, generate_experiment_name, delete_experiment):
     result = train.train_model(
         experiment_name=experiment_name,
         dataset_loc=dataset_loc,
+        num_repartitions=3,
         train_loop_config=json.dumps(train_loop_config),
-        num_samples=256,
+        num_workers=6,
+        cpu_per_worker=1,
+        gpu_per_worker=0,
         num_epochs=2,
-        batch_size=32,
+        num_samples=512,
+        batch_size=256,
+        results_fp=None,
     )
     delete_experiment(experiment_name=experiment_name)
     train_loss_list = result.metrics_dataframe.to_dict()["train_loss"]

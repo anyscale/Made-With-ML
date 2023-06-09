@@ -53,7 +53,13 @@ class ModelDeployment:
         # Get predictions
         data = await request.json()
         df = pd.DataFrame(
-            [{"title": data.get("title", ""), "description": data.get("description", ""), "tag": "other"}]
+            [
+                {
+                    "title": data.get("title", ""),
+                    "description": data.get("description", ""),
+                    "tag": "other",
+                }
+            ]
         )
         results = predict.predict_with_probs(df=df, predictor=self.predictor, index_to_class=self.index_to_class)
 
