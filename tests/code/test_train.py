@@ -17,9 +17,8 @@ def test_train_model(dataset_loc, generate_experiment_name, delete_experiment):
         num_workers=4,
         cpu_per_worker=1,
         gpu_per_worker=0,
-        num_samples=256,
         num_epochs=2,
-        batch_size=32,
+        batch_size=256,
         results_fp=None,
     )
     delete_experiment(experiment_name=experiment_name)

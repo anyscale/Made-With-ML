@@ -28,8 +28,7 @@ def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
         cpu_per_worker=1,
         gpu_per_worker=0,
         num_runs=num_runs,
-        num_samples=256,
-        num_epochs=2,
+        num_epochs=1,
         batch_size=32,
         results_fp=None,
     )
