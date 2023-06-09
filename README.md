@@ -200,7 +200,7 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
 ### Workloads
 
-1. Set env vars
+1. Set environment variables
 ```bash
 export PROJECT_NAME="madewithml"
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
