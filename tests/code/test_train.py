@@ -14,10 +14,11 @@ def test_train_model(dataset_loc, generate_experiment_name, delete_experiment):
         dataset_loc=dataset_loc,
         num_repartitions=3,
         train_loop_config=json.dumps(train_loop_config),
-        num_workers=4,
+        num_workers=6,
         cpu_per_worker=1,
         gpu_per_worker=0,
         num_epochs=2,
+        num_samples=512,
         batch_size=256,
         results_fp=None,
     )

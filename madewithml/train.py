@@ -154,17 +154,17 @@ def train_loop_per_worker(
 
 @app.command()
 def train_model(
-    experiment_name: str = typer.Option(..., "--experiment-id", help="name of the experiment for this training workload"),
-    dataset_loc: str = typer.Option(..., "--dataset-loc", help="location of the dataset"),
-    num_repartitions: int = typer.Option(..., "--num-repartitions", help="number of repartitions to use for the dataset"),
-    train_loop_config: str = typer.Option(..., "--train-loop-config", help="arguments to use for training"),
-    num_workers: int = typer.Option(1, "--num-workers", help="number of workers to use for training"),
-    cpu_per_worker: int = typer.Option(1, "--cpu-per-worker", help="number of CPUs to use per worker"),
-    gpu_per_worker: int = typer.Option(0, "--gpu-per-worker", help="number of GPUs to use per worker"),
-    num_samples: int = typer.Option(None, "--num-samples", help="number of samples to use from dataset"),
-    num_epochs: int = typer.Option(..., "--num-epochs", help="number of epochs to train for"),
-    batch_size: int = typer.Option(..., "--batch-size", help="number of samples per batch"),
-    results_fp: str = typer.Option(None, "--results-fp", help="filepath to save results to"),
+    experiment_name: str = "",
+    dataset_loc: str = "",
+    num_repartitions: int = 1,
+    train_loop_config: str = "",
+    num_workers: int = 1,
+    cpu_per_worker: int = 1,
+    gpu_per_worker: int = 0,
+    num_samples: int = None,
+    num_epochs: int = 1,
+    batch_size: int = 256,
+    results_fp: str = None,
 ) -> ray.air.result.Result:
     """Main train function to train our model as a distributed workload.
 
@@ -196,7 +196,7 @@ def train_model(
     # Scaling config
     scaling_config = ScalingConfig(
         num_workers=num_workers,
-        use_gpu=int(bool(gpu_per_worker)),
+        use_gpu=bool(gpu_per_worker),
         resources_per_worker={"CPU": cpu_per_worker, "GPU": gpu_per_worker},
         _max_cpu_fraction_per_node=0.8,
     )
