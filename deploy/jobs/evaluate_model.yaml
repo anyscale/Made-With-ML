@@ -1,6 +1,6 @@
 name: evaluate-model
 project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
-build_id: bld_t321vrfb1sxjyipcaigajhebqh
+build_id: bld_y2cqd1dzjw5cjsl7gcm8ihz7em
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
@@ -11,7 +11,7 @@ runtime_env:
     GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
-entrypoint: bash deploy/jobs/evaluate.sh
+entrypoint: bash deploy/jobs/evaluate_model.sh
 max_retries: 0
 compute_config:
   cloud_id: cld_htln18yuv82lz5he81urmkhgvs

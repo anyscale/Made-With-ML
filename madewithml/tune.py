@@ -40,29 +40,29 @@ class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, test
 
 @app.command()
 def tune_models(
-    experiment_name: str,
-    dataset_loc: str,
-    initial_params: str,
-    use_gpu: bool = False,
-    num_cpu_workers: int = 1,
-    num_gpu_workers: int = 1,
-    num_runs: int = 1,
-    num_samples: int = None,
-    num_epochs: int = None,
-    batch_size: int = None,
-    results_fp: str = None,
+    experiment_name: str = typer.Option(..., "--experiment-id", help="name of the experiment for this training workload"),
+    dataset_loc: str = typer.Option(..., "--dataset-loc", help="location of the dataset"),
+    num_repartitions: int = typer.Option(..., "--num-repartitions", help="number of repartitions to use for the dataset"),
+    initial_params: str = typer.Option(..., "--initial-params", help="initial set of parameters to use for tuning"),
+    num_workers: int = typer.Option(1, "--num-workers", help="number of workers to use for training"),
+    cpu_per_worker: int = typer.Option(1, "--cpu-per-worker", help="number of CPUs to use per worker"),
+    gpu_per_worker: int = typer.Option(0, "--gpu-per-worker", help="number of GPUs to use per worker"),
+    num_runs: int = typer.Option(0, "--num-runs", help="number of runs in this tuning experiment"),
+    num_samples: int = typer.Option(None, "--num-samples", help="number of samples to use from dataset"),
+    num_epochs: int = typer.Option(..., "--num-epochs", help="number of epochs to train for"),
+    batch_size: int = typer.Option(..., "--batch-size", help="number of samples per batch"),
+    results_fp: str = typer.Option(None, "--results-fp", help="filepath to save results to"),
 ) -> ray.tune.result_grid.ResultGrid:
     """Hyperparameter tuning experiment.
 
     Args:
         experiment_name (str): name of the experiment for this training workload.
         dataset_loc (str): location of the dataset.
+        num_repartitions (int): number of repartitions to use for the dataset.
         initial_params (str): initial config for the tuning workload.
-        use_gpu (bool, optional): whether or not to use the GPU for training. Defaults to False.
-        num_cpu_workers (int, optional): number of cpu workers to use for
-            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
-        num_gpu_workers (int, optional): number of gpu workers to use for
-                training (if `use_gpu` is false). Defaults to 1.
+        num_workers (int, optional): number of workers to use for training. Defaults to 1.
+        cpu_per_worker (int, optional): number of CPUs to use per worker. Defaults to 1.
+        gpu_per_worker (int, optional): number of GPUs to use per worker. Defaults to 0.
         num_runs (int, optional): number of runs in this tuning experiment. Defaults to 1.
         num_samples (int, optional): number of samples to use from dataset.
             If this is passed in, it will override the config. Defaults to None.
@@ -78,15 +78,15 @@ def tune_models(
     # Set up
     utils.set_seeds()
     train_loop_config = {}
-    train_loop_config["device"] = "cpu" if not use_gpu else "cuda"
     train_loop_config["num_samples"] = num_samples
     train_loop_config["num_epochs"] = num_epochs
     train_loop_config["batch_size"] = batch_size
 
     # Scaling config
     scaling_config = ScalingConfig(
-        num_workers=num_gpu_workers if use_gpu else num_cpu_workers,
-        use_gpu=use_gpu,
+        num_workers=num_workers,
+        use_gpu=int(bool(gpu_per_worker)),
+        resources_per_worker={"CPU": cpu_per_worker, "GPU": gpu_per_worker},
         _max_cpu_fraction_per_node=0.8,
     )
 
@@ -94,7 +94,7 @@ def tune_models(
     ds = data.load_data(
         dataset_loc=dataset_loc,
         num_samples=train_loop_config.get("num_samples", None),
-        num_partitions=num_cpu_workers,
+        num_partitions=num_repartitions,
     )
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
 

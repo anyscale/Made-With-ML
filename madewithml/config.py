@@ -26,9 +26,7 @@ logging_config = {
     "disable_existing_loggers": False,
     "formatters": {
         "minimal": {"format": "%(message)s"},
-        "detailed": {
-            "format": "%(levelname)s %(asctime)s [%(name)s:%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"
-        },
+        "detailed": {"format": "%(levelname)s %(asctime)s [%(name)s:%(filename)s:%(funcName)s:%(lineno)d]\n%(message)s\n"},
     },
     "handlers": {
         "console": {

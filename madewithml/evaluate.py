@@ -40,9 +40,7 @@ def get_overall_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:  # prag
     return overall_metrics
 
 
-def get_per_class_metrics(
-    y_true: np.ndarray, y_pred: np.ndarray, class_to_index: Dict
-) -> Dict:  # pragma: no cover, eval workload
+def get_per_class_metrics(y_true: np.ndarray, y_pred: np.ndarray, class_to_index: Dict) -> Dict:  # pragma: no cover, eval workload
     """Get per class performance metrics.
 
     Args:
@@ -62,9 +60,7 @@ def get_per_class_metrics(
             "f1": metrics[2][i],
             "num_samples": np.float64(metrics[3][i]),
         }
-    sorted_per_class_metrics = OrderedDict(
-        sorted(per_class_metrics.items(), key=lambda tag: tag[1]["f1"], reverse=True)
-    )
+    sorted_per_class_metrics = OrderedDict(sorted(per_class_metrics.items(), key=lambda tag: tag[1]["f1"], reverse=True))
     return sorted_per_class_metrics
 
 
@@ -83,9 +79,7 @@ def short_text(x):  # pragma: no cover, eval workload
     return len(x.text.split()) < 8  # less than 8 words
 
 
-def get_slice_metrics(
-    y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, preprocessor: Preprocessor
-) -> Dict:  # pragma: no cover, eval workload
+def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, preprocessor: Preprocessor) -> Dict:  # pragma: no cover, eval workload
     """Get performance metrics for slices.
 
     Args:
@@ -118,9 +112,7 @@ def get_slice_metrics(
 def evaluate(
     run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
     dataset_loc: str = typer.Option(..., "--dataset-loc", help="dataset (with labels) to evaluate on"),
-    num_cpu_workers: int = typer.Option(
-        1, "--num-cpu-workers", help="number of cpu workers to use for distributed data processing"
-    ),
+    num_repartitions: int = typer.Option(1, "--num-repartitions", help="number of blocks to partition the dataset into"),
     results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
 ) -> Dict:  # pragma: no cover, eval workload
     """_summary_
@@ -128,7 +120,7 @@ def evaluate(
     Args:
         run_id (str): id of the specific run to load from. Defaults to None.
         dataset_loc (str): dataset (with labels) to evaluate on.
-        num_cpu_workers (int, optional): number of cpu workers to use for
+        num_repartitions (int, optional): number of cpu workers to use for
             distributed data processing (and training if `use_gpu` is false). Defaults to 1.
         results_fp (str, optional): location to save evaluation results to. Defaults to None.
 
@@ -136,7 +128,7 @@ def evaluate(
         Dict: model's performance metrics on the dataset.
     """
     # Load
-    ds = ray.data.read_csv(dataset_loc).repartition(num_cpu_workers)
+    ds = ray.data.read_csv(dataset_loc).repartition(num_repartitions)
     best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", mode="min")
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
 

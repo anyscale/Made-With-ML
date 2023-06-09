@@ -35,13 +35,6 @@ pre-commit install
 pre-commit autoupdate
 ```
 
-### Install Ray
-Install Ray from the [latest nightly wheel](https://docs.ray.io/en/latest/ray-overview/installation.html#daily-releases-nightlies) for your specific OS.
-```bash
-# MacOS (arm64)
-python -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-macosx_11_0_arm64.whl"
-```
-
 ## Workloads
 1. Start by exploring the interactive [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
 ```bash
@@ -50,7 +43,7 @@ jupyter lab notebooks/madewithml.ipynb
 ```
 2. Then execute the same workloads using the clean Python scripts following software engineering best practices (testing, documentation, logging, serving, versioning, etc.)
 
-**Note**: Change the `--use-gpu`, `--num-cpu-workers` and `--num-gpu-workers` configurations based on your system's resources.
+**Note**: Change the `--use-gpu`, `--num-workers`, `cpu_per_worker`, and `--gpu-per-worker` configurations based on your system's resources.
 
 ### Train a single model
 ```bash
@@ -58,12 +51,13 @@ export EXPERIMENT_NAME="llm"
 export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 python madewithml/train.py \
-    "$EXPERIMENT_NAME" \
-    "$DATASET_LOC" \
-    "$TRAIN_LOOP_CONFIG" \
-    --use-gpu \
-    --num-cpu-workers 10 \
-    --num-gpu-workers 2 \
+    --experiment-name "$EXPERIMENT_NAME" \
+    --dataset-loc "$DATASET_LOC" \
+    --num-repartitions 3 \
+    --train-loop-config "$TRAIN_LOOP_CONFIG" \
+    --num-workers 2 \
+    --cpu-per-worker 10 \
+    --gpu-per-worker 1 \
     --num-epochs 10 \
     --batch-size 256 \
     --results-fp results/training_results.json
@@ -76,19 +70,28 @@ export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/
 export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 export INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
 python madewithml/tune.py \
-    "$EXPERIMENT_NAME" \
-    "$DATASET_LOC" \
-    "$INITIAL_PARAMS" \
+    --experiment-name "$EXPERIMENT_NAME" \
+    --dataset-loc "$DATASET_LOC" \
+    --num-repartitions 3 \
+    --initial-params "$INITIAL_PARAMS" \
     --num-runs 2 \
-    --use-gpu \
-    --num-cpu-workers 10 \
-    --num-gpu-workers 2 \
+    --num-workers 2 \
+    --cpu-per-worker 10 \
+    --gpu-per-worker 1 \
     --num-epochs 10 \
     --batch-size 256 \
     --results-fp results/tuning_results.json
 ```
 
 ### Experiment tracking
+If you've been following the course through Anyscale, be sure to sync the mlflow artifacts from S3 before running the commands below on your local machine. If you've been running too many experiment, you can make the s3 bucket location point to a specific experiment's folder.
+
+> In an actual data science team, you would have a centralized MLFlow server that everyone would use to track their experiments --- which we could easily achieve with  a database backend on top of our S3 artifact root.
+```bash
+# Sync artifacts from S3 (run on local machine if using Anyscale)
+export GITHUB_USERNAME=GokuMohandas
+aws s3 sync s3://madewithml/$GITHUB_USERNAME/mlflow $MODEL_REGISTRY
+```
 ```bash
 export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
 mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
@@ -102,7 +105,7 @@ export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/
 python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-cpu-workers 2 \
+    --num-repartitions 3 \
     --results-fp results/evaluation_results.json
 ```
 ```json
@@ -244,22 +247,22 @@ python deploy/utils.py submit-job \
 6. Train model
 ```bash
 # Manual
-anyscale job submit deploy/jobs/train.yaml
+anyscale job submit deploy/jobs/train_model.yaml
 
 # Dynamic (uses latest cluster env build)
 python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/train.yaml \
+  --yaml-config-fp deploy/jobs/train_model.yaml \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 
 7. Evaluate model
 ```bash
 # Manual
-anyscale job submit deploy/jobs/evaluate.yaml
+anyscale job submit deploy/jobs/evaluate_model.yaml
 
 # Dynamic (uses latest cluster env build)
 python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/evaluate.yaml \
+  --yaml-config-fp deploy/jobs/evaluate_model.yaml \
   --cluster-env-name $CLUSTER_ENV_NAME
 ```
 

@@ -74,9 +74,7 @@ def predict_with_probs(
 
 
 @app.command()
-def get_best_run_id(
-    experiment_name: str = "", metric: str = "", mode: str = ""
-) -> str:  # pragma: no cover, mlflow logic
+def get_best_run_id(experiment_name: str = "", metric: str = "", mode: str = "") -> str:  # pragma: no cover, mlflow logic
     """Get the best run_id from an MLflow experiment.
 
     Args:

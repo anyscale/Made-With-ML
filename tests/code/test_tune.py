@@ -22,11 +22,16 @@ def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
     results = tune.tune_models(
         experiment_name=experiment_name,
         dataset_loc=dataset_loc,
+        num_repartitions=3,
         initial_params=json.dumps(initial_params),
+        num_workers=4,
+        cpu_per_worker=1,
+        gpu_per_worker=0,
         num_runs=num_runs,
         num_samples=256,
         num_epochs=1,
         batch_size=32,
+        results_fp=None,
     )
     delete_experiment(experiment_name=experiment_name)
     assert len(results.get_dataframe()) == num_runs

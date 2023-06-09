@@ -14,12 +14,12 @@ app = typer.Typer()
 
 
 @app.command()
-def get_project_id(
-    project_name: str = typer.Option(..., "--project-name", "-n", help="name of the Anyscale project")
-) -> str:
+def get_project_id(project_name: str = typer.Option(..., "--project-name", "-n", help="name of the Anyscale project")) -> str:
     """Get the project id."""
     output = subprocess.run(
-        ["anyscale", "project", "list", "--name=" + project_name, "--created-by-me"], capture_output=True, text=True
+        ["anyscale", "project", "list", "--name=" + project_name, "--created-by-me"],
+        capture_output=True,
+        text=True,
     ).stdout
     lines = output.split("\n")
     matching_lines = [line for line in lines if project_name in line]
@@ -44,9 +44,7 @@ def get_latest_cluster_env_build_id(
 
 
 @app.command()
-def get_run_id(
-    service_name: str = typer.Option(..., "--service-name", "-n", help="name of the Anyscale service")
-) -> str:
+def get_run_id(service_name: str = typer.Option(..., "--service-name", "-n", help="name of the Anyscale service")) -> str:
     """Get the run id of the production run."""
     sdk = AnyscaleSDK()
     results = sdk.list_services(name="madewithml", state_filter=["RUNNING"]).results
