@@ -329,7 +329,7 @@ pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 From this point onwards, in order to deploy our application into production, we'll need to either be on Anyscale Workspaces or on a cluster on [cloud VMs](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index) / [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem), [etc](https://docs.ray.io/en/latest/cluster/vms/user-guides/community/index.html#ref-cluster-setup). If not on Anyscale, the commands will be [slightly different](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) but the concepts will be the same.
 
 ### Authentication
-> We **do not** need to set these credentials if we're using Anyscale Workspaces :)
+> We **do not** need to set these credentials if we're using Anyscale Workspaces.
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
