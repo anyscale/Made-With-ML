@@ -17,30 +17,112 @@ Learn how to combine machine learning with software engineering best practices t
 
 ## Set up
 
+### Cluster
+
+A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.html#head-node) (manages the cluster) connected to a set of [worker nodes](https://docs.ray.io/en/latest/cluster/key-concepts.html#head-node) (CPU, GPU, etc.). These clusters can be fixed in size or [autoscale](https://docs.ray.io/en/latest/cluster/key-concepts.html#cluster-autoscaler) up and down based on our application's compute needs.
+
+
+<details>
+  <summary>Local</summary><br>
+  Your personal laptop (single machine) will act as the cluster, where one CPU will be the head node and some of the remaining CPU will be the worker nodes. All of the code in this course will work in any personal laptop though it will be slower than executing the same workloads on a larger cluster.
+</details>
+
+<details open>
+  <summary>Anyscale</summary><br>
+
+  We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/anyscale-internal/workspaces/add/blank):
+
+  ```md
+  - Workspace name: madewithml
+  - Project: madewithml
+  - Cluster environment name: madewithml-cluster-env
+  # Toggle `Select from saved configurations`
+  - Compute config: madewithml-cluster-compute
+  ```
+
+  Alternatively, we can use the [CLI](https://docs.anyscale.com/reference/anyscale-cli) to create the workspace:
+
+  ```bash
+  anyscale workspace create \
+    --name madewithml \
+    --project-id "prj_hgqw2dlbcn9lt97mulm2rrf8tp" \
+    --cloud-id "cld_htln18yuv82lz5he81urmkhgvs" \
+    --compute-config-id "cpt_lngp2rax6yaxgegmrlpbvfnp3q" \
+    --cluster-env-build-id "bld_7iu2u4azlqyjey9q2rmg52fqgr"
+  ```
+</details>
+
+<details>
+  <summary>Other</summary><br>
+
+  If you don't want to do this course locally or via Anyscale, you have the following options:
+
+  - On [AWS and GCP](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index). Community-supported Azure and Aliyun integrations also exist.
+  - On [Kubernetes](https://docs.ray.io/en/latest/cluster/kubernetes/index.html#kuberay-index), via the officially supported KubeRay project.
+  - Deploy Ray manually [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem) or onto platforms [not listed here](https://docs.ray.io/en/latest/cluster/vms/user-guides/community/index.html#ref-cluster-setup).
+
+</details>
+
 ### Git clone
-```
-git clone https://github.com/anyscale/mlops-course.git mlops-course
-cd mlops-course
+
+```bash
+git clone https://github.com/anyscale/mlops-course.git .
+git checkout -b dev
+export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
 ### Virtual environment
-> Highly recommend using Python `3.10` and using [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows).
-```bash
-python3 -m venv venv  # recommend using Python 3.10
-source venv/bin/activate  # on Windows: venv\Scripts\activate
-python3 -m pip install --upgrade pip setuptools wheel
-python3 -m pip install -r requirements.txt
-export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
-pre-commit install
-pre-commit autoupdate
-```
+
+<details>
+  <summary>Local</summary><br>
+
+  ```bash
+  python3 -m venv venv  # recommend using Python 3.10
+  source venv/bin/activate  # on Windows: venv\Scripts\activate
+  python3 -m pip install --upgrade pip setuptools wheel
+  python3 -m pip install -r requirements.txt
+  export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
+  pre-commit install
+  pre-commit autoupdate
+  ```
+
+  > Highly recommend using Python `3.10` and using [pyenv](https://github.com/pyenv/pyenv) (mac) or [pyenv-win](https://github.com/pyenv-win/pyenv-win) (windows).
+
+</details>
+
+<details open>
+  <summary>Anyscale</summary><br>
+
+  Our environment with the appropriate Python version and libraries is already all set for us through the cluster environment we're using when setting up our Anyscale Workspace.
+  ```bash
+  export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
+  pre-commit install
+  pre-commit autoupdate
+  ```
+
+</details>
+
 
 ## Workloads
 1. Start by exploring the interactive [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
-```bash
-# Start notebook
-jupyter lab notebooks/madewithml.ipynb
+
+<details>
+  <summary>Local</summary><br>
+
+  ```bash
+  # Start notebook
+  jupyter lab notebooks/madewithml.ipynb
 ```
+
+</details>
+
+<details open>
+  <summary>Anyscale</summary><br>
+
+  Click on the Jupyter icon at the top right corner of our Anyscale Workspace page and this will open up our JupyterLab instance in a new tab. Then navigate to the `notebooks` directory and open up the `madewithml.ipynb` notebook.
+
+</details>
+
 2. Then execute the same workloads using the clean Python scripts following software engineering best practices (testing, documentation, logging, serving, versioning, etc.)
 
 **Note**: Change the `--num-workers`, `--cpu-per-worker`, and `--gpu-per-worker` input argument values below based on your system's resources. For example, if you're on a local laptop, a reasonable configuration would be `--num-workers 6 --cpu-per-worker 1 --gpu-per-worker 0`.
@@ -84,18 +166,23 @@ python madewithml/tune.py \
 ```
 
 ### Experiment tracking
-If you've been following the course through Anyscale, be sure to sync the mlflow artifacts from S3 before running the commands below on your local machine. If you've been running too many experiment, you can make the s3 bucket location point to a specific experiment's folder.
 
-> In an actual data science team, you would have a centralized MLFlow server that everyone would use to track their experiments --- which we could easily achieve with  a database backend on top of our S3 artifact root.
-```bash
-# Sync artifacts from S3 (run on local machine if using Anyscale)
-export GITHUB_USERNAME=GokuMohandas
-aws s3 sync s3://madewithml/$GITHUB_USERNAME/mlflow $MODEL_REGISTRY
-```
-```bash
-export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
-mlflow server -h 0.0.0.0 -p 8000 --backend-store-uri $MODEL_REGISTRY
-```
+<details>
+  <summary>Local</summary><br>
+
+  ```bash
+  export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
+  mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
+  ```
+
+</details>
+
+<details open>
+  <summary>Anyscale</summary><br>
+
+  Work in progress until we get EFS on production clusters w/ port forwarding or we set up an MLflow server ourselves. A temporary workaround is to sync our `$MODEL_REGISTRY` with a S3 bucket and then pull the contents of that bucket locally to view it with the MLflow UI using the same commands above.
+
+</details>
 
 ### Evaluation
 ```bash
@@ -110,10 +197,15 @@ python madewithml/evaluate.py \
 ```
 ```json
 {
-  "precision": 0.9164145614485539,
-  "recall": 0.9162303664921466,
-  "f1": 0.9152388901535271
-}
+  "timestamp": "June 09, 2023 09:26:18 AM",
+  "run_id": "6149e3fec8d24f1492d4a4cabd5c06f6",
+  "overall": {
+    "precision": 0.9076136428670714,
+    "recall": 0.9057591623036649,
+    "f1": 0.9046792827719773,
+    "num_samples": 191.0
+  },
+...
 ```
 
 ### Inference
@@ -141,37 +233,81 @@ python madewithml/predict.py predict \
 ```
 
 ### Serve
-```bash
-# Set up
-export EXPERIMENT_NAME="llm"
-export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-python madewithml/serve.py --run_id $RUN_ID
-```
 
-While the application is running, we can use it via cURL, Python, etc.
-```bash
-# via cURL
-curl -X POST -H "Content-Type: application/json" -d '{
-  "title": "Transfer learning with transformers",
-  "description": "Using transformers for transfer learning on text classification tasks."
-}' http://127.0.0.1:8000/predict
-```
-```python
-# via Python
-import json
-import requests
-title = "Transfer learning with transformers"
-description = "Using transformers for transfer learning on text classification tasks."
-json_data = json.dumps({"title": title, "description": description})
-requests.post("http://127.0.0.1:8000/predict", data=json_data).json()
-```
+<details>
+  <summary>Local</summary><br>
 
-> If you're running in a cluster environment where ray is not already running, we'll need to start it up and shut it down:
-```bash
-ray start --head  # already running if using Anyscale
-# Serve operations above
-ray stop  # showtdown
-```
+  ```bash
+  # Start
+  ray start --head
+  ```
+
+  ```bash
+  # Set up
+  export EXPERIMENT_NAME="llm"
+  export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+  python madewithml/serve.py --run_id $RUN_ID
+  ```
+
+  While the application is running, we can use it via cURL, Python, etc.:
+
+  ```bash
+  # via cURL
+  curl -X POST -H "Content-Type: application/json" -d '{
+    "title": "Transfer learning with transformers",
+    "description": "Using transformers for transfer learning on text classification tasks."
+  }' http://127.0.0.1:8000/predict
+  ```
+
+  ```python
+  # via Python
+  import json
+  import requests
+  title = "Transfer learning with transformers"
+  description = "Using transformers for transfer learning on text classification tasks."
+  json_data = json.dumps({"title": title, "description": description})
+  requests.post("http://127.0.0.1:8000/predict", data=json_data).json()
+  ```
+
+  ```bash
+  ray stop  # shutdown
+  ```
+
+</details>
+
+<details open>
+  <summary>Anyscale</summary><br>
+
+  In Anyscale Workspaces, Ray is already running so we don't have to manually start/shutdown like we have to do locally.
+
+  ```bash
+  # Set up
+  export EXPERIMENT_NAME="llm"
+  export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
+  python madewithml/serve.py --run_id $RUN_ID
+  ```
+
+  While the application is running, we can use it via cURL, Python, etc.:
+
+  ```bash
+  # via cURL
+  curl -X POST -H "Content-Type: application/json" -d '{
+    "title": "Transfer learning with transformers",
+    "description": "Using transformers for transfer learning on text classification tasks."
+  }' http://127.0.0.1:8000/predict
+  ```
+
+  ```python
+  # via Python
+  import json
+  import requests
+  title = "Transfer learning with transformers"
+  description = "Using transformers for transfer learning on text classification tasks."
+  json_data = json.dumps({"title": title, "description": description})
+  requests.post("http://127.0.0.1:8000/predict", data=json_data).json()
+  ```
+
+</details>
 
 ### Testing
 ```bash
@@ -188,8 +324,9 @@ export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
 
-
 ## Deploy
+
+From this point onwards, in order to deploy our application into production, we'll need to either be on Anyscale Workspaces or on a cluster on [cloud VMs](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index) / [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem), [etc](https://docs.ray.io/en/latest/cluster/vms/user-guides/community/index.html#ref-cluster-setup). If not on Anyscale, the commands will be [slightly different](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) but the concepts will be the same.
 
 ### Authentication
 > We **do not** need to set these credentials if we're using Anyscale Workspaces :)
@@ -205,87 +342,29 @@ export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 
 1. Set environment variables
 ```bash
-export PROJECT_NAME="madewithml"
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
+export CLUSTER_COMPUTE_NAME="madewithml-cluster-compute"
 ```
 
-2. Create the project and cluster env
+2. Create the cluster env and compute (if changed/needed)
 ```bash
-anyscale project create -n $PROJECT_NAME
 anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
+anyscale cluster-compute create deploy/cluster_compute.yaml --name $CLUSTER_COMPUTE_NAME
 ```
 
-3. Replace vars in configs
+3. Anyscale Jobs
 ```bash
-# Replace vars in configs (jobs/*.yaml and services/*.yaml)
-python deploy/utils.py get-project-id --project-name $PROJECT_NAME
-python deploy/utils.py get-latest-cluster-env-build-id --cluster-env-name $CLUSTER_ENV_NAME
-```
-
-4. Test code
-```bash
-# Manual
 anyscale job submit deploy/jobs/test_code.yaml
-
-# Dynamic (uses latest cluster env build)
-python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/test_code.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
-```
-
-5. Test data
-```bash
-# Manual
 anyscale job submit deploy/jobs/test_data.yaml
-
-# Dynamic (uses latest cluster env build)
-python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/test_data.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
-```
-
-6. Train model
-```bash
-# Manual
 anyscale job submit deploy/jobs/train_model.yaml
-
-# Dynamic (uses latest cluster env build)
-python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/train_model.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
-```
-
-7. Evaluate model
-```bash
-# Manual
 anyscale job submit deploy/jobs/evaluate_model.yaml
-
-# Dynamic (uses latest cluster env build)
-python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/evaluate_model.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
+anyscale job submit deploy/jobs/test_model.yaml
 ```
 
-8. Test model
+4. Anyscale Services
 ```bash
-# Manual
-anyscale job submit deploy/jobs/test_data.yaml
-
-# Dynamic (uses latest cluster env build)
-python deploy/utils.py submit-job \
-  --yaml-config-fp deploy/jobs/test_model.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
-```
-
-9. Serve model
-```bash
-# Manual rollout
+# Rollout service
 anyscale service rollout -f deploy/services/serve.yaml
-
-# Dynamic rollout (uses latest cluster env build)
-python deploy/utils.py rollout-service \
-  --yaml-config-fp deploy/services/serve.yaml \
-  --cluster-env-name $CLUSTER_ENV_NAME
 
 # Query (retrieved from Service endpoint generated from command above)
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{

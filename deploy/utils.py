@@ -30,20 +30,6 @@ def get_project_id(project_name: str = typer.Option(..., "--project-name", "-n",
 
 
 @app.command()
-def get_latest_cluster_env_build_id(
-    cluster_env_name: str = typer.Option(..., "--cluster-env-name", "-n", help="name of the cluster environment")
-) -> str:
-    """Get the latest cluster environment build id."""
-    sdk = AnyscaleSDK()
-    res = sdk.search_cluster_environments({"name": {"equals": cluster_env_name}})
-    apt_id = res.results[0].id
-    res = sdk.list_cluster_environment_builds(apt_id, desc=True, count=1)
-    bld_id = res.results[0].id
-    print(bld_id)
-    return bld_id
-
-
-@app.command()
 def get_run_id(service_name: str = typer.Option(..., "--service-name", "-n", help="name of the Anyscale service")) -> str:
     """Get the run id of the production run."""
     sdk = AnyscaleSDK()
@@ -62,7 +48,6 @@ def get_run_id(service_name: str = typer.Option(..., "--service-name", "-n", hel
 @app.command()
 def submit_job(
     yaml_config_fp: str = typer.Option(..., "--yaml-config-fp", help="path of the job's yaml config file"),
-    cluster_env_name: str = typer.Option(..., "--cluster-env-name", help="cluster environment's name"),
     run_id: str = typer.Option("", "--run-id", help="run ID to use to execute ML workflow"),
     github_username: str = typer.Option("default", "--github-username", help="GitHub username"),
     pr_num: str = typer.Option("default", "--pr-num", help="PR number"),
@@ -74,7 +59,6 @@ def submit_job(
         yaml_config = yaml.safe_load(file)
 
     # Edit yaml config
-    yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
     yaml_config["runtime_env"]["env_vars"]["RUN_ID"] = run_id
     yaml_config["runtime_env"]["env_vars"]["GITHUB_USERNAME"] = github_username
     yaml_config["runtime_env"]["env_vars"]["PR_NUM"] = pr_num
@@ -90,7 +74,6 @@ def submit_job(
 @app.command()
 def rollout_service(
     yaml_config_fp: str = typer.Option(..., "--yaml-config-fp", help="path of the job's yaml config file"),
-    cluster_env_name: str = typer.Option(..., "--cluster-env-name", help="cluster environment's name"),
     run_id: str = typer.Option("", "--run-id", help="run ID to use to execute ML workflow"),
 ) -> None:
     """Rollout an Anyscale Service."""
@@ -99,7 +82,6 @@ def rollout_service(
         yaml_config = yaml.safe_load(file)
 
     # Edit yaml config
-    yaml_config["build_id"] = get_latest_cluster_env_build_id(cluster_env_name=cluster_env_name)
     yaml_config["ray_serve_config"]["runtime_env"]["env_vars"]["RUN_ID"] = run_id
 
     # Execute Anyscale job

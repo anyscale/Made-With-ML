@@ -55,7 +55,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/test_code.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
@@ -99,7 +98,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/test_data.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
             --commit-id ${{ github.event.pull_request.head.sha }}
@@ -145,7 +143,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/train_model.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id "" \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
@@ -206,7 +203,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/evaluate_model.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id ${{ needs.train-model.outputs.RUN_ID }} \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
@@ -254,7 +250,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/test_model.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id ${{ needs.train-model.outputs.RUN_ID }} \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
@@ -309,7 +304,6 @@ jobs:
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py submit-job \
             --yaml-config-fp deploy/jobs/prod_eval.yaml \
-            --cluster-env-name ${{ needs.setup.outputs.CLUSTER_ENV_NAME }} \
             --run-id ${{ env.RUN_ID }} \
             --github-username ${{ github.actor }} \
             --pr-num ${{ github.event.number }} \
