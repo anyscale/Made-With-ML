@@ -1,6 +1,6 @@
 name: prod-eval
 project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
-build_id: bld_y2cqd1dzjw5cjsl7gcm8ihz7em
+cluster_env: madewithml-cluster-env
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
@@ -8,7 +8,7 @@ runtime_env:
     S3_BUCKET: s3://madewithml
     EXPERIMENT_NAME: llm  # if "", run_id must be provided
     RUN_ID: ""  # if "", best run from experiment will be used
-    GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
+    GITHUB_USERNAME: ${GITHUB_USERNAME} GokuMohandas  # exact case-sensitive GitHub username
     PR_NUM: default  # will be set when run w/ GitHub actions
     COMMIT_ID: default  # will be set when run w/ GitHub actions
 entrypoint: bash deploy/jobs/prod_eval.sh

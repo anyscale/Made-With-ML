@@ -1,6 +1,6 @@
 name: tune-model
 project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
-build_id: bld_y2cqd1dzjw5cjsl7gcm8ihz7em
+cluster_env: madewithml-cluster-env
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
