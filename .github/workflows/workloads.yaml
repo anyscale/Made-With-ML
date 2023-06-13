@@ -73,10 +73,6 @@ jobs:
     needs: setup
     steps:
 
-      # Temporary suppressing AWS warning
-      - name: Update AWS SDK Configuration
-        run: require('aws-sdk/lib/maintenance_mode_message').suppress = true;
-
       # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
