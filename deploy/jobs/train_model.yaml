@@ -1,6 +1,7 @@
 name: train-model
 project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
 cluster_env: madewithml-cluster-env
+compute_config: madewithml-cluster-compute
 runtime_env:
   working_dir: .
   upload_path: s3://madewithml/GokuMohandas/jobs
@@ -13,21 +14,3 @@ runtime_env:
     COMMIT_ID: default  # will be set when run w/ GitHub actions
 entrypoint: bash deploy/jobs/train_model.sh
 max_retries: 0
-compute_config:
-  cloud_id: cld_htln18yuv82lz5he81urmkhgvs
-  region: us-west2
-  max_workers: 2
-  head_node_type:
-    name: head_node_type
-    instance_type: m5.2xlarge
-  worker_node_types:
-  - name: gpu_worker
-    instance_type: g4dn.4xlarge
-    min_workers: 2
-    max_workers: 2
-  aws:
-    BlockDeviceMappings:
-    - DeviceName: "/dev/sda1"
-      Ebs:
-        VolumeSize: 500
-        DeleteOnTermination: true

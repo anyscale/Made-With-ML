@@ -13,7 +13,6 @@ jobs:
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
-      CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - name: Set global vars
         id: vars
@@ -28,8 +27,6 @@ jobs:
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_OUTPUT
           echo "PR_PATH=$PR_PATH" >> $GITHUB_OUTPUT
           echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_OUTPUT
-          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT
-
 
   serve-model:
     runs-on: ubuntu-22.04
@@ -68,5 +65,5 @@ jobs:
           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
           python deploy/utils.py rollout-service \
-            --yaml-config-fp deploy/services/serve.yaml \
+            --yaml-config-fp deploy/services/serve_model.yaml \
             --run-id ${{ env.RUN_ID }}

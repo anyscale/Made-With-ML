@@ -115,7 +115,7 @@ def evaluate(
     num_repartitions: int = typer.Option(1, "--num-repartitions", help="number of blocks to partition the dataset into"),
     results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
 ) -> Dict:  # pragma: no cover, eval workload
-    """_summary_
+    """Evaluate on the holdout dataset.
 
     Args:
         run_id (str): id of the specific run to load from. Defaults to None.
