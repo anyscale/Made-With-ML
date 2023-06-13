@@ -32,7 +32,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -73,9 +73,13 @@ jobs:
     needs: setup
     steps:
 
+      # Temporary suppressing AWS warning
+      - name: Update AWS SDK Configuration
+        run: require('aws-sdk/lib/maintenance_mode_message').suppress = true;
+
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -120,7 +124,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -180,7 +184,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -227,7 +231,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -271,7 +275,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
