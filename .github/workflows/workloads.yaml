@@ -13,7 +13,6 @@ jobs:
       S3_BUCKET: ${{ steps.vars.outputs.S3_BUCKET }}
       PR_PATH: ${{ steps.vars.outputs.PR_PATH }}
       COMMIT_PATH: ${{ steps.vars.outputs.COMMIT_PATH }}
-      CLUSTER_ENV_NAME: ${{ steps.vars.outputs.CLUSTER_ENV_NAME }}
     steps:
       - name: Set global vars
         id: vars
@@ -24,7 +23,6 @@ jobs:
           echo "S3_BUCKET=$S3_BUCKET" >> $GITHUB_OUTPUT
           echo "PR_PATH=$PR_PATH" >> $GITHUB_OUTPUT
           echo "COMMIT_PATH=$COMMIT_PATH" >> $GITHUB_OUTPUT
-          echo "CLUSTER_ENV_NAME=madewithml-cluster-env" >> $GITHUB_OUTPUT
 
   test-code:
     runs-on: ubuntu-22.04
@@ -34,7 +32,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -77,7 +75,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -122,7 +120,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -182,7 +180,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -229,7 +227,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
@@ -273,7 +271,7 @@ jobs:
 
       # Configure AWS credentials
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           role-to-assume: ${{ secrets.IAM_ROLE }}
           role-session-name: s3access
