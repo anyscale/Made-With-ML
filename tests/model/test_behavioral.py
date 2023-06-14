@@ -8,7 +8,7 @@ from madewithml import predict
 
 @pytest.fixture(scope="module")
 def predictor(run_id):
-    best_checkpoint = predict.get_best_checkpoint(run_id=run_id, metric="val_loss", mode="min")
+    best_checkpoint = predict.get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
     return predictor
 

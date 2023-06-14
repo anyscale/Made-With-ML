@@ -13,7 +13,6 @@ from ray.air.config import (
 from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.train.torch import TorchTrainer
 from ray.tune import Tuner
-from ray.tune.experiment import Trial
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.search import ConcurrencyLimiter
 from ray.tune.search.hyperopt import HyperOptSearch
@@ -23,19 +22,6 @@ from madewithml.config import MLFLOW_TRACKING_URI, logger
 
 # Initialize Typer CLI app
 app = typer.Typer()
-
-
-# Fixing https://github.com/ray-project/ray/blob/3aa6ede43743a098b5e0eb37ec11505f46100313/python/ray/air/integrations/mlflow.py#L301
-class MLflowLoggerCallbackFixed(MLflowLoggerCallback):  # pragma: no cover, tested in larger tune workload
-    def log_trial_start(self, trial: "Trial"):
-        if trial not in self._trial_runs:
-            tags = self.tags.copy()
-            tags["trial_name"] = str(trial)
-            run = self.mlflow_util.start_run(tags=tags, run_name=str(trial))
-            self._trial_runs[trial] = run.info.run_id
-        run_id = self._trial_runs[trial]
-        config = trial.config
-        self.mlflow_util.log_params(run_id=run_id, params_to_log=config["train_loop_config"])
 
 
 @app.command()
@@ -130,7 +116,7 @@ def tune_models(
     stopping_criteria = {"training_iteration": train_loop_config["num_epochs"]}  # auto incremented at every train step
 
     # Run configuration
-    mlflow_callback = MLflowLoggerCallbackFixed(
+    mlflow_callback = MLflowLoggerCallback(
         tracking_uri=MLFLOW_TRACKING_URI,
         experiment_name=experiment_name,
         save_artifact=True,

@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 from typing import Any, Dict, Iterable, List
 from urllib.parse import urlparse
 
@@ -8,7 +7,7 @@ import ray
 import torch
 import typer
 from numpyencoder import NumpyEncoder
-from ray.air import Checkpoint
+from ray.air import Result
 from ray.train.torch import TorchPredictor
 from ray.train.torch.torch_checkpoint import TorchCheckpoint
 
@@ -94,23 +93,18 @@ def get_best_run_id(experiment_name: str = "", metric: str = "", mode: str = "")
     return run_id
 
 
-def get_best_checkpoint(run_id: str, metric: str, mode: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
-    """Get the best checkpoint (by performance) from a specific run.
+def get_best_checkpoint(run_id: str) -> TorchCheckpoint:  # pragma: no cover, mlflow logic
+    """Get the best checkpoint from a specific run.
 
     Args:
         run_id (str): ID of the run to get the best checkpoint from.
-        metric (str): name of metric to search by.
-        mode (str): mode of metric (min/max).
 
     Returns:
         TorchCheckpoint: Best checkpoint from the run.
     """
-    artifact_uri = mlflow.get_run(run_id).to_dictionary()["info"]["artifact_uri"]
-    artifact_dir = urlparse(artifact_uri).path
-    progress_df = pd.read_csv(Path(artifact_dir, "progress.csv"))
-    best_epoch = progress_df[metric].argmin() if mode == "min" else progress_df[metric].argmax()
-    best_checkpoint = Checkpoint.from_directory(path=Path(artifact_dir, f"checkpoint_{str(best_epoch).zfill(6)}"))
-    return best_checkpoint
+    artifact_dir = urlparse(mlflow.get_run(run_id).info.artifact_uri).path  # get path from mlflow
+    results = Result.from_path(artifact_dir)
+    return results.best_checkpoints[0][0]
 
 
 @app.command()
@@ -130,7 +124,7 @@ def predict(
         Dict: prediction results for the input data.
     """
     # Load components
-    best_checkpoint = get_best_checkpoint(run_id=run_id, metric="val_loss", mode="min")
+    best_checkpoint = get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
     label_encoder = predictor.get_preprocessor().preprocessors[1]
     index_to_class = {v: k for k, v in label_encoder.stats_["unique_values(tag)"].items()}
