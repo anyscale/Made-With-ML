@@ -28,7 +28,7 @@ class ModelDeployment:
         self.run_id = run_id
         self.threshold = threshold
         mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)  # so workers have access to model registry
-        best_checkpoint = predict.get_best_checkpoint(run_id=self.run_id, metric="val_loss", mode="min")
+        best_checkpoint = predict.get_best_checkpoint(run_id=self.run_id)
         self.predictor = TorchPredictor.from_checkpoint(best_checkpoint)
         self.label_encoder = self.predictor.get_preprocessor().preprocessors[1]
         self.index_to_class = {v: k for k, v in self.label_encoder.stats_["unique_values(tag)"].items()}
