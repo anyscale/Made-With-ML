@@ -64,12 +64,6 @@ logging.config.dictConfig(logging_config)
 logger = logging.getLogger()
 
 # Constraints
-ACCEPTED_TAGS = [
-    "natural-language-processing",
-    "computer-vision",
-    "mlops",
-    "other",
-]
 STOPWORDS = [
     "i",
     "me",

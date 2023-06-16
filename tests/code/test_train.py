@@ -12,7 +12,6 @@ def test_train_model(dataset_loc, generate_experiment_name, delete_experiment):
     result = train.train_model(
         experiment_name=experiment_name,
         dataset_loc=dataset_loc,
-        num_repartitions=3,
         train_loop_config=json.dumps(train_loop_config),
         num_workers=6,
         cpu_per_worker=1,

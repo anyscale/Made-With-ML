@@ -8,7 +8,6 @@ import ray
 import ray.train.torch  # NOQA: F401 (imported but unused)
 import typer
 from ray.data import Dataset
-from ray.data.preprocessor import Preprocessor
 from ray.train.torch.torch_predictor import TorchPredictor
 from sklearn.metrics import precision_recall_fscore_support
 from snorkel.slicing import PandasSFApplier, slicing_function
@@ -79,7 +78,7 @@ def short_text(x):  # pragma: no cover, eval workload
     return len(x.text.split()) < 8  # less than 8 words
 
 
-def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, preprocessor: Preprocessor) -> Dict:  # pragma: no cover, eval workload
+def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset) -> Dict:  # pragma: no cover, eval workload
     """Get performance metrics for slices.
 
     Args:
@@ -92,10 +91,9 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, prepr
         Dict: performance metrics for slices.
     """
     slice_metrics = {}
-    df = preprocessor.preprocessors[0].transform(ds).to_pandas()
-    slicing_functions = [nlp_llm, short_text]
-    applier = PandasSFApplier(slicing_functions)
-    slices = applier.apply(df)
+    df = ds.to_pandas()
+    df["text"] = df["title"] + " " + df["description"]
+    slices = PandasSFApplier([nlp_llm, short_text]).apply(df)
     for slice_name in slices.dtype.names:
         mask = slices[slice_name].astype(bool)
         if sum(mask):
@@ -112,7 +110,6 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, prepr
 def evaluate(
     run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
     dataset_loc: str = typer.Option(..., "--dataset-loc", help="dataset (with labels) to evaluate on"),
-    num_repartitions: int = typer.Option(1, "--num-repartitions", help="number of blocks to partition the dataset into"),
     results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
 ) -> Dict:  # pragma: no cover, eval workload
     """Evaluate on the holdout dataset.
@@ -120,38 +117,31 @@ def evaluate(
     Args:
         run_id (str): id of the specific run to load from. Defaults to None.
         dataset_loc (str): dataset (with labels) to evaluate on.
-        num_repartitions (int, optional): number of cpu workers to use for
-            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
         results_fp (str, optional): location to save evaluation results to. Defaults to None.
 
     Returns:
         Dict: model's performance metrics on the dataset.
     """
     # Load
-    ds = ray.data.read_csv(dataset_loc).repartition(num_repartitions)
+    ds = ray.data.read_csv(dataset_loc)
     best_checkpoint = predict.get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
 
     # y_true
     preprocessor = predictor.get_preprocessor()
-    targets = utils.get_arr_col(preprocessor.transform(ds), col="targets")
-    y_true = targets.argmax(1)
+    y_true = utils.get_arr_col(preprocessor.transform(ds), col="targets")
 
     # y_pred
     z = predictor.predict(data=ds.to_pandas())["predictions"]
     y_pred = np.stack(z).argmax(1)
-
-    # Components
-    label_encoder = preprocessor.preprocessors[1]
-    class_to_index = label_encoder.stats_["unique_values(tag)"]
 
     # Metrics
     metrics = {
         "timestamp": datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S %p"),
         "run_id": run_id,
         "overall": get_overall_metrics(y_true=y_true, y_pred=y_pred),
-        "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=class_to_index),
-        "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds, preprocessor=preprocessor),
+        "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=preprocessor.class_to_index),
+        "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds),
     }
     logger.info(json.dumps(metrics, indent=2))
     if results_fp:  # pragma: no cover, saving results

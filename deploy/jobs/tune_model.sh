@@ -9,7 +9,6 @@ export INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
 python madewithml/tune.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
-    --num-repartitions 3 \
     --initial-params "$INITIAL_PARAMS" \
     --num-runs 2 \
     --num-workers 2 \

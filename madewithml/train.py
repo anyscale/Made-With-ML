@@ -7,6 +7,7 @@ import ray
 import ray.train as train
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import typer
 from ray.air import session
 from ray.air._internal.torch_utils import get_device
@@ -22,7 +23,7 @@ from ray.train.torch import TorchCheckpoint, TorchTrainer
 from transformers import BertModel
 
 from madewithml import data, models, utils
-from madewithml.config import ACCEPTED_TAGS, MLFLOW_TRACKING_URI, logger
+from madewithml.config import MLFLOW_TRACKING_URI, logger
 
 # Initialize Typer CLI app
 app = typer.Typer()
@@ -32,6 +33,7 @@ def train_step(
     ds: Dataset,
     batch_size: int,
     model: nn.Module,
+    num_classes: int,
     loss_fn: torch.nn.modules.loss._WeightedLoss,
     optimizer: torch.optim.Optimizer,
 ) -> float:  # pragma: no cover, tested via train workload
@@ -41,6 +43,7 @@ def train_step(
         ds (Dataset): dataset to iterate batches from.
         batch_size (int): size of each batch.
         model (nn.Module): model to train.
+        num_classes (int): number of classes.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
         optimizer (torch.optimizer.Optimizer): optimizer to use for updating the model's weights.
 
@@ -53,7 +56,8 @@ def train_step(
     for i, batch in enumerate(ds_generator):
         optimizer.zero_grad()  # reset gradients
         z = model(batch)  # forward pass
-        J = loss_fn(z, batch["targets"])  # define loss
+        targets = F.one_hot(batch["targets"], num_classes=num_classes).float()  # one-hot (for loss_fn)
+        J = loss_fn(z, targets)  # define loss
         J.backward()  # backward pass
         optimizer.step()  # update weights
         loss += (J.detach().item() - loss) / (i + 1)  # cumulative loss
@@ -61,7 +65,7 @@ def train_step(
 
 
 def eval_step(
-    ds: Dataset, batch_size: int, model: nn.Module, loss_fn: torch.nn.modules.loss._WeightedLoss
+    ds: Dataset, batch_size: int, model: nn.Module, num_classes: int, loss_fn: torch.nn.modules.loss._WeightedLoss
 ) -> Tuple[float, np.array, np.array]:  # pragma: no cover, tested via train workload
     """Eval step.
 
@@ -69,6 +73,7 @@ def eval_step(
         ds (Dataset): dataset to iterate batches from.
         batch_size (int): size of each batch.
         model (nn.Module): model to train.
+        num_classes (int): number of classes.
         loss_fn (torch.nn.loss._WeightedLoss): loss function to use between labels and predictions.
 
     Returns:
@@ -81,9 +86,10 @@ def eval_step(
     with torch.inference_mode():
         for i, batch in enumerate(ds_generator):
             z = model(batch)
-            J = loss_fn(z, batch["targets"]).item()
+            targets = F.one_hot(batch["targets"], num_classes=num_classes).float()  # one-hot (for loss_fn)
+            J = loss_fn(z, targets).item()
             loss += (J - loss) / (i + 1)
-            y_trues.extend(torch.argmax(batch["targets"], dim=1).cpu().numpy())
+            y_trues.extend(batch["targets"].cpu().numpy())
             y_preds.extend(torch.argmax(z, dim=1).cpu().numpy())
     return loss, np.vstack(y_trues), np.vstack(y_preds)
 
@@ -106,6 +112,7 @@ def train_loop_per_worker(
     lr_patience = config["lr_patience"]
     batch_size = config["batch_size"]
     num_epochs = config["num_epochs"]
+    num_classes = config["num_classes"]
 
     # Get datasets
     train_ds = session.get_dataset_shard("train")
@@ -117,14 +124,14 @@ def train_loop_per_worker(
         llm=llm,
         dropout_p=dropout_p,
         embedding_dim=llm.config.hidden_size,
-        num_classes=len(ACCEPTED_TAGS),
+        num_classes=num_classes,
     )
     model = train.torch.prepare_model(model)
 
     # Class weights
     batch_counts = []
     for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=utils.collate_fn):
-        batch_counts.append(np.bincount(batch["targets"].cpu().numpy().argmax(1)))
+        batch_counts.append(np.bincount(batch["targets"].cpu().numpy()))
     counts = [sum(count) for count in zip(*batch_counts)]
     class_weights = np.array([1.0 / count for i, count in enumerate(counts)])
     class_weights_tensor = torch.Tensor(class_weights).to(get_device())
@@ -138,8 +145,8 @@ def train_loop_per_worker(
     batch_size_per_worker = batch_size // session.get_world_size()
     for epoch in range(num_epochs):
         # Step
-        train_loss = train_step(train_ds, batch_size_per_worker, model, loss_fn, optimizer)
-        val_loss, _, _ = eval_step(val_ds, batch_size_per_worker, model, loss_fn)
+        train_loss = train_step(train_ds, batch_size_per_worker, model, num_classes, loss_fn, optimizer)
+        val_loss, _, _ = eval_step(val_ds, batch_size_per_worker, model, num_classes, loss_fn)
         scheduler.step(val_loss)
 
         # Checkpoint
@@ -156,7 +163,6 @@ def train_loop_per_worker(
 def train_model(
     experiment_name: str = "",
     dataset_loc: str = "",
-    num_repartitions: int = 1,
     train_loop_config: str = "",
     num_workers: int = 1,
     cpu_per_worker: int = 1,
@@ -171,7 +177,6 @@ def train_model(
     Args:
         experiment_name (str): name of the experiment for this training workload.
         dataset_loc (str): location of the dataset.
-        num_repartitions (int): number of repartitions to use for the dataset.
         train_loop_config (str): arguments to use for training.
         num_workers (int, optional): number of workers to use for training. Defaults to 1.
         cpu_per_worker (int, optional): number of CPUs to use per worker. Defaults to 1.
@@ -222,12 +227,10 @@ def train_model(
     )
 
     # Dataset
-    ds = data.load_data(
-        dataset_loc=dataset_loc,
-        num_samples=train_loop_config["num_samples"],
-        num_partitions=num_repartitions,
-    )
+    ds = data.load_data(dataset_loc=dataset_loc, num_samples=train_loop_config["num_samples"])
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+    tags = train_ds.to_pandas().tag.unique().tolist()
+    train_loop_config["num_classes"] = len(tags)
 
     # Dataset config
     dataset_config = {
@@ -236,7 +239,7 @@ def train_model(
     }
 
     # Preprocess
-    preprocessor = data.get_preprocessor()
+    preprocessor = data.CustomPreprocessor()
     train_ds = preprocessor.fit_transform(train_ds)
     val_ds = preprocessor.transform(val_ds)
     train_ds = train_ds.materialize()

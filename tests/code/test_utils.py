@@ -41,11 +41,18 @@ def test_pad_array():
 
 
 def test_collate_fn():
-    batch = {"ids": np.array([[1, 2], [1, 2, 3]], dtype="object")}
+    batch = {
+        "ids": np.array([[1, 2], [1, 2, 3]], dtype="object"),
+        "masks": np.array([[1, 1], [1, 1, 1]], dtype="object"),
+        "targets": np.array([3, 1]),
+    }
     processed_batch = utils.collate_fn(batch)
-    expected_batch = {"ids": torch.tensor([[1, 2, 0], [1, 2, 3]], dtype=torch.int32)}
+    expected_batch = {
+        "ids": torch.tensor([[1, 2, 0], [1, 2, 3]], dtype=torch.int32),
+        "masks": torch.tensor([[1, 1, 0], [1, 1, 1]], dtype=torch.int32),
+        "targets": torch.tensor([3, 1], dtype=torch.int64),
+    }
     for k in batch:
-        print(processed_batch[k], expected_batch[k])
         assert torch.allclose(processed_batch[k], expected_batch[k])
 
 

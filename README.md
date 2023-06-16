@@ -186,7 +186,6 @@ export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_p
 python madewithml/train.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
-    --num-repartitions 3 \
     --train-loop-config "$TRAIN_LOOP_CONFIG" \
     --num-workers 2 \
     --cpu-per-worker 10 \
@@ -205,7 +204,6 @@ export INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
 python madewithml/tune.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
-    --num-repartitions 3 \
     --initial-params "$INITIAL_PARAMS" \
     --num-runs 2 \
     --num-workers 2 \
@@ -243,7 +241,6 @@ export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/
 python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
-    --num-repartitions 3 \
     --results-fp results/evaluation_results.json
 ```
 ```json
