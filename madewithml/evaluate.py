@@ -8,7 +8,6 @@ import ray
 import ray.train.torch  # NOQA: F401 (imported but unused)
 import typer
 from ray.data import Dataset
-from ray.data.preprocessor import Preprocessor
 from ray.train.torch.torch_predictor import TorchPredictor
 from sklearn.metrics import precision_recall_fscore_support
 from snorkel.slicing import PandasSFApplier, slicing_function
@@ -79,7 +78,7 @@ def short_text(x):  # pragma: no cover, eval workload
     return len(x.text.split()) < 8  # less than 8 words
 
 
-def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, preprocessor: Preprocessor) -> Dict:  # pragma: no cover, eval workload
+def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset) -> Dict:  # pragma: no cover, eval workload
     """Get performance metrics for slices.
 
     Args:
@@ -92,10 +91,9 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, prepr
         Dict: performance metrics for slices.
     """
     slice_metrics = {}
-    df = preprocessor.preprocessors[0].transform(ds).to_pandas()
-    slicing_functions = [nlp_llm, short_text]
-    applier = PandasSFApplier(slicing_functions)
-    slices = applier.apply(df)
+    df = ds.to_pandas()
+    df["text"] = df["title"] + " " + df["description"]
+    slices = PandasSFApplier([nlp_llm, short_text]).apply(df)
     for slice_name in slices.dtype.names:
         mask = slices[slice_name].astype(bool)
         if sum(mask):
@@ -138,13 +136,12 @@ def evaluate(
     y_pred = np.stack(z).argmax(1)
 
     # Metrics
-    class_to_index = preprocessor.fn.keywords["class_to_index"]
     metrics = {
         "timestamp": datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S %p"),
         "run_id": run_id,
         "overall": get_overall_metrics(y_true=y_true, y_pred=y_pred),
-        "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=class_to_index),
-        "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds, preprocessor=preprocessor),
+        "per_class": get_per_class_metrics(y_true=y_true, y_pred=y_pred, class_to_index=preprocessor.class_to_index),
+        "slices": get_slice_metrics(y_true=y_true, y_pred=y_pred, ds=ds),
     }
     logger.info(json.dumps(metrics, indent=2))
     if results_fp:  # pragma: no cover, saving results
