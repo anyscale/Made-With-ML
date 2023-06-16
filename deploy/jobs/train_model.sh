@@ -8,7 +8,6 @@ export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_p
 python madewithml/train.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
-    --num-repartitions 3 \
     --train-loop-config "$TRAIN_LOOP_CONFIG" \
     --num-workers 2 \
     --cpu-per-worker 10 \

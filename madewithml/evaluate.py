@@ -112,7 +112,6 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset, prepr
 def evaluate(
     run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
     dataset_loc: str = typer.Option(..., "--dataset-loc", help="dataset (with labels) to evaluate on"),
-    num_repartitions: int = typer.Option(1, "--num-repartitions", help="number of blocks to partition the dataset into"),
     results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
 ) -> Dict:  # pragma: no cover, eval workload
     """Evaluate on the holdout dataset.
@@ -120,32 +119,26 @@ def evaluate(
     Args:
         run_id (str): id of the specific run to load from. Defaults to None.
         dataset_loc (str): dataset (with labels) to evaluate on.
-        num_repartitions (int, optional): number of cpu workers to use for
-            distributed data processing (and training if `use_gpu` is false). Defaults to 1.
         results_fp (str, optional): location to save evaluation results to. Defaults to None.
 
     Returns:
         Dict: model's performance metrics on the dataset.
     """
     # Load
-    ds = ray.data.read_csv(dataset_loc).repartition(num_repartitions)
+    ds = ray.data.read_csv(dataset_loc)
     best_checkpoint = predict.get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
 
     # y_true
     preprocessor = predictor.get_preprocessor()
-    targets = utils.get_arr_col(preprocessor.transform(ds), col="targets")
-    y_true = targets.argmax(1)
+    y_true = utils.get_arr_col(preprocessor.transform(ds), col="targets")
 
     # y_pred
     z = predictor.predict(data=ds.to_pandas())["predictions"]
     y_pred = np.stack(z).argmax(1)
 
-    # Components
-    label_encoder = preprocessor.preprocessors[1]
-    class_to_index = label_encoder.stats_["unique_values(tag)"]
-
     # Metrics
+    class_to_index = preprocessor.fn.keywords["class_to_index"]
     metrics = {
         "timestamp": datetime.datetime.now().strftime("%B %d, %Y %I:%M:%S %p"),
         "run_id": run_id,

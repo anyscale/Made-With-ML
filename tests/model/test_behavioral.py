@@ -14,22 +14,12 @@ def predictor(run_id):
 
 
 @pytest.fixture(scope="module")
-def index_to_class(predictor):
-    label_encoder = predictor.get_preprocessor().preprocessors[1]
-    class_to_index = label_encoder.stats_["unique_values(tag)"]
-    index_to_class = {v: k for k, v in class_to_index.items()}
-    return index_to_class
-
-
-@pytest.fixture(scope="module")
-def get_label_fixture(predictor, index_to_class):
-    def get_label(text):
-        df = pd.DataFrame({"title": [text], "description": "", "tag": "other"})
-        z = predictor.predict(data=df)["predictions"]
-        label = predict.decode(np.stack(z).argmax(1), index_to_class)[0]
-        return label
-
-    return get_label
+def get_label(text):
+    df = pd.DataFrame({"title": [text], "description": "", "tag": "other"})
+    z = predictor.predict(data=df)["predictions"]
+    preprocessor = predictor.get_preprocessor()
+    label = predict.decode(np.stack(z).argmax(1), preprocessor.index_to_class)[0]
+    return label
 
 
 @pytest.mark.parametrize(
@@ -42,10 +32,10 @@ def get_label_fixture(predictor, index_to_class):
         ),
     ],
 )
-def test_invariance(input_a, input_b, label, get_label_fixture):
+def test_invariance(input_a, input_b, label, get_label):
     """INVariance via verb injection (changes should not affect outputs)."""
-    label_a = get_label_fixture(input_a)
-    label_b = get_label_fixture(input_b)
+    label_a = get_label(input_a)
+    label_b = get_label(input_b)
     assert label_a == label_b == label
 
 
@@ -66,9 +56,9 @@ def test_invariance(input_a, input_b, label, get_label_fixture):
         ),
     ],
 )
-def test_directional(input, label, get_label_fixture):
+def test_directional(input, label, get_label):
     """DIRectional expectations (changes with known outputs)."""
-    prediction = get_label_fixture(text=input)
+    prediction = get_label(text=input)
     assert label == prediction
 
 
@@ -89,7 +79,7 @@ def test_directional(input, label, get_label_fixture):
         ),
     ],
 )
-def test_mft(input, label, get_label_fixture):
+def test_mft(input, label, get_label):
     """Minimum Functionality Tests (simple input/output pairs)."""
-    prediction = get_label_fixture(text=input)
+    prediction = get_label(text=input)
     assert label == prediction

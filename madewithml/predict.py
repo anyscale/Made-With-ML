@@ -46,29 +46,28 @@ def format_prob(prob: Iterable, index_to_class: Dict) -> Dict:
     return d
 
 
-def predict_with_probs(
+def predict_with_proba(
     df: pd.DataFrame,
     predictor: ray.train.torch.torch_predictor.TorchPredictor,
-    index_to_class: Dict,
 ) -> List:  # pragma: no cover, tested with inference workload
     """Predict tags (with probabilities) for input data from a dataframe.
 
     Args:
         df (pd.DataFrame): dataframe with input features.
         predictor (ray.train.torch.torch_predictor.TorchPredictor): loaded predictor from a checkpoint.
-        index_to_class (Dict): mapping between indices and labels.
 
     Returns:
         List: list of predicted labels.
     """
+    preprocessor = predictor.get_preprocessor()
     z = predictor.predict(data=df)["predictions"]
     import numpy as np
 
     y_prob = torch.tensor(np.stack(z)).softmax(dim=1).numpy()
     results = []
     for i, prob in enumerate(y_prob):
-        tag = decode([z[i].argmax()], index_to_class)[0]
-        results.append({"prediction": tag, "probabilities": format_prob(prob, index_to_class)})
+        tag = decode([z[i].argmax()], preprocessor.index_to_class)[0]
+        results.append({"prediction": tag, "probabilities": format_prob(prob, preprocessor.index_to_class)})
     return results
 
 
@@ -126,12 +125,11 @@ def predict(
     # Load components
     best_checkpoint = get_best_checkpoint(run_id=run_id)
     predictor = TorchPredictor.from_checkpoint(best_checkpoint)
-    label_encoder = predictor.get_preprocessor().preprocessors[1]
-    index_to_class = {v: k for k, v in label_encoder.stats_["unique_values(tag)"].items()}
+    preprocessor = predictor.get_preprocessor()
 
     # Predict
     sample_df = pd.DataFrame([{"title": title, "description": description, "tag": "other"}])
-    results = predict_with_probs(df=sample_df, predictor=predictor, index_to_class=index_to_class)
+    results = predict_with_proba(df=sample_df, predictor=predictor, index_to_class=preprocessor.index_to_class)
     logger.info(json.dumps(results, cls=NumpyEncoder, indent=2))
     return results
 

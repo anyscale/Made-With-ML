@@ -66,8 +66,8 @@ def get_arr_col(ds: Dataset, col: str) -> np.ndarray:
     Returns:
         np.array: an array of the column's values.
     """
-    values = ds.map_batches(lambda batch: {col: batch[col]}, batch_format="numpy")
-    return np.stack([item[col] for item in values.take_all()])
+    values = ds.select_columns(cols=[col]).take_all()
+    return np.stack([item[col] for item in values])
 
 
 def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:
@@ -88,8 +88,8 @@ def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:
     return padded_arr
 
 
-def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
-    """Convert a batch of numpy arrays to tensors.
+def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:  # pragma: no cover, air internal
+    """Convert a batch of numpy arrays to tensors (with appropriate padding).
 
     Args:
         batch (Dict[str, np.ndarray]): input batch as a dictionary of numpy arrays.
@@ -97,9 +97,9 @@ def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:
     Returns:
         Dict[str, torch.Tensor]: output batch as a dictionary of tensors.
     """
-    for k, v in batch.items():
-        batch[k] = pad_array(v)
-    dtypes = {"ids": torch.int32, "masks": torch.int32, "targets": torch.float64}
+    batch["ids"] = pad_array(batch["ids"])
+    batch["masks"] = pad_array(batch["masks"])
+    dtypes = {"ids": torch.int32, "masks": torch.int32, "targets": torch.int64}
     return convert_ndarray_batch_to_torch_tensor_batch(batch, dtypes=dtypes, device=get_device())
 
 

@@ -28,7 +28,6 @@ app = typer.Typer()
 def tune_models(
     experiment_name: str = "",
     dataset_loc: str = "",
-    num_repartitions: int = 1,
     initial_params: str = "",
     num_workers: int = 1,
     cpu_per_worker: int = 1,
@@ -44,7 +43,6 @@ def tune_models(
     Args:
         experiment_name (str): name of the experiment for this training workload.
         dataset_loc (str): location of the dataset.
-        num_repartitions (int): number of repartitions to use for the dataset.
         initial_params (str): initial config for the tuning workload.
         num_workers (int, optional): number of workers to use for training. Defaults to 1.
         cpu_per_worker (int, optional): number of CPUs to use per worker. Defaults to 1.
@@ -77,12 +75,10 @@ def tune_models(
     )
 
     # Dataset
-    ds = data.load_data(
-        dataset_loc=dataset_loc,
-        num_samples=train_loop_config.get("num_samples", None),
-        num_partitions=num_repartitions,
-    )
+    ds = data.load_data(dataset_loc=dataset_loc, num_samples=train_loop_config.get("num_samples", None))
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
+    tags = train_ds.to_pandas().tag.unique().tolist()
+    train_loop_config["num_classes"] = len(tags)
 
     # Dataset config
     dataset_config = {
@@ -91,7 +87,7 @@ def tune_models(
     }
 
     # Preprocess
-    preprocessor = data.get_preprocessor()
+    preprocessor = data.CustomPreprocessor()
     train_ds = preprocessor.fit_transform(train_ds)
     val_ds = preprocessor.transform(val_ds)
     train_ds = train_ds.materialize()

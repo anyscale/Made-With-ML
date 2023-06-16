@@ -22,7 +22,6 @@ def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
     results = tune.tune_models(
         experiment_name=experiment_name,
         dataset_loc=dataset_loc,
-        num_repartitions=3,
         initial_params=json.dumps(initial_params),
         num_workers=6,
         cpu_per_worker=1,

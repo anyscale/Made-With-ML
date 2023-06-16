@@ -1,5 +1,4 @@
 import re
-from functools import partial
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -7,11 +6,10 @@ import pandas as pd
 import ray
 from ray.data import Dataset
 from ray.data.preprocessor import Preprocessor
-from ray.data.preprocessors import BatchMapper, Chain
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer
 
-from madewithml.config import ACCEPTED_TAGS, STOPWORDS
+from madewithml.config import STOPWORDS
 
 
 def load_data(dataset_loc: str, num_samples: int = None, num_partitions: int = 1) -> Dataset:
@@ -25,9 +23,9 @@ def load_data(dataset_loc: str, num_samples: int = None, num_partitions: int = 1
     Returns:
         Dataset: Our dataset represented by a Ray Dataset.
     """
-    ds = ray.data.read_csv(dataset_loc).repartition(num_partitions)
+    ds = ray.data.read_csv(dataset_loc)
     ds = ds.random_shuffle(seed=1234)
-    ds = ray.data.from_items(ds.take(num_samples)).repartition(num_partitions) if num_samples else ds
+    ds = ray.data.from_items(ds.take(num_samples)) if num_samples else ds
     return ds
 
 
@@ -111,23 +109,6 @@ def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
     return text
 
 
-def preprocess(df: pd.DataFrame) -> pd.DataFrame:
-    """Preprocess the data in our dataframe.
-
-    Args:
-        df (pd.DataFrame): Raw dataframe to preprocess.
-
-    Returns:
-        pd.DataFrame: Dataframe with preprocessing applied to it.
-    """
-    df["text"] = df.title + " " + df.description  # feature engineering
-    df["text"] = df.text.apply(clean_text)  # clean text
-    df = df.drop(columns=["id", "created_on", "title", "description"], errors="ignore")  # drop columns
-    df["tag"] = df.tag.apply(lambda x: x if x in ACCEPTED_TAGS else "other")  # replace OOS tags
-    df = df[["text", "tag"]]  # rearrange columns
-    return df
-
-
 def tokenize(batch: Dict) -> Dict:
     """Tokenize the text input in our batch using a tokenizer.
 
@@ -139,41 +120,37 @@ def tokenize(batch: Dict) -> Dict:
     """
     tokenizer = BertTokenizer.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
     encoded_inputs = tokenizer(batch["text"].tolist(), return_tensors="np", padding="longest")
-    return dict(
-        ids=encoded_inputs["input_ids"],
-        masks=encoded_inputs["attention_mask"],
-        targets=np.array(batch["tag"]),
-    )
+    return dict(ids=encoded_inputs["input_ids"], masks=encoded_inputs["attention_mask"], targets=np.array(batch["tag"]))
 
 
-def to_one_hot(batch: Dict, num_classes: int) -> Dict:
-    """Convert the encoded labels into one-hot vectors.
+def preprocess(df: pd.DataFrame, class_to_index: Dict) -> Dict:
+    """Preprocess the data in our dataframe.
 
     Args:
-        batch (Dict): batch of data with targets to make into one-hot vectors.
-        num_classes (int): number of classes so we can determine width of our one-hot vectors.
+        df (pd.DataFrame): Raw dataframe to preprocess.
+        class_to_index (Dict): Mapping of class names to indices.
 
     Returns:
-        Dict: batch of data with one-hot encoded targets.
+        Dict: preprocessed data (ids, masks, targets).
     """
-    targets = batch["targets"]
-    one_hot = np.zeros((len(targets), num_classes))
-    one_hot[np.arange(len(targets)), targets] = 1
-    batch["targets"] = one_hot
-    return batch
+    df["text"] = df.title + " " + df.description  # feature engineering
+    df["text"] = df.text.apply(clean_text)  # clean text
+    df = df.drop(columns=["id", "created_on", "title", "description"], errors="ignore")  # clean dataframe
+    df = df[["text", "tag"]]  # rearrange columns
+    df["tag"] = df["tag"].map(class_to_index)  # label encoding
+    outputs = tokenize(df)
+    return outputs
 
 
-def get_preprocessor() -> Preprocessor:  # pragma: no cover, just returns a chained preprocessor
-    """Create the preprocessor for our task.
+class CustomPreprocessor(Preprocessor):
+    """Custom preprocessor class."""
 
-    Returns:
-        Preprocessor: A single combined `Preprocessor` created from our multiple preprocessors.
-    """
-    num_classes = len(ACCEPTED_TAGS)
-    preprocessor = Chain(
-        BatchMapper(preprocess, batch_format="pandas"),
-        ray.data.preprocessors.LabelEncoder(label_column="tag"),
-        BatchMapper(tokenize, batch_format="pandas"),
-        BatchMapper(partial(to_one_hot, num_classes=num_classes), batch_format="numpy"),
-    )
-    return preprocessor
+    def _fit(self, ds):
+        # tags = ds.select_columns(["tag"]).distinct()
+        tags = ds.to_pandas().tag.unique().tolist()
+        self.class_to_index = {tag: i for i, tag in enumerate(tags)}
+        self.index_to_class = {v: k for k, v in self.class_to_index.items()}
+        self.stats_ = True
+
+    def _transform_pandas(self, batch):  # could also do _transform_numpy
+        return preprocess(batch, class_to_index=self.class_to_index)

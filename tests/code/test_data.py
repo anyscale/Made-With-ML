@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import pytest
 import ray
@@ -11,6 +10,12 @@ def df():
     data = [{"title": "a0", "description": "b0", "tag": "c0"}]
     df = pd.DataFrame(data)
     return df
+
+
+@pytest.fixture(scope="module")
+def class_to_index():
+    class_to_index = {"c0": 0, "c1": 1}
+    return class_to_index
 
 
 def test_load_data(dataset_loc):
@@ -41,20 +46,7 @@ def test_clean_text(text, sw, clean_text):
     assert data.clean_text(text=text, stopwords=sw) == clean_text
 
 
-def test_preprocess(df):
+def test_preprocess(df, class_to_index):
     assert "text" not in df.columns
-    df = data.preprocess(df)
-    assert df.columns.tolist() == ["text", "tag"]
-
-
-def test_tokenize(df):
-    df = data.preprocess(df)
-    in_batch = {col: df[col].to_numpy() for col in df.columns}
-    out_batch = data.tokenize(in_batch)
-    assert set(out_batch) == {"ids", "masks", "targets"}
-
-
-def test_to_one_hot():
-    in_batch = {"targets": [1]}
-    out_batch = data.to_one_hot(in_batch, num_classes=3)
-    assert np.array_equal(out_batch["targets"], [[0.0, 1.0, 0.0]])
+    outputs = data.preprocess(df, class_to_index=class_to_index)
+    assert set(outputs) == {"ids", "masks", "targets"}
