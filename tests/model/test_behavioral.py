@@ -13,8 +13,7 @@ def predictor(run_id):
     return predictor
 
 
-@pytest.fixture(scope="module")
-def get_label(text):
+def get_label(text, predictor):
     df = pd.DataFrame({"title": [text], "description": "", "tag": "other"})
     z = predictor.predict(data=df)["predictions"]
     preprocessor = predictor.get_preprocessor()
@@ -32,10 +31,10 @@ def get_label(text):
         ),
     ],
 )
-def test_invariance(input_a, input_b, label, get_label):
+def test_invariance(input_a, input_b, label, predictor):
     """INVariance via verb injection (changes should not affect outputs)."""
-    label_a = get_label(input_a)
-    label_b = get_label(input_b)
+    label_a = get_label(text=input_a, predictor=predictor)
+    label_b = get_label(text=input_b, predictor=predictor)
     assert label_a == label_b == label
 
 
@@ -56,9 +55,9 @@ def test_invariance(input_a, input_b, label, get_label):
         ),
     ],
 )
-def test_directional(input, label, get_label):
+def test_directional(input, label, predictor):
     """DIRectional expectations (changes with known outputs)."""
-    prediction = get_label(text=input)
+    prediction = get_label(text=input, predictor=predictor)
     assert label == prediction
 
 
@@ -79,7 +78,7 @@ def test_directional(input, label, get_label):
         ),
     ],
 )
-def test_mft(input, label, get_label):
+def test_mft(input, label, predictor):
     """Minimum Functionality Tests (simple input/output pairs)."""
-    prediction = get_label(text=input)
+    prediction = get_label(text=input, predictor=predictor)
     assert label == prediction

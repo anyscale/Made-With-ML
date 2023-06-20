@@ -1,13 +1,13 @@
-name: workloads
+name: serve
 on:
   workflow_dispatch:  # manual
-  pull_request:
+  push:
     branches:
     - main
 permissions: write-all
 
 jobs:
-  workloads:
+  serve:
     runs-on: ubuntu-22.04
     steps:
 
@@ -19,9 +19,9 @@ jobs:
           cache: 'pip'
       - run: python3 -m pip install anyscale==0.5.116 typer==0.9.0
 
-      # Run workloads
-      - name: Workloads
+      # Serve model
+      - name: Serve model
         run: |
           export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
           export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
-          anyscale jobs submit deploy/jobs/workloads.yaml --wait
+          anyscale service rollout --service-config-file deploy/services/serve_model.yaml

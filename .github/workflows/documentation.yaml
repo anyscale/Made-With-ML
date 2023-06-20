@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - main
+
 jobs:
   build-docs:
     runs-on: ubuntu-22.04

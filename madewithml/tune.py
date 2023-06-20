@@ -16,6 +16,7 @@ from ray.tune import Tuner
 from ray.tune.schedulers import AsyncHyperBandScheduler
 from ray.tune.search import ConcurrencyLimiter
 from ray.tune.search.hyperopt import HyperOptSearch
+from typing_extensions import Annotated
 
 from madewithml import data, train, utils
 from madewithml.config import MLFLOW_TRACKING_URI, logger
@@ -26,17 +27,17 @@ app = typer.Typer()
 
 @app.command()
 def tune_models(
-    experiment_name: str = "",
-    dataset_loc: str = "",
-    initial_params: str = "",
-    num_workers: int = 1,
-    cpu_per_worker: int = 1,
-    gpu_per_worker: int = 0,
-    num_runs: int = 1,
-    num_samples: int = None,
-    num_epochs: int = 1,
-    batch_size: int = 256,
-    results_fp: str = None,
+    experiment_name: Annotated[str, typer.Option(help="name of the experiment for this training workload.")] = None,
+    dataset_loc: Annotated[str, typer.Option(help="location of the dataset.")] = None,
+    initial_params: Annotated[str, typer.Option(help="initial config for the tuning workload.")] = None,
+    num_workers: Annotated[int, typer.Option(help="number of workers to use for training.")] = 1,
+    cpu_per_worker: Annotated[int, typer.Option(help="number of CPUs to use per worker.")] = 1,
+    gpu_per_worker: Annotated[int, typer.Option(help="number of GPUs to use per worker.")] = 0,
+    num_runs: Annotated[int, typer.Option(help="number of runs in this tuning experiment.")] = 1,
+    num_samples: Annotated[int, typer.Option(help="number of samples to use from dataset.")] = None,
+    num_epochs: Annotated[int, typer.Option(help="number of epochs to train for.")] = 1,
+    batch_size: Annotated[int, typer.Option(help="number of samples per batch.")] = 256,
+    results_fp: Annotated[str, typer.Option(help="filepath to save results to.")] = None,
 ) -> ray.tune.result_grid.ResultGrid:
     """Hyperparameter tuning experiment.
 

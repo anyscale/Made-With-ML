@@ -9,7 +9,7 @@ from ray import serve
 from ray.train.torch import TorchPredictor
 from starlette.requests import Request
 
-from madewithml import predict
+from madewithml import evaluate, predict
 from madewithml.config import MLFLOW_TRACKING_URI, mlflow
 
 # Define application
@@ -47,19 +47,17 @@ class ModelDeployment:
         """Get the run ID."""
         return {"run_id": self.run_id}
 
+    @app.post("/evaluate")
+    async def _evaluate(self, request: Request) -> Dict:
+        data = await request.json()
+        results = evaluate.evaluate(run_id=self.run_id, dataset_loc=data.get("dataset_loc"))
+        return {"results": results}
+
     @app.post("/predict")
     async def _predict(self, request: Request) -> Dict:
-        # Get predictions
+        # Get prediction
         data = await request.json()
-        df = pd.DataFrame(
-            [
-                {
-                    "title": data.get("title", ""),
-                    "description": data.get("description", ""),
-                    "tag": "other",
-                }
-            ]
-        )
+        df = pd.DataFrame([{"title": data.get("title", ""), "description": data.get("description", ""), "tag": ""}])
         results = predict.predict_with_proba(df=df, predictor=self.predictor)
 
         # Apply custom logic

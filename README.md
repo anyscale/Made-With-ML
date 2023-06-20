@@ -216,6 +216,8 @@ python madewithml/tune.py \
 
 ### Experiment tracking
 
+We'll use [MLflow](https://mlflow.org/) to track our experiments and store our models and the [MLflow Tracking UI](https://www.mlflow.org/docs/latest/tracking.html#tracking-ui) to view our experiments. We have been saving our experiments to a local directory but note that in an actual production setting, we would have a central location to store all of our experiments. It's easy/inexpensive to spin up your own MLflow server for all of your team members to track their experiments on or use a managed solution like [Weights & Biases](https://wandb.ai/site), [Comet](https://www.comet.ml/), etc.
+
 <details>
   <summary>Local</summary><br>
 
@@ -229,7 +231,18 @@ python madewithml/tune.py \
 <details open>
   <summary>Anyscale</summary><br>
 
-  Work in progress until we get EFS on production clusters w/ port forwarding or we set up an MLflow server ourselves. A temporary workaround is to sync our `$MODEL_REGISTRY` with a S3 bucket and then pull the contents of that bucket locally to view it with the MLflow UI using the same commands above.
+  Since we store our experiment in `/mnt/user_storage`, we'll ssh into our workspace from our local laptop and view the MLflow dashboard via port forwarding.
+
+  ```bash
+  mkdir workspaces
+  cd workspaces
+  anyscale workspace clone -n madewithml  # may need to paste credentials from Anyscale
+  anyscale workspace ssh -- -L 8080:localhost:8080
+  export MODEL_REGISTRY=/mnt/user_storage/mlruns
+  mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
+  ```
+
+  Then navigate to `localhost:8080` in your browser to view the MLflow dashboard with our experiments.
 
 </details>
 
@@ -321,6 +334,13 @@ python madewithml/predict.py predict \
   ray stop  # shutdown
   ```
 
+```bash
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+curl -X POST -H "Content-Type: application/json" -d '{
+    "dataset_loc": "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+  }' http://127.0.0.1:8000/evaluate
+```
+
 </details>
 
 <details open>
@@ -385,9 +405,6 @@ From this point onwards, in order to deploy our application into production, we'
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
-export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
 ### Anyscale Jobs
@@ -404,13 +421,17 @@ anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 anyscale cluster-compute create deploy/cluster_compute.yaml --name $CLUSTER_COMPUTE_NAME
 ```
 
-3. Job submissions
+3. Push changes + set config
+Push any code changes to git (ex. `dev` branch) and ensure that the `working_dir` is pointed to your repository. In a production scenario, we also have the option to push our working directory to an S3 bucket, for example:
+```yaml
+runtime_env:
+  working_dir: .
+  upload_path: s3://BUCKET_NAME/jobs
+```
+
+4. Submit job
 ```bash
-anyscale job submit deploy/jobs/test_code.yaml
-anyscale job submit deploy/jobs/test_data.yaml
-anyscale job submit deploy/jobs/train_model.yaml
-anyscale job submit deploy/jobs/evaluate_model.yaml
-anyscale job submit deploy/jobs/test_model.yaml
+anyscale job submit deploy/jobs/workloads.yaml
 ```
 
 ### Anyscale Services
@@ -445,13 +466,11 @@ We're not going to manually deploy our application every time we make a change. 
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/o/anyscale-internal/credentials
-export AWS_REGION=us-west-2
-export IAM_ROLE=arn:aws:iam::959243851260:role/github-action-madewithml
 ```
 
 2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. When we start a PR from this branch to our `main` branch, this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow goes well, this will produce comments with the training, evaluation and current prod evaluation (if applicable) directly on the PR.
 
-3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [deployment workflow](/.github/workflows/deployment.yaml) which will rollout our new service to production!
+3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [serve workflow](/.github/workflows/serve.yaml) which will rollout our new service to production!
 
 ### Continual learning
 

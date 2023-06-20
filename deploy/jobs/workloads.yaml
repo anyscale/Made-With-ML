@@ -1,0 +1,8 @@
+name: workloads
+project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
+cluster_env: madewithml-cluster-env
+compute_config: madewithml-cluster-compute
+runtime_env:
+  working_dir: "https://github.com/anyscale/Made-With-ML/archive/refs/heads/dev.zip"
+entrypoint: bash deploy/jobs/workloads.sh
+max_retries: 0

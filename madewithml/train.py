@@ -21,6 +21,7 @@ from ray.air.integrations.mlflow import MLflowLoggerCallback
 from ray.data import Dataset
 from ray.train.torch import TorchCheckpoint, TorchTrainer
 from transformers import BertModel
+from typing_extensions import Annotated
 
 from madewithml import data, models, utils
 from madewithml.config import MLFLOW_TRACKING_URI, logger
@@ -161,16 +162,16 @@ def train_loop_per_worker(
 
 @app.command()
 def train_model(
-    experiment_name: str = "",
-    dataset_loc: str = "",
-    train_loop_config: str = "",
-    num_workers: int = 1,
-    cpu_per_worker: int = 1,
-    gpu_per_worker: int = 0,
-    num_samples: int = None,
-    num_epochs: int = 1,
-    batch_size: int = 256,
-    results_fp: str = None,
+    experiment_name: Annotated[str, typer.Option(help="name of the experiment for this training workload.")] = None,
+    dataset_loc: Annotated[str, typer.Option(help="location of the dataset.")] = None,
+    train_loop_config: Annotated[str, typer.Option(help="arguments to use for training.")] = None,
+    num_workers: Annotated[int, typer.Option(help="number of workers to use for training.")] = 1,
+    cpu_per_worker: Annotated[int, typer.Option(help="number of CPUs to use per worker.")] = 1,
+    gpu_per_worker: Annotated[int, typer.Option(help="number of GPUs to use per worker.")] = 0,
+    num_samples: Annotated[int, typer.Option(help="number of samples to use from dataset.")] = None,
+    num_epochs: Annotated[int, typer.Option(help="number of epochs to train for.")] = 1,
+    batch_size: Annotated[int, typer.Option(help="number of samples per batch.")] = 256,
+    results_fp: Annotated[str, typer.Option(help="filepath to save results to.")] = None,
 ) -> ray.air.result.Result:
     """Main train function to train our model as a distributed workload.
 
