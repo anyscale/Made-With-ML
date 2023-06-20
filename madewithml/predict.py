@@ -10,6 +10,7 @@ from numpyencoder import NumpyEncoder
 from ray.air import Result
 from ray.train.torch import TorchPredictor
 from ray.train.torch.torch_checkpoint import TorchCheckpoint
+from typing_extensions import Annotated
 
 from madewithml.config import logger, mlflow
 
@@ -108,9 +109,9 @@ def get_best_checkpoint(run_id: str) -> TorchCheckpoint:  # pragma: no cover, ml
 
 @app.command()
 def predict(
-    run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
-    title: str = typer.Option("", "--title", help="project title"),
-    description: str = typer.Option("", "--description", help="project description"),
+    run_id: Annotated[str, typer.Option(help="id of the specific run to load from")] = None,
+    title: Annotated[str, typer.Option(help="project title")] = None,
+    description: Annotated[str, typer.Option(help="project description")] = None,
 ) -> Dict:  # pragma: no cover, tested with inference workload
     """Predict the tag for a project given it's title and description.
 

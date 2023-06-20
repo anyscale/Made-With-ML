@@ -3,6 +3,7 @@ logs/
 stores/
 mlruns/
 results/
+workspaces/
 
 # VSCode
 .vscode/

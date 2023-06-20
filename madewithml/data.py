@@ -51,9 +51,7 @@ def stratify_split(
         Tuple[Dataset, Dataset]: the stratified train and test datasets.
     """
 
-    def _add_split(
-        df: pd.DataFrame,
-    ) -> pd.DataFrame:  # pragma: no cover, used in parent function
+    def _add_split(df: pd.DataFrame) -> pd.DataFrame:  # pragma: no cover, used in parent function
         """Naively split a dataframe into train and test splits.
         Add a column specifying whether it's the train or test split."""
         train, test = train_test_split(df, test_size=test_size, shuffle=shuffle, random_state=seed)
@@ -68,12 +66,8 @@ def stratify_split(
 
     # Train, test split with stratify
     grouped = ds.groupby(stratify).map_groups(_add_split, batch_format="pandas")  # group by each unique value in the column we want to stratify on
-    train_ds = grouped.map_batches(
-        _filter_split, fn_kwargs={"split": "train"}, batch_format="pandas"
-    )  # Combine data points from all groups for train split
-    test_ds = grouped.map_batches(
-        _filter_split, fn_kwargs={"split": "test"}, batch_format="pandas"
-    )  # Combine data points from all groups for test split
+    train_ds = grouped.map_batches(_filter_split, fn_kwargs={"split": "train"}, batch_format="pandas")  # combine
+    test_ds = grouped.map_batches(_filter_split, fn_kwargs={"split": "test"}, batch_format="pandas")  # combine
 
     # Shuffle each split (required)
     train_ds = train_ds.random_shuffle(seed=seed)

@@ -6,9 +6,4 @@ ray_serve_config:
   import_path: deploy.services.serve_model:entrypoint
   runtime_env:
     working_dir: .
-    upload_path: s3://madewithml/GokuMohandas/services
-    env_vars:
-      S3_BUCKET: s3://madewithml
-      EXPERIMENT_NAME: llm  # if "", run_id must be provided
-      RUN_ID: ""  # if "", best run from experiment will be used
-      GITHUB_USERNAME: GokuMohandas  # exact case-sensitive GitHub username
+    upload_path: s3://madewithml/services

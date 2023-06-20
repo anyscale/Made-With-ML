@@ -216,6 +216,8 @@ python madewithml/tune.py \
 
 ### Experiment tracking
 
+We'll use [MLflow](https://mlflow.org/) to track our experiments and store our models and the [MLflow Tracking UI](https://www.mlflow.org/docs/latest/tracking.html#tracking-ui) to view our experiments. We have been saving our experiments to a local directory but note that in an actual production setting, we would have a central location to store all of our experiments. It's easy/inexpensive to spin up your own MLflow server for all of your team members to track their experiments on or use a managed solution like [Weights & Biases](https://wandb.ai/site), [Comet](https://www.comet.ml/), etc.
+
 <details>
   <summary>Local</summary><br>
 
@@ -229,7 +231,18 @@ python madewithml/tune.py \
 <details open>
   <summary>Anyscale</summary><br>
 
-  Work in progress until we get EFS on production clusters w/ port forwarding or we set up an MLflow server ourselves. A temporary workaround is to sync our `$MODEL_REGISTRY` with a S3 bucket and then pull the contents of that bucket locally to view it with the MLflow UI using the same commands above.
+  Since we store our experiment in `/mnt/user_storage`, we'll ssh into our workspace from our local laptop and view the MLflow dashboard via port forwarding.
+
+  ```bash
+  mkdir workspaces
+  cd workspaces
+  anyscale workspace clone -n madewithml  # may need to paste credentials from Anyscale
+  anyscale workspace ssh -- -L 8080:localhost:8080
+  export MODEL_REGISTRY=/mnt/user_storage/mlruns
+  mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
+  ```
+
+  Then navigate to `localhost:8080` in your browser to view the MLflow dashboard with our experiments.
 
 </details>
 
@@ -320,6 +333,13 @@ python madewithml/predict.py predict \
   ```bash
   ray stop  # shutdown
   ```
+
+```bash
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+curl -X POST -H "Content-Type: application/json" -d '{
+    "dataset_loc": "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+  }' http://127.0.0.1:8000/evaluate
+```
 
 </details>
 

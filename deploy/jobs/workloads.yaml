@@ -1,0 +1,9 @@
+name: workloads
+project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
+cluster_env: madewithml-cluster-env
+compute_config: madewithml-cluster-compute
+runtime_env:
+  working_dir: .
+  upload_path: s3://madewithml/jobs
+entrypoint: bash deploy/jobs/workloads.sh
+max_retries: 0

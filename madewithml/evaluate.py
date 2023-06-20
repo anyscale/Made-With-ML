@@ -11,6 +11,7 @@ from ray.data import Dataset
 from ray.train.torch.torch_predictor import TorchPredictor
 from sklearn.metrics import precision_recall_fscore_support
 from snorkel.slicing import PandasSFApplier, slicing_function
+from typing_extensions import Annotated
 
 from madewithml import predict, utils
 from madewithml.config import logger
@@ -108,9 +109,9 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset) -> Di
 
 @app.command()
 def evaluate(
-    run_id: str = typer.Option(..., "--run-id", help="id of the specific run to load from"),
-    dataset_loc: str = typer.Option(..., "--dataset-loc", help="dataset (with labels) to evaluate on"),
-    results_fp: str = typer.Option(None, "--results-fp", help="location to save evaluation results to"),
+    run_id: Annotated[str, typer.Option(help="id of the specific run to load from")] = None,
+    dataset_loc: Annotated[str, typer.Option(help="dataset (with labels) to evaluate on")] = None,
+    results_fp: Annotated[str, typer.Option(help="location to save evaluation results to")] = None,
 ) -> Dict:  # pragma: no cover, eval workload
     """Evaluate on the holdout dataset.
 
