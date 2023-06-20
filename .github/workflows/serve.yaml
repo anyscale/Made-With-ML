@@ -21,4 +21,7 @@ jobs:
 
       # Serve model
       - name: Serve model
-        run: anyscale service rollout --service-config-file deploy/services/serve_model.yaml
+        run: |
+          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+          anyscale service rollout --service-config-file deploy/services/serve_model.yaml
