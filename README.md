@@ -405,9 +405,6 @@ From this point onwards, in order to deploy our application into production, we'
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale-staging.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
-export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
 ### Anyscale Jobs
@@ -424,13 +421,17 @@ anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 anyscale cluster-compute create deploy/cluster_compute.yaml --name $CLUSTER_COMPUTE_NAME
 ```
 
-3. Job submissions
+3. Push changes + set config
+Push any code changes to git (ex. `dev` branch) and ensure that the `working_dir` is pointed to your repository. In a production scenario, we also have the option to push our working directory to an S3 bucket, for example:
+```yaml
+runtime_env:
+  working_dir: .
+  upload_path: s3://BUCKET_NAME/jobs
+```
+
+4. Submit job
 ```bash
-anyscale job submit deploy/jobs/test_code.yaml
-anyscale job submit deploy/jobs/test_data.yaml
-anyscale job submit deploy/jobs/train_model.yaml
-anyscale job submit deploy/jobs/evaluate_model.yaml
-anyscale job submit deploy/jobs/test_model.yaml
+anyscale job submit deploy/jobs/workloads.yaml
 ```
 
 ### Anyscale Services
@@ -465,13 +466,11 @@ We're not going to manually deploy our application every time we make a change. 
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/o/anyscale-internal/credentials
-export AWS_REGION=us-west-2
-export IAM_ROLE=arn:aws:iam::959243851260:role/github-action-madewithml
 ```
 
 2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. When we start a PR from this branch to our `main` branch, this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow goes well, this will produce comments with the training, evaluation and current prod evaluation (if applicable) directly on the PR.
 
-3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [deployment workflow](/.github/workflows/deployment.yaml) which will rollout our new service to production!
+3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [serve workflow](/.github/workflows/serve.yaml) which will rollout our new service to production!
 
 ### Continual learning
 
