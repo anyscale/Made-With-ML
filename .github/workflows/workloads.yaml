@@ -11,17 +11,79 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-      # Set up dependencies
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10.11'
-          cache: 'pip'
-      - run: python3 -m pip install anyscale==0.5.116 typer==0.9.0
-
-      # Run workloads
-      - name: Workloads
+      # Setup
+      - name: Setup
         run: |
-          export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
-          export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
-          anyscale jobs submit deploy/jobs/workloads.yaml --wait
+          mkdir results
+          touch results/evaluation_results.json
+          echo '{\n\t"foo": "bar"\n}' > results/evaluation_results.json
+
+      - name: github script method
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "\`\`\`json\n$(cat results/evaluation_results.json)\n\`\`\`"
+            })
+
+      - name: peter-evans method body
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.number }}
+          body: "```json\n$(cat results/evaluation_results.json)\n```"
+
+      - name: peter-evans method body-path
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          issue-number: ${{ github.event.number }}
+          body-path: "results/evaluation_results.json"
+
+      - uses: buildingcash/json-to-markdown-table-action@v1
+        id: table
+        with:
+          json: $(cat results/evaluation_results.json )
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            **Evaluation results**
+
+            ${{ steps.table.outputs.table }}
+
+      # # Set up dependencies
+      # - uses: actions/checkout@v3
+      # - uses: actions/setup-python@v4
+      #   with:
+      #     python-version: '3.10.11'
+      #     cache: 'pip'
+      # - run: python3 -m pip install anyscale==0.5.116 typer==0.9.0
+
+      # # Run workloads
+      # - name: Workloads
+      #   run: |
+      #     export ANYSCALE_HOST=${{ secrets.ANYSCALE_HOST }}
+      #     export ANYSCALE_CLI_TOKEN=${{ secrets.ANYSCALE_CLI_TOKEN }}
+      #     anyscale jobs submit deploy/jobs/workloads.yaml --wait
+
+      # # Configure AWS credentials
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+      #     role-session-name: s3access
+      #     aws-region: us-west-2
+
+      # # Read results from S3
+      # - name: Read results from S3
+      #   run: |
+      #     mkdir results
+      #     aws s3 cp s3://madewithml/${{ github.actor }}/results/ results/
+
+      # # Comment to PR
+      # - name: Comment results on PR
+      #   uses: thollander/actions-comment-pull-request@v2
+      #   with:
+      #     filePath: results/evaluation_results.json

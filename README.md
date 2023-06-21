@@ -401,41 +401,68 @@ From this point onwards, in order to deploy our application into production, we'
 </div>
 
 ### Authentication
-> We **do not** need to set these credentials if we're using Anyscale Workspaces but we do if we're running this locally or on a cluster outside of where our Anyscale Jobs and Services are configured to run (via `cluster_env`).
+
+These credentials below are **automatically** set for us if we're using Anyscale Workspaces. We **do not** need to set these credentials explicitly on Workspaces but we do if we're running this locally or on a cluster outside of where our Anyscale Jobs and Services are configured to run.
+
 ``` bash
-export ANYSCALE_HOST=https://console.anyscale-staging.com
+export ANYSCALE_HOST=https://console.anyscale.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
-### Anyscale Jobs
+### Cluster environment
 
-1. Set environment variables
+The cluster environment determines **where** our workloads will be executed (OS, dependencies, etc.) We've already created this [cluster environment](./deploy/cluster_env.yaml) for us but this is how we can create it ourselves.
+
 ```bash
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
-export CLUSTER_COMPUTE_NAME="madewithml-cluster-compute"
+anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
 ```
 
-2. Create the cluster env and compute (if changed/needed)
+### Compute configuration
+
+The compute configuration determines **what** resources our workloads will be executes on. We've already created this [compute configuration](./deploy/cluster_compute.yaml) for us but this is how we can create it ourselves.
+
 ```bash
-anyscale cluster-env build deploy/cluster_env.yaml --name $CLUSTER_ENV_NAME
+export CLUSTER_COMPUTE_NAME="madewithml-cluster-compute"
 anyscale cluster-compute create deploy/cluster_compute.yaml --name $CLUSTER_COMPUTE_NAME
 ```
 
-3. Push changes + set config
-Push any code changes to git (ex. `dev` branch) and ensure that the `working_dir` is pointed to your repository. In a production scenario, we also have the option to push our working directory to an S3 bucket, for example:
+### Anyscale jobs
+
+Now we're ready to execute our ML workloads. We've decided to combine them all together into one [job](./deploy/jobs/workloads.yaml) but we could have also created separate jobs for each workload (train, evaluate, etc.) We'll start by editing the `$GITHUB_USERNAME` slots inside our [`workloads.yaml`](./deploy/jobs/workloads.yaml) file:
 ```yaml
 runtime_env:
   working_dir: .
-  upload_path: s3://BUCKET_NAME/jobs
+  upload_path: s3://madewithml/$GITHUB_USERNAME/jobs  # <--- CHANGE USERNAME (case-sensitive)
+  env_vars:
+    GITHUB_USERNAME: $GITHUB_USERNAME  # <--- CHANGE USERNAME (case-sensitive)
 ```
 
-4. Submit job
+The `runtime_env` here specifies that we should upload our current `working_dir` to an S3 bucket so that all of our workers when we execute an Anyscale Job have access to the code to use. The `GITHUB_USERNAME` is used later to save results from our workloads to S3 so that we can retrieve them later (ex. for serving).
+
+Now we're ready to submit our job to execute our ML workloads:
 ```bash
 anyscale job submit deploy/jobs/workloads.yaml
 ```
 
 ### Anyscale Services
 
+And after our ML workloads have been executed, we're ready to launch our serve our model to production. Similar to our Anyscale Jobs configs, be sure to change the `$GITHUB_USERNAME` in [`serve_model.yaml`](./deploy/services/serve_model.yaml).
+
+```yaml
+ray_serve_config:
+  import_path: deploy.services.serve_model:entrypoint
+  runtime_env:
+    working_dir: .
+    upload_path: s3://madewithml/$GITHUB_USERNAME/services  # <--- CHANGE USERNAME (case-sensitive)
+    env_vars:
+      GITHUB_USERNAME: $GITHUB_USERNAME  # <--- CHANGE USERNAME (case-sensitive)
+```
+
+Now we're ready to launch our service:
 ```bash
 # Rollout service
 anyscale service rollout -f deploy/services/serve_model.yaml

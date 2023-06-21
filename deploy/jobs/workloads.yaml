@@ -3,6 +3,9 @@ project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
 cluster_env: madewithml-cluster-env
 compute_config: madewithml-cluster-compute
 runtime_env:
-  working_dir: "https://github.com/anyscale/Made-With-ML/archive/refs/heads/dev.zip"
+  working_dir: .
+  upload_path: s3://madewithml/GokuMohandas/jobs  # <--- CHANGE USERNAME (case-sensitive)
+  env_vars:
+    GITHUB_USERNAME: GokuMohandas  # <--- CHANGE USERNAME (case-sensitive)
 entrypoint: bash deploy/jobs/workloads.sh
 max_retries: 0

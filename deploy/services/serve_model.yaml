@@ -5,4 +5,7 @@ compute_config: madewithml-cluster-compute
 ray_serve_config:
   import_path: deploy.services.serve_model:entrypoint
   runtime_env:
-    working_dir: "https://github.com/anyscale/Made-With-ML/archive/refs/heads/dev.zip"
+    working_dir: .
+    upload_path: s3://madewithml/GokuMohandas/services  # <--- CHANGE USERNAME (case-sensitive)
+    env_vars:
+      GITHUB_USERNAME: GokuMohandas  # <--- CHANGE USERNAME (case-sensitive)
