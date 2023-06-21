@@ -30,13 +30,13 @@ jobs:
             })
 
       - name: peter-evans method body
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ github.event.number }}
           body: "```json\n$(cat results/evaluation_results.json)\n```"
 
       - name: peter-evans method body-path
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v3
         with:
           issue-number: ${{ github.event.number }}
           body-path: "results/evaluation_results.json"
