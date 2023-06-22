@@ -11,6 +11,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::959243851260:role/github-action-madewithml
+          role-session-name: s3access
+          aws-region: us-west-2
+
       # Set up dependencies
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
