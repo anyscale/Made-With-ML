@@ -46,5 +46,6 @@ RESULTS_FILE=results/test_model_results.txt
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings > $RESULTS_FILE
 cat $RESULTS_FILE
 
-# Save results to S3
+# Save to S3
+aws s3 cp mlflow/ s3://madewithml/$GITHUB_USERNAME/mlflow/ --recursive
 aws s3 cp results/ s3://madewithml/$GITHUB_USERNAME/results/ --recursive

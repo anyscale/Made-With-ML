@@ -1,6 +1,5 @@
 # config.py
 import logging
-import os
 import sys
 from pathlib import Path
 
@@ -13,8 +12,7 @@ LOGS_DIR = Path(ROOT_DIR, "logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Config MLflow
-mlflow_dir = "/mnt/user_storage"
-MODEL_REGISTRY = Path(mlflow_dir, "mlruns") if os.path.exists(mlflow_dir) else Path("/tmp", "mlruns")
+MODEL_REGISTRY = Path(ROOT_DIR, "mlflow")
 Path(MODEL_REGISTRY).mkdir(parents=True, exist_ok=True)
 MLFLOW_TRACKING_URI = "file://" + str(MODEL_REGISTRY.absolute())
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
