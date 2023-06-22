@@ -38,7 +38,7 @@ jobs:
       - name: Read results from S3
         run: |
           mkdir results
-          aws s3 cp s3://madewithml/${{ github.actor }}/results/ results/
+          aws s3 cp s3://madewithml/${{ github.actor }}/results/ results/ --recursive
           python .github/workflows/json_to_md.py results/training_results.json results/training_results.md
           python .github/workflows/json_to_md.py results/evaluation_results.json results/evaluation_results.md
 

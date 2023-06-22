@@ -14,6 +14,7 @@ python -m pytest tests/code --verbose --disable-warnings > $RESULTS_FILE
 cat $RESULTS_FILE
 
 # Train
+export EXPERIMENT_NAME="llm"
 export RESULTS_FILE=results/training_results.json
 export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
