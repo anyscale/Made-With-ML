@@ -231,18 +231,21 @@ We'll use [MLflow](https://mlflow.org/) to track our experiments and store our m
 <details open>
   <summary>Anyscale</summary><br>
 
-  Since we store our experiment in `/mnt/user_storage`, we'll ssh into our workspace from our local laptop and view the MLflow dashboard via port forwarding.
+  Since we store our experiment in `/tmp/mlflow`, we'll ssh into our workspace from our local laptop and view the MLflow dashboard via port forwarding.
 
   ```bash
+  export GITHUB_USERNAME="GokuMohandas"  # <--- CHANGE USERNAME (case-sensitive)
   mkdir workspaces
   cd workspaces
   anyscale workspace clone -n madewithml  # may need to paste credentials from Anyscale
+  cd madewithml
   anyscale workspace ssh -- -L 8080:localhost:8080
-  export MODEL_REGISTRY=/mnt/user_storage/mlruns
+  export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
+  aws s3 cp s3://madewithml/$GITHUB_USERNAME/mlflow/ $MODEL_REGISTRY --recursive
   mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
   ```
 
-  Then navigate to `localhost:8080` in your browser to view the MLflow dashboard with our experiments.
+  Then navigate to `localhost:8080` in your browser to view the MLflow dashboard with our experiments. When you're finished, type the command `exit` to exit the ssh session.
 
 </details>
 
