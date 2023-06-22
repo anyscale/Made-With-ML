@@ -1,7 +1,7 @@
 # Data
 logs/
 stores/
-mlruns/
+mlflow/
 results/
 workspaces/
 
