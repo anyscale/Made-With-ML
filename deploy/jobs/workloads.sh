@@ -48,5 +48,6 @@ pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings > $RESULTS_FILE
 cat $RESULTS_FILE
 
 # Save to S3
-aws s3 cp mlflow/ s3://madewithml/$GITHUB_USERNAME/mlflow/ --recursive
+export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
+aws s3 cp $MODEL_REGISTRY s3://madewithml/$GITHUB_USERNAME/mlflow/ --recursive
 aws s3 cp results/ s3://madewithml/$GITHUB_USERNAME/results/ --recursive
