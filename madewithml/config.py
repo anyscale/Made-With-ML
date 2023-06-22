@@ -7,7 +7,7 @@ import mlflow
 import pretty_errors  # NOQA: F401 (imported but unused)
 
 # Directories
-ROOT_DIR = Path(__file__).parent.parent.parent.absolute()
+ROOT_DIR = Path(__file__).parent.parent.absolute()
 LOGS_DIR = Path(ROOT_DIR, "logs")
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
