@@ -56,23 +56,15 @@ A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.ht
   We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/anyscale-internal/workspaces/add/blank):
 
   ```md
-  - Workspace name: madewithml
-  - Project: madewithml
-  - Cluster environment name: madewithml-cluster-env
+  - Workspace name: `madewithml`
+  - Project: `madewithml`
+  - Cluster environment name: `madewithml-cluster-env`
   # Toggle `Select from saved configurations`
-  - Compute config: madewithml-cluster-compute
+  - Compute config: `madewithml-cluster-compute`
   ```
 
-  Alternatively, we can use the [CLI](https://docs.anyscale.com/reference/anyscale-cli) to create the workspace:
+  > Alternatively, we can use the [CLI](https://docs.anyscale.com/reference/anyscale-cli) to create the workspace via `anyscale workspace create ...`
 
-  ```bash
-  anyscale workspace create \
-    --name madewithml \
-    --project-id "prj_hgqw2dlbcn9lt97mulm2rrf8tp" \
-    --cloud-id "cld_htln18yuv82lz5he81urmkhgvs" \
-    --compute-config-id "cpt_lngp2rax6yaxgegmrlpbvfnp3q" \
-    --cluster-env-build-id "bld_7iu2u4azlqyjey9q2rmg52fqgr"
-  ```
 </details>
 
 <details>
@@ -104,7 +96,6 @@ export PYTHONPATH=$PYTHONPATH:$PWD
   source venv/bin/activate  # on Windows: venv\Scripts\activate
   python3 -m pip install --upgrade pip setuptools wheel
   python3 -m pip install -r requirements.txt
-  export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
   pre-commit install
   pre-commit autoupdate
   ```
@@ -116,9 +107,8 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 <details open>
   <summary>Anyscale</summary><br>
 
-  Our environment with the appropriate Python version and libraries is already all set for us through the cluster environment we're using when setting up our Anyscale Workspace.
+  Our environment with the appropriate Python version and libraries is already all set for us through the cluster environment we used when setting up our Anyscale Workspace.
   ```bash
-  export PYTHONPATH=$PYTHONPATH:$PWD  # on Windows: set PYTHONPATH=%PYTHONPATH%;C:$PWD
   pre-commit install
   pre-commit autoupdate
   ```
@@ -135,7 +125,7 @@ python -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-whee
 
 ## Notebook
 
-Start by exploring the interactive [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
+Start by exploring the [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
 
 <div align="center">
   <img src="https://madewithml.com/static/images/mlops/experimentation.png">
