@@ -53,7 +53,7 @@ A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.ht
 <details open>
   <summary>Anyscale</summary><br>
 
-  We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/anyscale-internal/workspaces/add/blank):
+  We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/anyscale-internal/workspaces/add/blank). **Note**: You will need to walkthrough this course on the **Production** environment (not Staging).
 
   ```md
   - Workspace name: `madewithml`
@@ -78,12 +78,16 @@ A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.ht
 
 </details>
 
-### Git clone
+### Git setup
+
+Create a repository by following these instructions: [Create a new repository](https://github.com/new) → name it `Made-With-ML` → Toggle `Add a README file` (**very important** as this creates a `main` branch) → Click `Create repository` (scroll down)
+
+Now we're ready to clone the repository that has all of our code:
 
 ```bash
 git clone https://github.com/anyscale/Made-With-ML.git .
+git remote set-url origin https://github.com/GITHUB_USERNAME/Made-With-ML.git  # <-- CHANGE THIS to your username
 git checkout -b dev
-export PYTHONPATH=$PYTHONPATH:$PWD
 ```
 
 ### Virtual environment
@@ -92,6 +96,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD
   <summary>Local</summary><br>
 
   ```bash
+  export PYTHONPATH=$PYTHONPATH:$PWD
   python3 -m venv venv  # recommend using Python 3.10
   source venv/bin/activate  # on Windows: venv\Scripts\activate
   python3 -m pip install --upgrade pip setuptools wheel
@@ -107,8 +112,9 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 <details open>
   <summary>Anyscale</summary><br>
 
-  Our environment with the appropriate Python version and libraries is already all set for us through the cluster environment we used when setting up our Anyscale Workspace.
+  Our environment with the appropriate Python version and libraries is already all set for us through the cluster environment we used when setting up our Anyscale Workspace. So we just need to run these commands:
   ```bash
+  export PYTHONPATH=$PYTHONPATH:$PWD
   pre-commit install
   pre-commit autoupdate
   ```
@@ -488,13 +494,25 @@ export ANYSCALE_HOST=https://console.anyscale.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/o/anyscale-internal/credentials
 ```
 
-2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. When we start a PR from this branch to our `main` branch, this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow goes well, this will produce comments with the training, evaluation and current prod evaluation (if applicable) directly on the PR.
+2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. But in order to push our code to GitHub, we'll need to first authenticate with our credentials before pushing to our repository:
 
-3. After we compare our new experiment with what is currently in prod (if applicable), we can merge the PR into the `main` branch. This will trigger the [serve workflow](/.github/workflows/serve.yaml) which will rollout our new service to production!
+```bash
+git config --global user.name "Your Name"  # <-- CHANGE THIS to your name
+git config --global user.email you@example.com  # <-- CHANGE THIS to your email
+git add .
+git commit -m ""  # <-- CHANGE THIS to your message
+git push origin dev
+```
+
+Now you will be prompted to enter your username and password (personal access token). Follow these steps to get personal access token: [New GitHub personal access token](https://github.com/settings/tokens/new) → Add a name → Toggle `repo` and `workflow` → Click `Generate token` (scroll down) → Copy the token
+
+3. Now we can start a PR from this branch to our `main` branch and this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow (Anyscale Jobs) succeeds, this will produce comments with the training and evaluation results directly on the PR.
+
+4. If we like the results, we can merge the PR into the `main` branch. This will trigger the [serve workflow](/.github/workflows/serve.yaml) which will rollout our new service to production!
 
 ### Continual learning
 
-With our CI/CD workflow in place to deploy our application, we can now focus on continually improving our model. It becomes really easy to extend on this foundation to connect to scheduled runs (cron), [data pipelines](https://madewithml.com/courses/mlops/data-stack/), [orchestrate workflows](https://madewithml.com/courses/mlops/orchestration/), drift detected through [monitoring](https://madewithml.com/courses/mlops/monitoring/), [online evaluation](https://madewithml.com/courses/mlops/evaluation/#online-evaluation), etc.
+With our CI/CD workflow in place to deploy our application, we can now focus on continually improving our model. It becomes really easy to extend on this foundation to connect to scheduled runs (cron), [data pipelines](https://madewithml.com/courses/mlops/data-stack/), [orchestrate workflows](https://madewithml.com/courses/mlops/orchestration/), drift detected through [monitoring](https://madewithml.com/courses/mlops/monitoring/), [online evaluation](https://madewithml.com/courses/mlops/evaluation/#online-evaluation), etc. And we can easily add additional context such as comparing any experiment with what's currently in production (directly in the PR even), etc.
 
 <div align="center">
   <img src="https://madewithml.com/static/images/mlops/continual.png">
