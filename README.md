@@ -30,7 +30,7 @@ In this course, we'll journey from experimentation (model design + development) 
 Along the way, we'll address some of the largest obstacles that *used to* prevent ML from being easily and reliably deployed in production. And how [Ray](https://ray.io/), an open-source framework to scale AI applications that's used by ML teams at companies like [Spotify](https://engineering.atspotify.com/2023/02/unleashing-ml-innovation-at-spotify-with-ray/), [OpenAI](https://thenewstack.io/how-ray-a-distributed-ai-framework-helps-power-chatgpt/), [Instacart](https://tech.instacart.com/distributed-machine-learning-at-instacart-4b11d7569423), etc., makes it easy to overcome these obstacles.
 
 <blockquote>
-  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for an in-depth overview of what we'll be building.
+  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for an in-depth overview of what we'll be building. (*) Private for now, please ask for access.
 </blockquote>
 
 <div align="center">
