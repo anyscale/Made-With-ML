@@ -391,9 +391,9 @@ export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
 ```
 
-## Deployment
+## Production
 
-From this point onwards, in order to deploy our application into production, we'll need to either be on Anyscale or on a [cloud VMs](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index) / [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem) cluster you manage yourself. If not on Anyscale, the commands will be [slightly different](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) but the concepts will be the same.
+From this point onwards, in order to deploy our application into production, we'll need to either be on Anyscale or on a [cloud VM](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index) / [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem) cluster you manage yourself (w/ Ray). If not on Anyscale, the commands will be [slightly different](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) but the concepts will be the same.
 
 <div align="center">
   <img src="https://madewithml.com/static/images/mlops/manual.png">
@@ -406,9 +406,6 @@ These credentials below are **automatically** set for us if we're using Anyscale
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale.com
 export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials page
-export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID  # retrieved from AWS IAM
-export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
 ```
 
 ### Cluster environment
