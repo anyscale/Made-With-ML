@@ -121,12 +121,7 @@ def train_loop_per_worker(
 
     # Model
     llm = BertModel.from_pretrained("allenai/scibert_scivocab_uncased", return_dict=False)
-    model = models.FinetunedLLM(
-        llm=llm,
-        dropout_p=dropout_p,
-        embedding_dim=llm.config.hidden_size,
-        num_classes=num_classes,
-    )
+    model = models.FinetunedLLM(llm=llm, dropout_p=dropout_p, embedding_dim=llm.config.hidden_size, num_classes=num_classes)
     model = train.torch.prepare_model(model)
 
     # Class weights
@@ -151,13 +146,9 @@ def train_loop_per_worker(
         scheduler.step(val_loss)
 
         # Checkpoint
-        metrics = dict(
-            epoch=epoch,
-            lr=optimizer.param_groups[0]["lr"],
-            train_loss=train_loss,
-            val_loss=val_loss,
-        )
-        session.report(metrics, checkpoint=TorchCheckpoint.from_model(model=model))
+        metrics = dict(epoch=epoch, lr=optimizer.param_groups[0]["lr"], train_loss=train_loss, val_loss=val_loss)
+        checkpoint = TorchCheckpoint.from_model(model=model)
+        session.report(metrics, checkpoint=checkpoint)
 
 
 @app.command()
@@ -230,7 +221,7 @@ def train_model(
     # Dataset
     ds = data.load_data(dataset_loc=dataset_loc, num_samples=train_loop_config["num_samples"])
     train_ds, val_ds = data.stratify_split(ds, stratify="tag", test_size=0.2)
-    tags = train_ds.to_pandas().tag.unique().tolist()
+    tags = train_ds.unique(column="tag")
     train_loop_config["num_classes"] = len(tags)
 
     # Dataset config
