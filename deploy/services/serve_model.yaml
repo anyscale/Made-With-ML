@@ -1,5 +1,5 @@
 name: madewithml
-project_id: prj_hgqw2dlbcn9lt97mulm2rrf8tp
+project_id: prj_v9izs5t1d6b512ism8c5rkq4wm
 cluster_env: madewithml-cluster-env
 compute_config: madewithml-cluster-compute
 ray_serve_config:

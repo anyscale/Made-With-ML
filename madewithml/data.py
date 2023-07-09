@@ -12,13 +12,12 @@ from transformers import BertTokenizer
 from madewithml.config import STOPWORDS
 
 
-def load_data(dataset_loc: str, num_samples: int = None, num_partitions: int = 1) -> Dataset:
+def load_data(dataset_loc: str, num_samples: int = None) -> Dataset:
     """Load data from source into a Ray Dataset.
 
     Args:
         dataset_loc (str): Location of the dataset.
         num_samples (int, optional): The number of samples to load. Defaults to None.
-        num_partitions (int, optional): Number of shards to separate the data into. Defaults to 1.
 
     Returns:
         Dataset: Our dataset represented by a Ray Dataset.
@@ -140,11 +139,9 @@ class CustomPreprocessor(Preprocessor):
     """Custom preprocessor class."""
 
     def _fit(self, ds):
-        # tags = ds.select_columns(["tag"]).distinct()
-        tags = ds.to_pandas().tag.unique().tolist()
+        tags = ds.unique(column="tag")
         self.class_to_index = {tag: i for i, tag in enumerate(tags)}
         self.index_to_class = {v: k for k, v in self.class_to_index.items()}
-        self.stats_ = True
 
     def _transform_pandas(self, batch):  # could also do _transform_numpy
         return preprocess(batch, class_to_index=self.class_to_index)

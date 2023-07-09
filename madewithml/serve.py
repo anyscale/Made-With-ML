@@ -42,18 +42,18 @@ class ModelDeployment:
         }
         return response
 
-    @app.get("/run_id")
+    @app.get("/run_id/")
     def _run_id(self) -> Dict:
         """Get the run ID."""
         return {"run_id": self.run_id}
 
-    @app.post("/evaluate")
+    @app.post("/evaluate/")
     async def _evaluate(self, request: Request) -> Dict:
         data = await request.json()
         results = evaluate.evaluate(run_id=self.run_id, dataset_loc=data.get("dataset_loc"))
         return {"results": results}
 
-    @app.post("/predict")
+    @app.post("/predict/")
     async def _predict(self, request: Request) -> Dict:
         # Get prediction
         data = await request.json()

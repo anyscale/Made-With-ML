@@ -3,7 +3,7 @@ export PYTHONPATH=$PYTHONPATH:$PWD
 mkdir results
 
 # Test data
-export TRESULTS_FILE=results/test_data_results.txt
+export RESULTS_FILE=results/test_data_results.txt
 export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
 pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings > $RESULTS_FILE
 cat $RESULTS_FILE
@@ -22,7 +22,7 @@ python madewithml/train.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
     --train-loop-config "$TRAIN_LOOP_CONFIG" \
-    --num-workers 2 \
+    --num-workers 1 \
     --cpu-per-worker 10 \
     --gpu-per-worker 1 \
     --num-epochs 10 \

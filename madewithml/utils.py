@@ -9,9 +9,11 @@ from ray.air._internal.torch_utils import (
     convert_ndarray_batch_to_torch_tensor_batch,
     get_device,
 )
-from ray.data import Dataset
+from ray.data import Dataset, DatasetContext
 
 from madewithml.config import mlflow
+
+DatasetContext.get_current().execution_options.preserve_order = True
 
 
 def set_seeds(seed: int = 42):

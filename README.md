@@ -2,7 +2,7 @@
 <h1><img width="30" src="https://madewithml.com/static/images/rounded_logo.png">&nbsp;<a href="https://madewithml.com/">Made With ML</a></h1>
 Design · Develop · Deploy · Iterate
 <br>
-Join 40K+ developers in learning how to responsibly <a href="https://madewithml.com/about/">deliver value</a> with ML.
+Join 40K+ developers in learning how to responsibly deliver value with ML.
     <br>
 </div>
 
@@ -183,7 +183,7 @@ python madewithml/train.py \
     --experiment-name "$EXPERIMENT_NAME" \
     --dataset-loc "$DATASET_LOC" \
     --train-loop-config "$TRAIN_LOOP_CONFIG" \
-    --num-workers 2 \
+    --num-workers 1 \
     --cpu-per-worker 10 \
     --gpu-per-worker 1 \
     --num-epochs 10 \
@@ -202,7 +202,7 @@ python madewithml/tune.py \
     --dataset-loc "$DATASET_LOC" \
     --initial-params "$INITIAL_PARAMS" \
     --num-runs 2 \
-    --num-workers 2 \
+    --num-workers 1 \
     --cpu-per-worker 10 \
     --gpu-per-worker 1 \
     --num-epochs 10 \
@@ -467,7 +467,7 @@ anyscale service rollout -f deploy/services/serve_model.yaml
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $SECRET_TOKEN" -d '{
   "title": "Transfer learning with transformers",
   "description": "Using transformers for transfer learning on text classification tasks."
-}' $SERVICE_ENDPOINT
+}' $SERVICE_ENDPOINT/predict/
 
 # Rollback (to previous version of the Service)
 anyscale service rollback -f $SERVICE_CONFIG --name $SERVICE_NAME
