@@ -20,7 +20,7 @@ app = FastAPI(
 )
 
 
-@serve.deployment(route_prefix="/")
+@serve.deployment(route_prefix="/", num_replicas="1")
 @serve.ingress(app)
 class ModelDeployment:
     def __init__(self, run_id: str, threshold: int = 0.9):

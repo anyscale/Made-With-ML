@@ -9,3 +9,4 @@ ray_serve_config:
     upload_path: s3://madewithml/GokuMohandas/services  # <--- CHANGE USERNAME (case-sensitive)
     env_vars:
       GITHUB_USERNAME: GokuMohandas  # <--- CHANGE USERNAME (case-sensitive)
+rollout_strategy: ROLLOUT # ROLLOUT or IN_PLACE
