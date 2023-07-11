@@ -10,7 +10,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import typer
 from ray.air import session
-from ray.air._internal.torch_utils import get_device
 from ray.air.config import (
     CheckpointConfig,
     DatasetConfig,
@@ -95,17 +94,12 @@ def eval_step(
     return loss, np.vstack(y_trues), np.vstack(y_preds)
 
 
-def train_loop_per_worker(
-    config: dict,
-) -> None:  # pragma: no cover, tested via train workload
+def train_loop_per_worker(config: dict) -> None:  # pragma: no cover, tested via train workload
     """Training loop that each worker will execute.
 
     Args:
         config (dict): arguments to use for training.
     """
-    # Set up
-    utils.set_seeds()
-
     # Hyperparameters
     dropout_p = config["dropout_p"]
     lr = config["lr"]
@@ -116,6 +110,7 @@ def train_loop_per_worker(
     num_classes = config["num_classes"]
 
     # Get datasets
+    utils.set_seeds()
     train_ds = session.get_dataset_shard("train")
     val_ds = session.get_dataset_shard("val")
 
@@ -124,20 +119,12 @@ def train_loop_per_worker(
     model = models.FinetunedLLM(llm=llm, dropout_p=dropout_p, embedding_dim=llm.config.hidden_size, num_classes=num_classes)
     model = train.torch.prepare_model(model)
 
-    # Class weights
-    batch_counts = []
-    for batch in train_ds.iter_torch_batches(batch_size=256, collate_fn=utils.collate_fn):
-        batch_counts.append(np.bincount(batch["targets"].cpu().numpy()))
-    counts = [sum(count) for count in zip(*batch_counts)]
-    class_weights = np.array([1.0 / count for i, count in enumerate(counts)])
-    class_weights_tensor = torch.Tensor(class_weights).to(get_device())
-
     # Training components
-    loss_fn = nn.BCEWithLogitsLoss(weight=class_weights_tensor)
+    loss_fn = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=lr_factor, patience=lr_patience)
 
-    # Train
+    # Training
     batch_size_per_worker = batch_size // session.get_world_size()
     for epoch in range(num_epochs):
         # Step
