@@ -5,11 +5,8 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-from ray.air._internal.torch_utils import (
-    convert_ndarray_batch_to_torch_tensor_batch,
-    get_device,
-)
 from ray.data import Dataset, DatasetContext
+from ray.train.torch import get_device
 
 from madewithml.config import mlflow
 
@@ -58,7 +55,7 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
         fp.write("\n")
 
 
-def get_arr_col(ds: Dataset, col: str) -> np.ndarray:
+def get_col(ds: Dataset, col: str) -> np.ndarray:
     """Return an array of values from a specific array column in a Ray Dataset.
 
     Args:
@@ -102,7 +99,10 @@ def collate_fn(batch: Dict[str, np.ndarray]) -> Dict[str, torch.Tensor]:  # prag
     batch["ids"] = pad_array(batch["ids"])
     batch["masks"] = pad_array(batch["masks"])
     dtypes = {"ids": torch.int32, "masks": torch.int32, "targets": torch.int64}
-    return convert_ndarray_batch_to_torch_tensor_batch(batch, dtypes=dtypes, device=get_device())
+    tensor_batch = {}
+    for key, array in batch.items():
+        tensor_batch[key] = torch.as_tensor(array, dtype=dtypes[key], device=get_device())
+    return tensor_batch
 
 
 def get_run_id(experiment_name: str, trial_id: str) -> str:  # pragma: no cover, mlflow functionality

@@ -130,7 +130,7 @@ def evaluate(
 
     # y_true
     preprocessor = predictor.get_preprocessor()
-    y_true = utils.get_arr_col(preprocessor.transform(ds), col="targets")
+    y_true = utils.get_col(preprocessor.transform(ds), col="targets")
 
     # y_pred
     z = predictor.predict(data=ds.to_pandas())["predictions"]
