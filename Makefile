@@ -1,19 +1,6 @@
 # Makefile
 SHELL = /bin/bash
 
-.PHONY: help
-help:
-	@echo "Commands:"
-	@echo "venv    : creates a virtual environment."
-	@echo "style   : executes style formatting."
-	@echo "clean   : cleans all unnecessary files."
-
-# Testing
-test:
-	python3 -m pytest tests/code --cov madewithml --cov-config=pyproject.toml --cov-report html --disable-warnings
-	open htmlcov/index.html
-	rm -rf .coverage*
-
 # Styling
 .PHONY: style
 style:

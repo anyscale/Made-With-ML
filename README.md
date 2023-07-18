@@ -214,34 +214,27 @@ python madewithml/tune.py \
 
 We'll use [MLflow](https://mlflow.org/) to track our experiments and store our models and the [MLflow Tracking UI](https://www.mlflow.org/docs/latest/tracking.html#tracking-ui) to view our experiments. We have been saving our experiments to a local directory but note that in an actual production setting, we would have a central location to store all of our experiments. It's easy/inexpensive to spin up your own MLflow server for all of your team members to track their experiments on or use a managed solution like [Weights & Biases](https://wandb.ai/site), [Comet](https://www.comet.ml/), etc.
 
+```bash
+export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
+mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
+```
+
 <details>
   <summary>Local</summary><br>
 
-  ```bash
-  export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
-  mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
-  ```
+  If you're running this notebook on your local laptop then head on over to <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a> to view your MLflow dashboard.
 
 </details>
 
 <details open>
   <summary>Anyscale</summary><br>
 
-  Since we store our experiment in `/tmp/mlflow`, we'll ssh into our workspace from our local laptop and view the MLflow dashboard via port forwarding.
+  If you're on <a href="https://docs.anyscale.com/develop/workspaces/get-started" target="_blank">Anyscale Workspaces</a>, then we need to first expose the port of the MLflow server. Run the following command on your Anyscale Workspace terminal to generate the public URL to your MLflow server.
 
   ```bash
-  export GITHUB_USERNAME="GokuMohandas"  # <--- CHANGE USERNAME (case-sensitive)
-  mkdir workspaces
-  cd workspaces
-  anyscale workspace clone -n madewithml  # may need to paste credentials from Anyscale
-  cd madewithml
-  anyscale workspace ssh -- -L 8080:localhost:8080
-  export MODEL_REGISTRY=$(python -c "from madewithml import config; print(config.MODEL_REGISTRY)")
-  aws s3 cp s3://madewithml/$GITHUB_USERNAME/mlflow/ $MODEL_REGISTRY --recursive
-  mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
+  APP_PORT=8080
+  echo https://$APP_PORT-port-$ANYSCALE_SESSION_DOMAIN
   ```
-
-  Then navigate to `localhost:8080` in your browser to view the MLflow dashboard with our experiments. When you're finished, type the command `exit` to exit the ssh session.
 
 </details>
 
