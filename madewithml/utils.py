@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 import torch
-from ray.data import Dataset, DatasetContext
+from ray.data import DatasetContext
 from ray.train.torch import get_device
 
 from madewithml.config import mlflow
@@ -53,20 +53,6 @@ def save_dict(d: Dict, path: str, cls: Any = None, sortkeys: bool = False) -> No
     with open(path, "w") as fp:
         json.dump(d, indent=2, fp=fp, cls=cls, sort_keys=sortkeys)
         fp.write("\n")
-
-
-def get_col(ds: Dataset, col: str) -> np.ndarray:
-    """Return an array of values from a specific array column in a Ray Dataset.
-
-    Args:
-        ds (Dataset): Ray Dataset.
-        col (str): name of the column to extract values from.
-
-    Returns:
-        np.array: an array of the column's values.
-    """
-    values = ds.select_columns(cols=[col]).take_all()
-    return np.stack([item[col] for item in values])
 
 
 def pad_array(arr: np.ndarray, dtype=np.int32) -> np.ndarray:

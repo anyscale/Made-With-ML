@@ -8,7 +8,7 @@ numpy==1.24.3
 numpyencoder==0.3.0
 pandas==2.0.1
 pretty-errors==1.2.25
-ray[air]==2.5.0
+ray[air]==2.6.0
 scikit-learn==1.2.2
 snorkel==0.9.9
 SQLAlchemy==1.4.48
@@ -20,7 +20,7 @@ cleanlab==2.3.1
 jupyterlab==3.6.3
 lime==0.2.0.1
 seaborn==0.12.2
-wordcloud==1.8.2.2
+wordcloud==1.9.2
 
 # Documentation
 mkdocs==1.4.2
@@ -45,4 +45,4 @@ pre-commit==3.2.2
 typer==0.9.0
 
 # Deployment
-anyscale==0.5.128
+anyscale==0.5.131

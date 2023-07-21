@@ -130,7 +130,9 @@ def evaluate(
 
     # y_true
     preprocessor = predictor.get_preprocessor()
-    y_true = utils.get_col(preprocessor.transform(ds), col="targets")
+    preprocessed_ds = preprocessor.transform(ds)
+    values = preprocessed_ds.select_columns(cols=["targets"]).take_all()
+    y_true = np.stack([item["targets"] for item in values])
 
     # y_pred
     z = predictor.predict(data=ds.to_pandas())["predictions"]

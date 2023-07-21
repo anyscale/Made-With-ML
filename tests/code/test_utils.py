@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-import ray
 import torch
 
 from madewithml import utils
@@ -27,11 +26,6 @@ def test_save_and_load_dict():
         utils.save_dict(d=d, path=fp)
         d = utils.load_dict(path=fp)
         assert d["hello"] == "world"
-
-
-def test_get_col():
-    ds = ray.data.from_items([{"a": [0, 0, 1, 0]}, {"a": [1, 0, 0, 0]}])
-    assert np.array_equal(utils.get_col(ds, "a"), np.array([[0, 0, 1, 0], [1, 0, 0, 0]]))
 
 
 def test_pad_array():
