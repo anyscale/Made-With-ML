@@ -86,8 +86,6 @@ def get_slice_metrics(y_true: np.ndarray, y_pred: np.ndarray, ds: Dataset) -> Di
         y_true (np.ndarray): ground truth labels.
         y_pred (np.ndarray): predicted labels.
         ds (Dataset): Ray dataset with labels.
-        preprocessor (Preprocessor): Ray preprocessor.
-
     Returns:
         Dict: performance metrics for slices.
     """

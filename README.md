@@ -14,23 +14,31 @@ Join 40K+ developers in learning how to responsibly deliver value with ML.
     <a target="_blank" href="https://www.linkedin.com/in/goku"><img src="https://img.shields.io/badge/style--5eba00.svg?label=LinkedIn&logo=linkedin&style=social"></a>&nbsp;
     <a target="_blank" href="https://twitter.com/GokuMohandas"><img src="https://img.shields.io/twitter/follow/GokuMohandas.svg?label=Follow&style=social"></a>
     <br>
-    🔥&nbsp; Among the <a href="https://github.com/GokuMohandas/Made-With-ML" target="_blank">top MLOps</a> repositories on GitHub
+    🔥&nbsp; Among the <a href="https://github.com/GokuMohandas/Made-With-ML" target="_blank">top ML repositories</a> on GitHub
 </div>
 
 <br>
 <hr>
 
+## Lessons
+
+Learn how to combine machine learning with software engineering to design, develop, deploy and iterate on production-grade ML applications.
+
 - Lessons: https://madewithml.com/
 - Code: [GokuMohandas/Made-With-ML](https://github.com/GokuMohandas/Made-With-ML)
 
+<a href="https://madewithml.com/#course">
+  <img src="https://madewithml.com/static/images/lessons.png" alt="lessons">
+</a>
+
 ## Overview
 
-In this course, we'll journey from experimentation (model design + development) towards production (model deployment + iteration) so that we can deliver value with machine learning. We'll do this iteratively by motivating the components that will enable us to build a *reliable* production system.
+In this course, we'll go from experimentation (model design + development) to production (model deployment + iteration). We'll do this iteratively by motivating the components that will enable us to build a *reliable* production system.
 
 Along the way, we'll address some of the largest obstacles that *used to* prevent ML from being easily and reliably deployed in production. And how [Ray](https://ray.io/), an open-source framework to scale AI applications that's used by ML teams at companies like [Spotify](https://engineering.atspotify.com/2023/02/unleashing-ml-innovation-at-spotify-with-ray/), [OpenAI](https://thenewstack.io/how-ray-a-distributed-ai-framework-helps-power-chatgpt/), [Instacart](https://tech.instacart.com/distributed-machine-learning-at-instacart-4b11d7569423), etc., makes it easy to overcome these obstacles.
 
 <blockquote>
-  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for an in-depth overview of what we'll be building. (*) Private for now, please ask for access.
+  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for a quick overview of what we'll be building. (*) Private for now, please ask for access.
 </blockquote>
 
 <div align="center">
@@ -121,14 +129,6 @@ git checkout -b dev
 
 </details>
 
-### Install Ray
-Install Ray from the [latest nightly wheel](https://docs.ray.io/en/latest/ray-overview/installation.html#daily-releases-nightlies) for your specific OS.
-```bash
-# MacOS (arm64)
-python -m pip install -U "ray[air] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp310-cp310-macosx_11_0_arm64.whl"
-```
-
-
 ## Notebook
 
 Start by exploring the [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
@@ -184,7 +184,7 @@ python madewithml/train.py \
     --dataset-loc "$DATASET_LOC" \
     --train-loop-config "$TRAIN_LOOP_CONFIG" \
     --num-workers 1 \
-    --cpu-per-worker 10 \
+    --cpu-per-worker 3 \
     --gpu-per-worker 1 \
     --num-epochs 10 \
     --batch-size 256 \
@@ -203,7 +203,7 @@ python madewithml/tune.py \
     --initial-params "$INITIAL_PARAMS" \
     --num-runs 2 \
     --num-workers 1 \
-    --cpu-per-worker 10 \
+    --cpu-per-worker 3 \
     --gpu-per-worker 1 \
     --num-epochs 10 \
     --batch-size 256 \
@@ -382,6 +382,9 @@ pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings
 export EXPERIMENT_NAME="llm"
 export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
 pytest --run-id=$RUN_ID tests/model --verbose --disable-warnings
+
+# Coverage
+python3 -m pytest --cov madewithml --cov-report html
 ```
 
 ## Production

@@ -80,10 +80,10 @@ def clean_text(text: str, stopwords: List = STOPWORDS) -> str:
 
     Args:
         text (str): Raw text to clean.
-        stopwords (List, optional): _description_. Defaults to STOPWORDS.
+        stopwords (List, optional): list of words to filter out. Defaults to STOPWORDS.
 
     Returns:
-        str: _description_
+        str: cleaned text.
     """
     # Lower
     text = text.lower()

@@ -110,7 +110,6 @@ def tune_models(
         checkpoint_score_attribute="val_loss",
         checkpoint_score_order="min",
     )
-    stopping_criteria = {"training_iteration": train_loop_config["num_epochs"]}  # auto incremented at every train step
 
     # Run configuration
     mlflow_callback = MLflowLoggerCallback(
@@ -121,7 +120,6 @@ def tune_models(
     run_config = RunConfig(
         callbacks=[mlflow_callback],
         checkpoint_config=checkpoint_config,
-        stop=stopping_criteria,
     )
 
     # Hyperparameters to start with
@@ -139,7 +137,7 @@ def tune_models(
         }
     }
 
-    # Stopping criteria
+    # Scheduler
     scheduler = AsyncHyperBandScheduler(
         max_t=train_loop_config["num_epochs"],  # max epoch (<time_attr>) per trial
         grace_period=1,  # min epoch (<time_attr>) per trial

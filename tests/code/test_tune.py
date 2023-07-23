@@ -1,14 +1,15 @@
 import json
 
 import pytest
+import utils
 
 from madewithml import tune
 
 
 @pytest.mark.training
-def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
+def test_tune_models(dataset_loc):
     num_runs = 2
-    experiment_name = generate_experiment_name(prefix="test_tune")
+    experiment_name = utils.generate_experiment_name(prefix="test_tune")
     initial_params = [
         {
             "train_loop_config": {
@@ -32,5 +33,5 @@ def test_tune_models(dataset_loc, generate_experiment_name, delete_experiment):
         batch_size=256,
         results_fp=None,
     )
-    delete_experiment(experiment_name=experiment_name)
+    utils.delete_experiment(experiment_name=experiment_name)
     assert len(results.get_dataframe()) == num_runs

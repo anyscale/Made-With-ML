@@ -1,24 +1,5 @@
-import numpy as np
-import pandas as pd
 import pytest
-from ray.train.torch.torch_predictor import TorchPredictor
-
-from madewithml import predict
-
-
-@pytest.fixture(scope="module")
-def predictor(run_id):
-    best_checkpoint = predict.get_best_checkpoint(run_id=run_id)
-    predictor = TorchPredictor.from_checkpoint(best_checkpoint)
-    return predictor
-
-
-def get_label(text, predictor):
-    df = pd.DataFrame({"title": [text], "description": "", "tag": "other"})
-    z = predictor.predict(data=df)["predictions"]
-    preprocessor = predictor.get_preprocessor()
-    label = predict.decode(np.stack(z).argmax(1), preprocessor.index_to_class)[0]
-    return label
+import utils
 
 
 @pytest.mark.parametrize(
@@ -33,8 +14,8 @@ def get_label(text, predictor):
 )
 def test_invariance(input_a, input_b, label, predictor):
     """INVariance via verb injection (changes should not affect outputs)."""
-    label_a = get_label(text=input_a, predictor=predictor)
-    label_b = get_label(text=input_b, predictor=predictor)
+    label_a = utils.get_label(text=input_a, predictor=predictor)
+    label_b = utils.get_label(text=input_b, predictor=predictor)
     assert label_a == label_b == label
 
 
@@ -57,7 +38,7 @@ def test_invariance(input_a, input_b, label, predictor):
 )
 def test_directional(input, label, predictor):
     """DIRectional expectations (changes with known outputs)."""
-    prediction = get_label(text=input, predictor=predictor)
+    prediction = utils.get_label(text=input, predictor=predictor)
     assert label == prediction
 
 
@@ -80,5 +61,5 @@ def test_directional(input, label, predictor):
 )
 def test_mft(input, label, predictor):
     """Minimum Functionality Tests (simple input/output pairs)."""
-    prediction = get_label(text=input, predictor=predictor)
+    prediction = utils.get_label(text=input, predictor=predictor)
     assert label == prediction

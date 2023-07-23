@@ -50,3 +50,9 @@ def test_preprocess(df, class_to_index):
     assert "text" not in df.columns
     outputs = data.preprocess(df, class_to_index=class_to_index)
     assert set(outputs) == {"ids", "masks", "targets"}
+
+
+def test_fit_transform(dataset_loc, preprocessor):
+    ds = data.load_data(dataset_loc=dataset_loc)
+    preprocessor.fit_transform(ds)
+    assert len(preprocessor.class_to_index) == 4
