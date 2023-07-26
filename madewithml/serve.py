@@ -50,7 +50,7 @@ class ModelDeployment:
     @app.post("/evaluate/")
     async def _evaluate(self, request: Request) -> Dict:
         data = await request.json()
-        results = evaluate.evaluate(run_id=self.run_id, dataset_loc=data.get("dataset_loc"))
+        results = evaluate.evaluate(run_id=self.run_id, dataset_loc=data.get("dataset"))
         return {"results": results}
 
     @app.post("/predict/")

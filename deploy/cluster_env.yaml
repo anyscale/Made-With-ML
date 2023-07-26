@@ -9,4 +9,4 @@ python:
 
 post_build_cmds:
   - python3 -m pip install --upgrade pip setuptools wheel
-  - python3 -m pip install -r https://raw.githubusercontent.com/anyscale/Made-With-ML/main/requirements.txt
+  - python3 -m pip install -r https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/requirements.txt

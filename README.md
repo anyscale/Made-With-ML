@@ -35,23 +35,38 @@ Learn how to combine machine learning with software engineering to design, devel
 
 In this course, we'll go from experimentation (model design + development) to production (model deployment + iteration). We'll do this iteratively by motivating the components that will enable us to build a *reliable* production system.
 
-Along the way, we'll address some of the largest obstacles that *used to* prevent ML from being easily and reliably deployed in production. And how [Ray](https://ray.io/), an open-source framework to scale AI applications that's used by ML teams at companies like [Spotify](https://engineering.atspotify.com/2023/02/unleashing-ml-innovation-at-spotify-with-ray/), [OpenAI](https://thenewstack.io/how-ray-a-distributed-ai-framework-helps-power-chatgpt/), [Instacart](https://tech.instacart.com/distributed-machine-learning-at-instacart-4b11d7569423), etc., makes it easy to overcome these obstacles.
-
 <blockquote>
-  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for a quick overview of what we'll be building. (*) Private for now, please ask for access.
+  <img width=20 src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/YouTube_full-color_icon_%282017%29.svg/640px-YouTube_full-color_icon_%282017%29.svg.png">&nbsp; Be sure to watch the video below for a quick overview of what we'll be building.
 </blockquote>
 
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=7XF-h-oUR2Q"><img src="https://img.youtube.com/vi/7XF-h-oUR2Q/0.jpg" alt="Course overview video"></a>
+  <a href="https://youtu.be/AWgkt8H8yVo"><img src="https://img.youtube.com/vi/AWgkt8H8yVo/0.jpg" alt="Course overview video"></a>
 </div>
+
+<br>
+
+- **💡 First principles**: before we jump straight into the code, we develop a first principles understanding for every machine learning concept.
+- **💻 Best practices**: implement software engineering best practices as we develop and deploy our machine learning models.
+- **📈 Scale**: easily scale ML workloads (data, train, tune, serve) in Python without having to learn completely new languages.
+- **⚙️ MLOps**: connect MLOps components (tracking, testing, serving, orchestration, etc.) as we build an end-to-end machine learning system.
+- **🚀 Dev to Prod**: learn how to quickly and reliably go from development to production without any changes to our code or infra management.
+- **🐙 CI/CD**: learn how to create mature CI/CD workflows to continuously train and deploy better models in a modular way that integrates with any stack.
+
+## Audience
+
+Machine learning is not a separate industry, instead, it's a powerful way of thinking about data that's not reserved for any one type of person.
+
+- **👩‍💻 All developers**: whether software/infra engineer or data scientist, ML is increasingly becoming a key part of the products that you'll be developing.
+- **👩‍🎓 College graduates**: learn the practical skills required for industry and bridge gap between the university curriculum and what industry expects.
+- **👩‍💼 Product/Leadership**: who want to develop a technical foundation so that they can build amazing (and reliable) products powered by machine learning.
 
 ## Set up
 
+Be sure to go through the [course](https://madewithml/#course) for a much more detailed walkthrough of the content on this repository. We will have instructions for both local laptop and Anyscale clusters for the sections below, so be sure to toggle the ► dropdown based on what you're using (Anyscale instructions will be toggled on by default). If you do want to run this course with Anyscale, where we'll provide the **structure**, **compute (GPUs)** and **community** to learn everything in one weekend, join our next upcoming live cohort → [sign up here](https://4190urw86oh.typeform.com/madewithml)!
+
 ### Cluster
 
-A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.html#head-node) (manages the cluster) connected to a set of [worker nodes](https://docs.ray.io/en/latest/cluster/key-concepts.html#head-node) (CPU, GPU, etc.). These clusters can be fixed in size or [autoscale](https://docs.ray.io/en/latest/cluster/key-concepts.html#cluster-autoscaler) up and down based on our application's compute needs.
-
-> **Note**: We will have instructions for both local laptop and Anyscale clusters for the sections below, so be sure to toggle the ► dropdown based on what you're using. (Anyscale instructions will be toggled on by default).
+We'll start by setting up our cluster with the environment and compute configurations.
 
 <details>
   <summary>Local</summary><br>
@@ -61,7 +76,7 @@ A cluster is a [head node](https://docs.ray.io/en/latest/cluster/key-concepts.ht
 <details open>
   <summary>Anyscale</summary><br>
 
-  We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/anyscale-internal/workspaces/add/blank). **Note**: You will need to walkthrough this course on the **Production** environment (not Staging).
+  We can create an [Anyscale Workspace](https://docs.anyscale.com/develop/workspaces/get-started) using the [webpage UI](https://console.anyscale.com/o/madewithml/workspaces/add/blank).
 
   ```md
   - Workspace name: `madewithml`
@@ -93,7 +108,7 @@ Create a repository by following these instructions: [Create a new repository](h
 Now we're ready to clone the repository that has all of our code:
 
 ```bash
-git clone https://github.com/anyscale/Made-With-ML.git .
+git clone https://github.com/GokuMohandas/Made-With-ML.git .
 git remote set-url origin https://github.com/GITHUB_USERNAME/Made-With-ML.git  # <-- CHANGE THIS to your username
 git checkout -b dev
 ```
@@ -134,7 +149,7 @@ git checkout -b dev
 Start by exploring the [jupyter notebook](notebooks/madewithml.ipynb) to interactively walkthrough the core machine learning workloads.
 
 <div align="center">
-  <img src="https://madewithml.com/static/images/mlops/experimentation.png">
+  <img src="https://madewithml.com/static/images/mlops/systems-design/workloads.png">
 </div>
 
 <details>
@@ -177,7 +192,7 @@ madewithml
 ### Training
 ```bash
 export EXPERIMENT_NAME="llm"
-export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/dataset.csv"
 export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 python madewithml/train.py \
     --experiment-name "$EXPERIMENT_NAME" \
@@ -194,7 +209,7 @@ python madewithml/train.py \
 ### Tuning
 ```bash
 export EXPERIMENT_NAME="llm"
-export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/dataset.csv"
 export TRAIN_LOOP_CONFIG='{"dropout_p": 0.5, "lr": 1e-4, "lr_factor": 0.8, "lr_patience": 3}'
 export INITIAL_PARAMS="[{\"train_loop_config\": $TRAIN_LOOP_CONFIG}]"
 python madewithml/tune.py \
@@ -242,7 +257,7 @@ mlflow server -h 0.0.0.0 -p 8080 --backend-store-uri $MODEL_REGISTRY
 ```bash
 export EXPERIMENT_NAME="llm"
 export RUN_ID=$(python madewithml/predict.py get-best-run-id --experiment-name $EXPERIMENT_NAME --metric val_loss --mode ASC)
-export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/holdout.csv"
 python madewithml/evaluate.py \
     --run-id $RUN_ID \
     --dataset-loc $HOLDOUT_LOC \
@@ -327,9 +342,9 @@ python madewithml/predict.py predict \
   ```
 
 ```bash
-export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+export HOLDOUT_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/holdout.csv"
 curl -X POST -H "Content-Type: application/json" -d '{
-    "dataset_loc": "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/holdout.csv"
+    "dataset_loc": "https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/holdout.csv"
   }' http://127.0.0.1:8000/evaluate
 ```
 
@@ -375,7 +390,7 @@ curl -X POST -H "Content-Type: application/json" -d '{
 python3 -m pytest tests/code --verbose --disable-warnings
 
 # Data
-export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/madewithml/dataset.csv"
+export DATASET_LOC="https://raw.githubusercontent.com/GokuMohandas/Made-With-ML/main/datasets/dataset.csv"
 pytest --dataset-loc=$DATASET_LOC tests/data --verbose --disable-warnings
 
 # Model
@@ -391,8 +406,10 @@ python3 -m pytest --cov madewithml --cov-report html
 
 From this point onwards, in order to deploy our application into production, we'll need to either be on Anyscale or on a [cloud VM](https://docs.ray.io/en/latest/cluster/vms/index.html#cloud-vm-index) / [on-prem](https://docs.ray.io/en/latest/cluster/vms/user-guides/launching-clusters/on-premises.html#on-prem) cluster you manage yourself (w/ Ray). If not on Anyscale, the commands will be [slightly different](https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html) but the concepts will be the same.
 
+> If you don't want to set up all of this yourself, we highly recommend joining our [upcoming live cohort](https://4190urw86oh.typeform.com/madewithml){:target="_blank"} where we'll provide an environment with all of this infrastructure already set up for you so that you just focused on the machine learning.
+
 <div align="center">
-  <img src="https://madewithml.com/static/images/mlops/manual.png">
+  <img src="https://madewithml.com/static/images/jobs_and_services/manual.png">
 </div>
 
 ### Authentication
@@ -406,7 +423,7 @@ export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from Anyscale credentials
 
 ### Cluster environment
 
-The cluster environment determines **where** our workloads will be executed (OS, dependencies, etc.) We've already created this [cluster environment](./deploy/cluster_env.yaml) for us but this is how we can create it ourselves.
+The cluster environment determines **where** our workloads will be executed (OS, dependencies, etc.) We've already created this [cluster environment](./deploy/cluster_env.yaml) for us but this is how we can create/update one ourselves.
 
 ```bash
 export CLUSTER_ENV_NAME="madewithml-cluster-env"
@@ -477,14 +494,14 @@ anyscale service terminate --name $SERVICE_NAME
 We're not going to manually deploy our application every time we make a change. Instead, we'll automate this process using GitHub Actions!
 
 <div align="center">
-  <img src="https://madewithml.com/static/images/mlops/cicd.png">
+  <img src="https://madewithml.com/static/images/mlops/cicd/cicd.png">
 </div>
 
 1. We'll start by adding the necessary credentials to the [`/settings/secrets/actions`](https://github.com/GokuMohandas/Made-With-ML/settings/secrets/actions) page of our GitHub repository.
 
 ``` bash
 export ANYSCALE_HOST=https://console.anyscale.com
-export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/o/anyscale-internal/credentials
+export ANYSCALE_CLI_TOKEN=$YOUR_CLI_TOKEN  # retrieved from https://console.anyscale.com/o/madewithml/credentials
 ```
 
 2. Now we can make changes to our code (not on `main` branch) and push them to GitHub. But in order to push our code to GitHub, we'll need to first authenticate with our credentials before pushing to our repository:
@@ -497,18 +514,22 @@ git commit -m ""  # <-- CHANGE THIS to your message
 git push origin dev
 ```
 
-Now you will be prompted to enter your username and password (personal access token). Follow these steps to get personal access token: [New GitHub personal access token](https://github.com/settings/tokens/new) → Add a name → Toggle `repo` and `workflow` → Click `Generate token` (scroll down) → Copy the token
+Now you will be prompted to enter your username and password (personal access token). Follow these steps to get personal access token: [New GitHub personal access token](https://github.com/settings/tokens/new) → Add a name → Toggle `repo` and `workflow` → Click `Generate token` (scroll down) → Copy the token and paste it when prompted for your password.
 
 3. Now we can start a PR from this branch to our `main` branch and this will trigger the [workloads workflow](/.github/workflows/workloads.yaml). If the workflow (Anyscale Jobs) succeeds, this will produce comments with the training and evaluation results directly on the PR.
+
+<div align="center">
+  <img src="https://madewithml.com/static/images/mlops/cicd/comments.png">
+</div>
 
 4. If we like the results, we can merge the PR into the `main` branch. This will trigger the [serve workflow](/.github/workflows/serve.yaml) which will rollout our new service to production!
 
 ### Continual learning
 
-With our CI/CD workflow in place to deploy our application, we can now focus on continually improving our model. It becomes really easy to extend on this foundation to connect to scheduled runs (cron), [data pipelines](https://madewithml.com/courses/mlops/data-stack/), [orchestrate workflows](https://madewithml.com/courses/mlops/orchestration/), drift detected through [monitoring](https://madewithml.com/courses/mlops/monitoring/), [online evaluation](https://madewithml.com/courses/mlops/evaluation/#online-evaluation), etc. And we can easily add additional context such as comparing any experiment with what's currently in production (directly in the PR even), etc.
+With our CI/CD workflow in place to deploy our application, we can now focus on continually improving our model. It becomes really easy to extend on this foundation to connect to scheduled runs (cron), [data pipelines](https://madewithml.com/courses/mlops/data-engineering/), drift detected through [monitoring](https://madewithml.com/courses/mlops/monitoring/), [online evaluation](https://madewithml.com/courses/mlops/evaluation/#online-evaluation), etc. And we can easily add additional context such as comparing any experiment with what's currently in production (directly in the PR even), etc.
 
 <div align="center">
-  <img src="https://madewithml.com/static/images/mlops/continual.png">
+  <img src="https://madewithml.com/static/images/mlops/cicd/continual.png">
 </div>
 
 ## FAQ
