@@ -1,3 +1,5 @@
+> ⚠️ This is an unmaintained Anyscale fork. The canonical, maintained course is at https://madewithml.com/ and https://github.com/GokuMohandas/Made-With-ML
+
 <div align="center">
 <h1><img width="30" src="https://madewithml.com/static/images/rounded_logo.png">&nbsp;<a href="https://madewithml.com/">Made With ML</a></h1>
 Design · Develop · Deploy · Iterate
